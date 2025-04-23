@@ -1,8 +1,9 @@
 import { useMedplumProfile } from "@medplum/react-hooks";
+import { Audio } from "expo-av";
 import { useVideoPlayer } from "expo-video";
 import { VideoView } from "expo-video";
-import { CirclePlay, FileDown, UserRound } from "lucide-react-native";
-import { memo, useCallback, useRef, useState } from "react";
+import { CirclePlay, FileDown, Headphones, Mic, UserRound } from "lucide-react-native";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Alert } from "react-native";
 
@@ -83,6 +84,76 @@ const VideoAttachment = memo(
 );
 VideoAttachment.displayName = "VideoAttachment";
 
+function AudioAttachment({ audioData }: { audioData: string }) {
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Cleanup function for the sound object
+  useEffect(() => {
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, [sound]);
+
+  const handlePlay = useCallback(async () => {
+    // If already playing, stop it
+    if (isPlaying && sound) {
+      await sound.stopAsync();
+      setIsPlaying(false);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // If we don't have a sound object yet, create one
+      if (!sound) {
+        // Convert base64 to URI
+        const base64Audio = `data:audio/wav;base64,${audioData}`;
+        const { sound: newSound } = await Audio.Sound.createAsync(
+          { uri: base64Audio },
+          { shouldPlay: true },
+          (status) => {
+            if (status.didJustFinish) {
+              setIsPlaying(false);
+            }
+          },
+        );
+        setSound(newSound);
+      } else {
+        // Otherwise, play the existing sound
+        await sound.playAsync();
+      }
+      setIsPlaying(true);
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      Alert.alert("Error", "Failed to play audio. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [audioData, sound, isPlaying]);
+
+  return (
+    <Button
+      className={`${isPlaying ? "bg-primary-600" : "bg-tertiary-500"}`}
+      variant="solid"
+      onPress={handlePlay}
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        <LoadingButtonSpinner />
+      ) : (
+        <ButtonIcon as={isPlaying ? Headphones : Mic} className="text-typography-100" />
+      )}
+      <ButtonText className="text-sm text-typography-100">
+        {isPlaying ? "Playing Audio..." : "Play Audio"}
+      </ButtonText>
+    </Button>
+  );
+}
+
 function FileAttachment({ attachment }: { attachment: AttachmentWithUrl }) {
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -128,10 +199,22 @@ export function ChatMessageBubble({
   const isCurrentUser = message.senderType === profile?.resourceType;
   const hasImage = message.attachment?.contentType?.startsWith("image/");
   const hasVideo = message.attachment?.contentType?.startsWith("video/");
+  const hasAudio = !!message.audioData;
+
+  // Check if this is a message from the AI assistant
+  const isAIMessage = !isCurrentUser && !isPatientMessage;
 
   const wrapperAlignment = isCurrentUser ? "self-end" : "self-start";
-  const bubbleColor = isPatientMessage ? "bg-secondary-200" : "bg-tertiary-200";
-  const borderColor = isPatientMessage ? "border-secondary-300" : "border-tertiary-300";
+  const bubbleColor = isPatientMessage
+    ? "bg-secondary-200"
+    : isAIMessage
+      ? "bg-primary-50"
+      : "bg-tertiary-200";
+  const borderColor = isPatientMessage
+    ? "border-secondary-300"
+    : isAIMessage
+      ? "border-primary-200"
+      : "border-tertiary-300";
   const flexDirection = isCurrentUser ? "flex-row-reverse" : "flex-row";
 
   const handleLongPress = useCallback(() => {
@@ -145,6 +228,12 @@ export function ChatMessageBubble({
       onSelect(message.id);
     }
   }, [message.id, onSelect, selectionEnabled]);
+
+  // Message status indicators
+  const isTranscriptionPlaceholder = message.text === "[Audio message - Transcribing...]";
+  const isTranscribing =
+    (message.status === "in-progress" && hasAudio) || isTranscriptionPlaceholder;
+  const isProcessing = message.status === "in-progress" && !hasAudio && !isTranscriptionPlaceholder;
 
   return (
     <Pressable
@@ -169,6 +258,7 @@ export function ChatMessageBubble({
             selected ? "border-primary-500" : ""
           }`}
         >
+          {/* Display the appropriate attachment or audio content */}
           {message.attachment?.url && (
             <View className="mb-1">
               {hasImage ? (
@@ -185,7 +275,34 @@ export function ChatMessageBubble({
               )}
             </View>
           )}
-          {Boolean(message.text) && <Text className="text-typography-900">{message.text}</Text>}
+
+          {/* Audio attachment */}
+          {hasAudio && (
+            <View className="mb-1">
+              <AudioAttachment audioData={message.audioData!} />
+            </View>
+          )}
+
+          {/* Status indicators */}
+          {isTranscribing && (
+            <View className="mb-2 flex-row items-center gap-2">
+              <LoadingButtonSpinner />
+              <Text className="text-sm italic text-typography-500">Transcribing audio...</Text>
+            </View>
+          )}
+          {isProcessing && (
+            <View className="mb-2 flex-row items-center gap-2">
+              <LoadingButtonSpinner />
+              <Text className="text-sm italic text-typography-500">Processing message...</Text>
+            </View>
+          )}
+
+          {/* Message text - don't show if it's just the placeholder text */}
+          {Boolean(message.text) && !isTranscriptionPlaceholder && (
+            <Text className="text-typography-900">{message.text}</Text>
+          )}
+
+          {/* Timestamp */}
           <Text className="mt-1 text-xs text-typography-600">{formatTime(message.sentAt)}</Text>
         </View>
       </View>
