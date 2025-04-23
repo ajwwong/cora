@@ -10,6 +10,7 @@ import {
   Bundle,
   Communication,
   CommunicationPayload,
+  Extension,
   Patient,
   Reference,
 } from "@medplum/fhirtypes";
@@ -103,12 +104,41 @@ async function createThreadComm({
   medplum,
   profile,
   topic,
+  options,
 }: {
   medplum: MedplumClient;
   profile: Patient;
   topic: string;
+  options?: { 
+    isReflectionThread?: boolean; 
+    reflectionTheme?: string;
+  };
 }): Promise<Communication> {
   const sent = new Date().toISOString();
+  
+  // Create extensions array with last changed date
+  const extensions: Extension[] = [
+    {
+      url: "https://medplum.com/last-changed",
+      valueDateTime: sent,
+    }
+  ];
+  
+  // Add reflection guide extensions if specified
+  if (options?.isReflectionThread) {
+    extensions.push({
+      url: 'https://progressnotes.app/fhir/StructureDefinition/reflection-thread',
+      valueBoolean: true
+    });
+    
+    if (options.reflectionTheme) {
+      extensions.push({
+        url: 'https://progressnotes.app/fhir/StructureDefinition/reflection-themes',
+        valueString: options.reflectionTheme
+      });
+    }
+  }
+  
   return await medplum.createResource({
     resourceType: "Communication",
     status: "completed",
@@ -119,14 +149,7 @@ async function createThreadComm({
     },
     subject: createReference(profile),
     payload: [{ contentString: topic.trim() }],
-    // Use an extension to store the last changed date.
-    // This will allow to subscribe to changes to the thread, including new messages
-    extension: [
-      {
-        url: "https://medplum.com/last-changed",
-        valueDateTime: sent,
-      },
-    ],
+    extension: extensions,
   } satisfies Communication);
 }
 
@@ -155,6 +178,8 @@ async function createThreadMessageComm({
   message,
   threadId,
   attachment,
+  audioData,
+  audioContentType = 'audio/wav',
 }: {
   medplum: MedplumClient;
   profile: ProfileResource;
@@ -162,8 +187,11 @@ async function createThreadMessageComm({
   message: string;
   threadId: string;
   attachment?: Attachment;
+  audioData?: string;
+  audioContentType?: string;
 }): Promise<Communication> {
   const payload: CommunicationPayload[] = [];
+  const extensions: Extension[] = [];
 
   // Add text message if provided
   if (message.trim()) {
@@ -177,6 +205,19 @@ async function createThreadMessageComm({
     });
   }
 
+  // Add audio data extensions if provided
+  if (audioData) {
+    extensions.push({
+      url: 'https://progressnotes.app/fhir/StructureDefinition/reflection-guide-audio-data',
+      valueString: audioData
+    });
+    
+    extensions.push({
+      url: 'https://progressnotes.app/fhir/StructureDefinition/reflection-guide-audio-content-type',
+      valueString: audioContentType
+    });
+  }
+
   return await medplum.createResource({
     resourceType: "Communication",
     status: "in-progress",
@@ -185,6 +226,7 @@ async function createThreadMessageComm({
     subject: patientRef,
     payload,
     partOf: [{ reference: `Communication/${threadId}` }],
+    extension: extensions.length > 0 ? extensions : undefined
   } satisfies Communication);
 }
 
@@ -194,17 +236,24 @@ interface ChatContextType {
   isLoadingMessagesMap: Map<string, boolean>;
   connectedOnce: boolean;
   reconnecting: boolean;
-  createThread: (topic: string) => Promise<string | undefined>;
+  createThread: (topic: string, options?: { 
+    isReflectionThread?: boolean; 
+    reflectionTheme?: string;
+  }) => Promise<string | undefined>;
   receiveThread: (threadId: string) => Promise<void>;
   sendMessage: ({
     threadId,
     message,
     attachment,
+    audioData,
+    processWithAI,
   }: {
     threadId: string;
     message?: string;
     attachment?: ImagePicker.ImagePickerAsset;
-  }) => Promise<void>;
+    audioData?: string;
+    processWithAI?: boolean;
+  }) => Promise<string | undefined>;
   markMessageAsRead: ({
     threadId,
     messageId,
@@ -219,6 +268,17 @@ interface ChatContextType {
     threadId: string;
     messageIds: string[];
   }) => Promise<void>;
+  processWithReflectionGuide: ({
+    threadId,
+    messageId,
+    textInput,
+    audioData,
+  }: {
+    threadId: string;
+    messageId?: string;
+    textInput?: string;
+    audioData?: string;
+  }) => Promise<void>;
 }
 
 export const ChatContext = createContext<ChatContextType>({
@@ -229,9 +289,10 @@ export const ChatContext = createContext<ChatContextType>({
   reconnecting: false,
   createThread: async () => undefined,
   receiveThread: async () => {},
-  sendMessage: async () => {},
+  sendMessage: async () => undefined,
   markMessageAsRead: async () => {},
   deleteMessages: async () => {},
+  processWithReflectionGuide: async () => {},
 });
 
 interface ChatProviderProps {
@@ -393,11 +454,20 @@ export function ChatProvider({
 
   // CRUD functions
   const createThread = useCallback(
-    async (topic: string) => {
+    async (topic: string, options?: { 
+      isReflectionThread?: boolean; 
+      reflectionTheme?: string;
+    }) => {
       if (!topic.trim() || !profile) return;
       if (profile.resourceType !== "Patient") throw new Error("Only patients can create threads");
 
-      const newThread = await createThreadComm({ medplum, profile, topic });
+      const newThread = await createThreadComm({ 
+        medplum, 
+        profile, 
+        topic,
+        options
+      });
+      
       setThreads((prev) => syncResourceArray(prev, newThread));
       setThreadCommMap((prev) => {
         return new Map([...prev, [newThread.id!, []]]);
@@ -413,13 +483,21 @@ export function ChatProvider({
       threadId,
       message,
       attachment,
+      audioData,
+      processWithAI = false,
+      skipAIProcessing = false,
+      placeholderMessageId,
     }: {
       threadId: string;
       message?: string;
       attachment?: ImagePicker.ImagePickerAsset;
+      audioData?: string;
+      processWithAI?: boolean;
+      skipAIProcessing?: boolean; // Skip AI processing even if processWithAI=true (for placeholders)
+      placeholderMessageId?: string; // For audio transcription flow
     }) => {
       if (!profile) return;
-      if (!message?.trim() && !attachment) return;
+      if (!message?.trim() && !attachment && !audioData && !placeholderMessageId) return;
 
       try {
         let uploadedAttachment;
@@ -438,34 +516,208 @@ export function ChatProvider({
         const thread = threads.find((t) => t.id === threadId);
         if (!thread) return;
 
-        // Create the message
-        const newCommunication = await createThreadMessageComm({
-          medplum,
-          profile,
-          patientRef: thread.subject as Reference<Patient>,
-          message: message ?? "",
-          threadId,
-          attachment: uploadedAttachment,
-        });
+        let newCommunication;
+        
+        // Handle special case for audio with placeholder
+        if (audioData && placeholderMessageId) {
+          console.log('Processing audio with placeholder ID:', placeholderMessageId);
+          
+          // First create a Binary resource (exactly like in SecureHealth)
+          console.log('Creating Binary resource for audio data...');
+          const binary = await medplum.createResource({
+            resourceType: 'Binary',
+            contentType: 'audio/wav',
+            data: audioData
+          });
+          
+          console.log('Binary resource created with ID:', binary.id);
+          
+          // Now process the audio via the reflection guide bot for transcription
+          console.log(`STEP 1: Getting transcription from audio with binaryId: ${binary.id}`);
+          const transcriptionResponse = await medplum.executeBot(
+            {
+              system: 'https://progressnotes.app',
+              value: 'reflection-guide'
+            },
+            {
+              patientId: profile.id,
+              threadId: threadId,
+              placeholderMessageId: placeholderMessageId,
+              audioBinaryId: binary.id, // Use binary ID instead of raw audio data
+              returnTranscriptionOnly: true // Just get transcription, not response
+            }
+          );
+          
+          console.log('Transcription response:', {
+            success: transcriptionResponse.success,
+            hasTranscription: !!transcriptionResponse.transcription,
+            error: transcriptionResponse.error
+          });
+          
+          // Wait for placeholder update to propagate
+          await new Promise(resolve => setTimeout(resolve, 500));
+          await receiveThread(threadId);
+          
+          // If transcription failed, try alternative approach
+          if (!transcriptionResponse.success || !transcriptionResponse.transcription) {
+            console.warn('Transcription failed or empty:', transcriptionResponse.error);
+            console.log('Trying alternative approach with direct audio processing...');
+            
+            // Check if audio is valid base64
+            let valid = true;
+            try {
+              // Simple check to see if this is valid base64
+              atob(audioData.substring(0, 100));
+            } catch (e) {
+              valid = false;
+              console.error('Audio data is not valid base64:', e);
+            }
+            
+            if (valid) {
+              // Try direct approach by updating the placeholder with the audio data
+              try {
+                console.log('Updating placeholder directly with audio data...');
+                const updateResponse = await medplum.updateResource({
+                  resourceType: 'Communication',
+                  id: placeholderMessageId,
+                  status: 'in-progress',
+                  payload: [{ contentString: 'Audio received. Processing...' }],
+                  extension: [
+                    {
+                      url: 'https://progressnotes.app/fhir/StructureDefinition/reflection-guide-audio-data',
+                      valueString: audioData
+                    }
+                  ]
+                });
+                
+                console.log('Placeholder updated with audio data:', !!updateResponse);
+                
+                // Now try to process with the bot for a response
+                console.log('STEP 2 (Alternative): Generating response with raw audio...');
+                const aiResponse = await medplum.executeBot(
+                  {
+                    system: 'https://progressnotes.app',
+                    value: 'reflection-guide'
+                  },
+                  {
+                    patientId: profile.id,
+                    threadId: threadId,
+                    messageId: placeholderMessageId,
+                    processAudio: true
+                  }
+                );
+                
+                console.log('Alternative approach response:', {
+                  success: aiResponse.success,
+                  hasResponseContent: !!aiResponse.responseContent,
+                  hasAudio: !!aiResponse.audioData,
+                  error: aiResponse.error
+                });
+              } catch (error) {
+                console.error('Alternative approach failed:', error);
+              }
+            }
+            
+            // Refresh the thread regardless
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await receiveThread(threadId);
+            
+            // Return placeholder ID
+            return placeholderMessageId;
+          }
+          
+          // Normal flow when transcription is successful
+          console.log('STEP 2: Generating AI response to transcription:', transcriptionResponse.transcription);
+          
+          // Now generate the AI response using the transcription
+          try {
+            const aiResponse = await medplum.executeBot(
+              {
+                system: 'https://progressnotes.app',
+                value: 'reflection-guide'
+              },
+              {
+                patientId: profile.id,
+                threadId: threadId,
+                textInput: transcriptionResponse.transcription,
+                skipMessageCreation: true // Don't create a new message, we already have the placeholder
+              }
+            );
+            
+            console.log('Reflection guide bot response:', {
+              success: aiResponse.success,
+              hasResponseContent: !!aiResponse.responseContent,
+              hasAudio: !!aiResponse.audioData,
+              error: aiResponse.error
+            });
+            
+            if (!aiResponse.success) {
+              console.error('AI response generation failed:', aiResponse.error);
+            }
+          } catch (error) {
+            console.error('Error generating AI response:', error);
+          } finally {
+            // Wait for response to propagate regardless of success/failure
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await receiveThread(threadId);
+          }
+          
+          return placeholderMessageId; // Return placeholder ID as it was updated
+        } else {
+          // Normal flow - create a new message
+          newCommunication = await createThreadMessageComm({
+            medplum,
+            profile,
+            patientRef: thread.subject as Reference<Patient>,
+            message: message ?? "",
+            threadId,
+            attachment: uploadedAttachment,
+            audioData,
+            audioContentType: "audio/wav", // Assuming WAV format for now
+          });
 
-        // Touch the thread last changed date
-        await touchThreadLastChanged({
-          medplum,
-          threadId,
-          value: newCommunication.sent!,
-        });
+          // Touch the thread last changed date
+          await touchThreadLastChanged({
+            medplum,
+            threadId,
+            value: newCommunication.sent!,
+          });
 
-        // Update the thread messages
-        setThreadCommMap((prev) => {
-          const existing = prev.get(threadId) || [];
-          return new Map([...prev, [threadId, syncResourceArray(existing, newCommunication)]]);
-        });
+          // Update the thread messages
+          setThreadCommMap((prev) => {
+            const existing = prev.get(threadId) || [];
+            return new Map([...prev, [threadId, syncResourceArray(existing, newCommunication)]]);
+          });
+          
+          // Process with AI if requested and is a reflection thread, but not if skipAIProcessing is true
+          if (processWithAI && !skipAIProcessing) {
+            const threadObj = Thread.fromCommunication({
+              comm: thread,
+              threadMessageComms: threadCommMap.get(threadId) || [],
+            });
+            
+            if (threadObj.isReflectionThread) {
+              // Process asynchronously
+              processWithReflectionGuide({
+                threadId,
+                messageId: newCommunication.id,
+                textInput: message,
+                audioData,
+              }).catch(e => {
+                console.error('Error processing with reflection guide:', e);
+                onError?.(e as Error);
+              });
+            }
+          }
+          
+          return newCommunication.id;
+        }
       } catch (err) {
         onError?.(err as Error);
         throw err;
       }
     },
-    [profile, threads, medplum, onError],
+    [profile, threads, threadCommMap, medplum, onError, receiveThread],
   );
 
   const markMessageAsRead = useCallback(
@@ -522,6 +774,177 @@ export function ChatProvider({
     [medplum, profile, onError],
   );
 
+  // Function to process a message with the reflection guide bot
+  const processWithReflectionGuide = useCallback(
+    async ({
+      threadId,
+      messageId,
+      textInput,
+      audioData,
+    }: {
+      threadId: string;
+      messageId?: string;
+      textInput?: string;
+      audioData?: string;
+    }) => {
+      if (!profile) return;
+      
+      try {
+        console.log('Processing with reflection guide bot:', {
+          threadId,
+          messageId: messageId?.substring(0, 8),
+          hasTextInput: !!textInput,
+          hasAudioData: !!audioData?.substring(0, 20) + '...'
+        });
+        
+        // First, check if the bot exists by making a direct query
+        let botExists = false;
+        try {
+          // Try to find the bot by identifier
+          const searchResults = await medplum.search('Bot', {
+            identifier: 'https://progressnotes.app|reflection-guide'
+          });
+          
+          botExists = searchResults.entry && searchResults.entry.length > 0;
+          
+          if (!botExists) {
+            console.log('Reflection guide bot not found. Creating placeholder message response.');
+            
+            // Create a placeholder response message from the system
+            await createThreadMessageComm({
+              medplum,
+              profile: {
+                resourceType: 'Practitioner',
+                id: 'system',
+                name: [{ given: ['Reflection'], family: 'Guide' }]
+              } as any,
+              patientRef: profile.resourceType === 'Patient' ? 
+                { reference: `Patient/${profile.id}` } as Reference<Patient> : 
+                threads.find(t => t.id === threadId)?.subject as Reference<Patient>,
+              message: "I'm sorry, the reflection guide bot is not available. Please contact support for assistance.",
+              threadId: threadId,
+            });
+            
+            // Refresh thread to show placeholder message
+            await receiveThread(threadId);
+            return;
+          }
+        } catch (botCheckError) {
+          console.error('Error checking for bot existence:', botCheckError);
+          // Continue to try executing the bot anyway
+        }
+        
+        // Execute the reflection-guide bot if it exists or if we couldn't check
+        
+        // First create an audio attachment if we have audio data
+        let audioBinaryId;
+        if (audioData) {
+          try {
+            console.log('Creating audio attachment for bot processing...');
+            
+            // Convert base64 to blob for the attachment
+            const byteCharacters = atob(audioData);
+            const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+              const slice = byteCharacters.slice(offset, offset + 512);
+              const byteNumbers = new Array(slice.length);
+              for (let i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+              }
+              byteArrays.push(new Uint8Array(byteNumbers));
+            }
+            
+            const blob = new Blob(byteArrays, { type: 'audio/wav' });
+            const audioAttachment = await medplum.createAttachment({
+              data: blob,
+              contentType: 'audio/wav'
+            });
+            
+            audioBinaryId = audioAttachment.id;
+            console.log('Created audio attachment with ID:', audioBinaryId);
+          } catch (attachmentError) {
+            console.error('Failed to create audio attachment:', attachmentError);
+            // Continue without audio if attachment creation fails
+          }
+        }
+        
+        const response = await medplum.executeBot(
+          {
+            system: 'https://progressnotes.app',
+            value: 'reflection-guide'
+          },
+          {
+            patientId: profile.id,
+            threadId: threadId,
+            messageId: messageId,
+            textInput: textInput || (audioData ? '[Audio message]' : undefined),
+            audioBinaryId: audioBinaryId,
+            config: {
+              voiceModel: 'aura-2-cora-en',
+              persona: 'empathetic, supportive guide',
+              theme: 'general well-being and mental health'
+            }
+          }
+        );
+        
+        console.log('Reflection guide bot response:', {
+          success: response.success,
+          hasResponseContent: !!response.responseContent,
+          hasAudio: !!response.audioData?.substring(0, 20) + '...',
+          error: response.error
+        });
+        
+        if (!response.success) {
+          // Create an error message in the thread
+          await createThreadMessageComm({
+            medplum,
+            profile: {
+              resourceType: 'Practitioner',
+              id: 'system',
+              name: [{ given: ['Reflection'], family: 'Guide' }]
+            } as any,
+            patientRef: profile.resourceType === 'Patient' ? 
+              { reference: `Patient/${profile.id}` } as Reference<Patient> : 
+              threads.find(t => t.id === threadId)?.subject as Reference<Patient>,
+            message: `Sorry, I couldn't process your message. ${response.error || 'Please try again later.'}`,
+            threadId: threadId,
+          });
+        }
+        
+        // Refresh thread to show AI response
+        await receiveThread(threadId);
+        
+      } catch (err) {
+        console.error('Error processing with reflection guide:', err);
+        
+        try {
+          // Create an error message in the thread
+          await createThreadMessageComm({
+            medplum,
+            profile: {
+              resourceType: 'Practitioner',
+              id: 'system',
+              name: [{ given: ['Reflection'], family: 'Guide' }]
+            } as any,
+            patientRef: profile.resourceType === 'Patient' ? 
+              { reference: `Patient/${profile.id}` } as Reference<Patient> : 
+              threads.find(t => t.id === threadId)?.subject as Reference<Patient>,
+            message: "I'm sorry, I encountered an error while processing your message. Please try again later.",
+            threadId: threadId,
+          });
+          
+          // Refresh thread to show error message
+          await receiveThread(threadId);
+        } catch (errorMessageError) {
+          console.error('Failed to create error message:', errorMessageError);
+        }
+        
+        onError?.(err as Error);
+      }
+    },
+    [medplum, profile, receiveThread, onError, createThreadMessageComm, threads]
+  );
+  
   const value = {
     threads: threadsOut,
     isLoadingThreads,
@@ -533,6 +956,7 @@ export function ChatProvider({
     sendMessage,
     markMessageAsRead,
     deleteMessages,
+    processWithReflectionGuide,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

@@ -19,6 +19,7 @@ export function useSingleThread({ threadId }: UseSingleThreadProps) {
   const sendMessage = useContextSelector(ChatContext, (state) => state.sendMessage);
   const markMessageAsRead = useContextSelector(ChatContext, (state) => state.markMessageAsRead);
   const deleteMessages = useContextSelector(ChatContext, (state) => state.deleteMessages);
+  const processWithReflectionGuide = useContextSelector(ChatContext, (state) => state.processWithReflectionGuide);
   const previousReconnectingRef = useRef(false);
   const reconnecting = useContextSelector(ChatContext, (state) => state.reconnecting);
 
@@ -42,5 +43,6 @@ export function useSingleThread({ threadId }: UseSingleThreadProps) {
     sendMessage,
     markMessageAsRead,
     deleteMessages,
+    processWithReflectionGuide,
   };
 }

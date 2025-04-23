@@ -41,7 +41,9 @@ function ThreadItem({
     <View>
       <Pressable
         onPress={() => onPress()}
-        className="flex-row items-center gap-3 overflow-hidden bg-background-0 p-4 active:bg-secondary-100"
+        className={`flex-row items-center gap-3 overflow-hidden p-4 active:bg-secondary-100 ${
+          thread.isReflectionThread ? 'bg-primary-50' : 'bg-background-0'
+        }`}
       >
         <Avatar size="md" className="border-2 border-primary-200">
           <Icon as={UserRound} size="lg" className="stroke-typography-0" />
@@ -53,6 +55,13 @@ function ThreadItem({
             <Text className="text-sm font-semibold text-typography-900" isTruncated={true}>
               {isPractitioner ? `${thread.patientName}: ${thread.topic}` : thread.topic}
             </Text>
+            {thread.isReflectionThread && thread.reflectionTheme && (
+              <View className="rounded-full bg-primary-100 px-2 py-0.5">
+                <Text className="text-xs text-primary-700">
+                  {thread.reflectionTheme}
+                </Text>
+              </View>
+            )}
             {profile && thread.getUnreadCount({ profile }) > 0 && (
               <View className="rounded-full bg-primary-500 px-2 py-0.5">
                 <Text className="text-xs font-medium text-typography-0">
@@ -66,9 +75,14 @@ function ThreadItem({
           </Text>
         </View>
 
-        <Text className="mt-1 self-start text-xs text-typography-500">
-          {thread.lastMessageSentAt ? formatTime(thread.lastMessageSentAt) : ""}
-        </Text>
+        <View className="items-end">
+          {thread.isReflectionThread && (
+            <Text className="mb-1 text-xs text-primary-600">Reflection Guide</Text>
+          )}
+          <Text className="self-start text-xs text-typography-500">
+            {thread.lastMessageSentAt ? formatTime(thread.lastMessageSentAt) : ""}
+          </Text>
+        </View>
       </Pressable>
       <View className="h-[1px] bg-outline-100" />
     </View>

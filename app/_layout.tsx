@@ -34,6 +34,7 @@ SplashScreen.preventAutoHideAsync();
 
 polyfillMedplumWebAPIs();
 const medplum = new MedplumClient({
+  baseUrl: "https://api.progressnotes.app/",
   clientId: oauth2ClientId,
   storage: new ExpoClientStorage(),
   onUnauthenticated: () => {

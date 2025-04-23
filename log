@@ -1,0 +1,193 @@
+Redirect URL: http://localhost:8081
+api.progressnotes.app/fhir/R4/Subscription:1 
+            
+            
+           Failed to load resource: the server responded with a status of 403 ()Understand this error
+entry.bundle?platform=web&dev=true&hot=false&transform.routerRoot=app:29348 Forbidden
+registerError @ entry.bundle?platform=web&dev=true&hot=false&transform.routerRoot=app:29348Understand this error
+api.progressnotes.app/fhir/R4/Practitioner/reflection-guide-bot:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+api.progressnotes.app/fhir/R4/Practitioner/reflection-guide-bot:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+api.progressnotes.app/fhir/R4/Practitioner/reflection-guide-bot:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+entry.bundle?platform=web&dev=true&hot=false&transform.routerRoot=app:6134 props.pointerEvents is deprecated. Use style.pointerEvents
+warnOnce @ entry.bundle?platform=web&dev=true&hot=false&transform.routerRoot=app:6134Understand this warning
+api.progressnotes.app/fhir/R4/Practitioner/reflection-guide-bot:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+useAudioRecording.tsx:50 Starting audio recording...
+useAudioRecording.tsx:58 Recording started
+useAudioRecording.tsx:74 Stopping recording...
+useAudioRecording.tsx:99 Recording stopped, blob size: 220760
+entry.bundle?platform=web&dev=true&hot=false&transform.routerRoot=app:29348 Error processing audio recording: TypeError: chatContext.sendMessage is not a function
+    at reader.onloadend ([id].tsx:126:33)
+registerError @ entry.bundle?platform=web&dev=true&hot=false&transform.routerRoot=app:29348Understand this error
+web-client-content-script.js:2 TypeError: Cannot read properties of undefined (reading 'disconnect')
+    at web-client-content-script.js:2:325800
+    at eu (web-client-content-script.js:2:123185)
+    at nu (web-client-content-script.js:2:123381)
+    at bl (web-client-content-script.js:2:143028)
+    at web-client-content-script.js:2:140367
+    at b (web-client-content-script.js:2:181586)
+    at MessagePort.R (web-client-content-script.js:2:182120)
+Uncaught Error
+Pressable is not defined
+Source
+ 
+ 61 |
+return
+ (
+ 
+ 62 |
+  
+<
+View
+ className
+=
+"flex-row items-center bg-background-0 p-3"
+>
+>
+ 63 |
+    
+<
+Pressable
+ 
+ 
+    |
+     
+^
+ 
+ 64 |
+      onPress
+=
+{() 
+=>
+ {
+ 
+ 65 |
+        console
+.
+log(
+"Record button pressed via Pressable"
+)
+;
+ 
+ 66 |
+        onAttachment()
+;
+Call Stack
+ChatMessageInput
+cora/components/ChatMessageInput.tsx:63:8
+See 19 more frames
+ 
+ 61 |
+return
+ (
+ 
+ 62 |
+  
+<
+View
+ className
+=
+"flex-row items-center bg-background-0 p-3"
+>
+>
+ 63 |
+    
+<
+Pressable
+ 
+ 
+    |
+     
+^
+ 
+ 64 |
+      onPress
+=
+{() 
+=>
+ {
+ 
+ 65 |
+        console
+.
+log(
+"Record button pressed via Pressable"
+)
+;
+ 
+ 66 |
+        onAttachment()
+;
+
+ 61 |
+return
+ (
+ 
+ 62 |
+  
+<
+View
+ className
+=
+"flex-row items-center bg-background-0 p-3"
+>
+>
+ 63 |
+    
+<
+Pressable
+ 
+ 
+    |
+     
+^
+ 
+ 64 |
+      onPress
+=
+{() 
+=>
+ {
+ 
+ 65 |
+        console
+.
+log(
+"Record button pressed via Pressable"
+)
+;
+ 
+ 66 |
+        onAttachment()
+;
+Call Stack
+ChatMessageInput
+cora/components/ChatMessageInput.tsx:63:8
+See 17 more frames
+Component Stack
+ChatMessageInput
+cora/components/ChatMessageInput.tsx:23:3
+ThreadPage
+cora/app/(app)/thread/[id].tsx:47:38
+ChatProvider
+cora/contexts/ChatContext.tsx:307:3
+AppLayout
+cora/app/(app)/_layout.tsx:43:49
+NotificationsProvider
+cora/contexts/NotificationsContext.tsx:65:41
+GluestackUIProvider
+cora/components/gluestack-ui-provider/index.web.tsx:21:3
+RootLayout
+cora/app/_layout.tsx:48:12
+See 73 more frames

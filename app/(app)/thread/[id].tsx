@@ -1,7 +1,7 @@
 import { useMedplumContext } from "@medplum/react-hooks";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useContext } from "react";
 import { Alert, View } from "react-native";
 
 import { ChatHeader } from "@/components/ChatHeader";
@@ -11,6 +11,8 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { MessageDeleteModal } from "@/components/MessageDeleteModal";
 import { useAvatars } from "@/hooks/useAvatars";
 import { useSingleThread } from "@/hooks/useSingleThread";
+import { useAudioRecording } from "@/hooks/useAudioRecording";
+import { ChatContext } from "@/contexts/ChatContext";
 
 async function getAttachment() {
   try {
@@ -57,6 +59,8 @@ export default function ThreadPage() {
   const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const { isRecording, audioBlob, recordingDuration, startRecording, stopRecording } = useAudioRecording();
+  // The chatContext is not needed since we get the sendMessage function directly from useSingleThread
 
   // If thread is not loading and the thread undefined, redirect to the index page
   useEffect(() => {
@@ -76,20 +80,48 @@ export default function ThreadPage() {
   }, [thread, markMessageAsRead]);
 
   const handleSendMessage = useCallback(
-    async (attachment?: ImagePicker.ImagePickerAsset) => {
+    async (attachment?: ImagePicker.ImagePickerAsset, audioData?: string) => {
       if (!thread) return;
       setIsSending(true);
       const existingMessage = message;
       setMessage("");
 
       try {
-        await sendMessage({
-          threadId: thread.id,
-          message: existingMessage,
-          attachment,
-        });
-      } catch {
+        if (audioData) {
+          // For audio messages, we want to use a different flow based on SecureHealth implementation
+          console.log("Audio data detected, using transcription flow");
+          
+          // 1. Create a placeholder message for transcription
+          console.log("Creating transcription placeholder message");
+          const placeholderId = await sendMessage({
+            threadId: thread.id,
+            message: '[Audio message - Transcribing...]',
+            skipAIProcessing: true, // Don't process this placeholder with AI
+          });
+          
+          // 2. Send the audio for transcription and processing
+          console.log("Sending audio data for transcription and processing");
+          await sendMessage({
+            threadId: thread.id,
+            audioData,
+            placeholderMessageId: placeholderId,
+            // Process with AI if this is a reflection thread
+            processWithAI: thread.isReflectionThread,
+          });
+        } else {
+          // For text messages, use the standard flow
+          await sendMessage({
+            threadId: thread.id,
+            message: existingMessage,
+            attachment,
+            // Process with AI if this is a reflection thread
+            processWithAI: thread.isReflectionThread,
+          });
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
         setMessage(existingMessage);
+        Alert.alert("Error", "Failed to send message. Please try again.");
       } finally {
         setIsSending(false);
       }
@@ -99,13 +131,91 @@ export default function ThreadPage() {
 
   const handleAttachment = useCallback(async () => {
     if (!thread) return;
-    setIsAttaching(true);
-    const attachment = await getAttachment();
-    setIsAttaching(false);
-    if (attachment) {
-      await handleSendMessage(attachment);
+    
+    console.log("Attachment button clicked, isRecording:", isRecording);
+    
+    // If already recording, stop recording and send audio
+    if (isRecording) {
+      console.log("Attempting to stop recording and process audio");
+      setIsAttaching(true);
+      try {
+        // First stop the recording to get the blob
+        const blob = await stopRecording();
+        console.log("Recording stopped successfully, blob size:", blob.size);
+        
+        // We don't need to call handleSendMessage directly here anymore
+        // as we've implemented the SecureHealth style audio handling workflow
+        try {
+          // Convert blob to base64
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            
+            reader.onload = () => {
+              try {
+                // Extract the base64 data (remove the data URL prefix)
+                const result = reader.result as string;
+                const base64 = result.split(',')[1];
+                console.log("Base64 data extracted, length:", base64.length);
+                resolve(base64);
+              } catch (err) {
+                console.error("Error extracting base64 data:", err);
+                reject(err);
+              }
+            };
+            
+            reader.onerror = () => {
+              console.error("FileReader error occurred");
+              reject(new Error("FileReader error"));
+            };
+            
+            // Start reading the blob
+            reader.readAsDataURL(blob);
+          });
+          
+          // handleSendMessage will automatically handle the audio transcription workflow
+          // using the two-step process from SecureHealth
+          console.log("Sending audio for processing...");
+          await handleSendMessage(undefined, base64Data);
+          console.log("Audio processing initiated successfully");
+        } catch (error) {
+          console.error("Error processing audio data:", error);
+          Alert.alert("Error", "Failed to process the recording. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error stopping recording:", error);
+        Alert.alert("Error", "Failed to stop the recording. Please try again.");
+      } finally {
+        setIsAttaching(false);
+      }
+    } else {
+      // If reflection thread, start recording
+      if (thread.isReflectionThread) {
+        try {
+          console.log("Attempting to start recording (reflection thread)");
+          await startRecording();
+          console.log("Recording started successfully");
+        } catch (error) {
+          console.error("Error starting recording:", error);
+          Alert.alert("Error", "Failed to start recording. Please check microphone permissions.");
+        }
+      } else {
+        // Regular attachment flow
+        console.log("Regular attachment flow (not a reflection thread)");
+        setIsAttaching(true);
+        try {
+          const attachment = await getAttachment();
+          if (attachment) {
+            await handleSendMessage(attachment);
+          }
+        } catch (error) {
+          console.error("Error with attachment:", error);
+          Alert.alert("Error", "Failed to process attachment. Please try again.");
+        } finally {
+          setIsAttaching(false);
+        }
+      }
     }
-  }, [thread, handleSendMessage]);
+  }, [thread, handleSendMessage, isRecording, startRecording, stopRecording]);
 
   const handleMessageSelect = useCallback((messageId: string) => {
     setSelectedMessages((prev) => {
@@ -174,6 +284,9 @@ export default function ThreadPage() {
         onSend={handleSendMessage}
         isSending={isSending || isAttaching}
         disabled={selectedMessages.size > 0}
+        isRecording={isRecording}
+        isReflectionThread={thread.isReflectionThread}
+        recordingDuration={recordingDuration}
       />
       <MessageDeleteModal
         isOpen={isDeleteModalOpen}

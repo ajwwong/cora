@@ -5,7 +5,10 @@ export const oauth2ClientId =
     ? process.env.EXPO_PUBLIC_MEDPLUM_WEB_CLIENT_ID!
     : process.env.EXPO_PUBLIC_MEDPLUM_NATIVE_CLIENT_ID!;
 export const oAuth2Discovery = {
-  authorizationEndpoint: "https://api.medplum.com/oauth2/authorize",
-  tokenEndpoint: "https://api.medplum.com/oauth2/token",
-  userInfoEndpoint: "https://api.medplum.com/oauth2/userinfo",
+  authorizationEndpoint: "https://api.progressnotes.app/oauth2/authorize",
+  tokenEndpoint: "https://api.progressnotes.app/oauth2/token",
+  userInfoEndpoint: "https://api.progressnotes.app/oauth2/userinfo",
+//  authorizationEndpoint: "https://api.medplum.com/oauth2/authorize",
+//  tokenEndpoint: "https://api.medplum.com/oauth2/token",
+//   userInfoEndpoint: "https://api.medplum.com/oauth2/userinfo",
 };
