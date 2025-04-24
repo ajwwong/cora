@@ -3,12 +3,14 @@ import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, View } from "react-native";
+import { useContextSelector } from "use-context-selector";
 
 import { ChatHeader } from "@/components/ChatHeader";
 import { ChatMessageInput } from "@/components/ChatMessageInput";
 import { ChatMessageList } from "@/components/ChatMessageList";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { MessageDeleteModal } from "@/components/MessageDeleteModal";
+import { ChatContext } from "@/contexts/ChatContext";
 import { useAudioRecording } from "@/hooks/useAudioRecording";
 import { useAvatars } from "@/hooks/useAvatars";
 import { useSingleThread } from "@/hooks/useSingleThread";
@@ -64,6 +66,13 @@ export default function ThreadPage() {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [currentPlayingMessageId, setCurrentPlayingMessageId] = useState<string | null>(null);
   const [autoplayedMessageIds, setAutoplayedMessageIds] = useState<Set<string>>(new Set());
+
+  // Get the bot processing state and setter from context
+  const isBotProcessingMap = useContextSelector(ChatContext, (ctx) => ctx.isBotProcessingMap);
+  const processWithReflectionGuide = useContextSelector(
+    ChatContext,
+    (ctx) => ctx.processWithReflectionGuide,
+  );
 
   // Track the most recent audio message
   const mostRecentAudioMessageId = useMemo(() => {
@@ -346,6 +355,7 @@ export default function ThreadPage() {
         isRecording={isRecording}
         isReflectionThread={thread.isReflectionThread}
         recordingDuration={recordingDuration}
+        isBotProcessing={isBotProcessingMap.get(thread.id) || false}
       />
       <MessageDeleteModal
         isOpen={isDeleteModalOpen}

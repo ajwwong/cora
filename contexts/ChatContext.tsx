@@ -234,6 +234,7 @@ interface ChatContextType {
   threads: Thread[];
   isLoadingThreads: boolean;
   isLoadingMessagesMap: Map<string, boolean>;
+  isBotProcessingMap: Map<string, boolean>;
   connectedOnce: boolean;
   reconnecting: boolean;
   createThread: (
@@ -288,6 +289,7 @@ export const ChatContext = createContext<ChatContextType>({
   threads: [],
   isLoadingThreads: true,
   isLoadingMessagesMap: new Map(),
+  isBotProcessingMap: new Map(),
   connectedOnce: false,
   reconnecting: false,
   createThread: async () => undefined,
@@ -321,6 +323,7 @@ export function ChatProvider({
   const [connectedOnce, setConnectedOnce] = useState(false);
   const [isLoadingThreads, setIsLoadingThreads] = useState(true);
   const [isLoadingMessagesMap, setIsLoadingMessagesMap] = useState<Map<string, boolean>>(new Map());
+  const [isBotProcessingMap, setIsBotProcessingMap] = useState<Map<string, boolean>>(new Map());
 
   // Threads memoized, sorted by threadOrder
   const threadsOut = useMemo(() => {
@@ -595,9 +598,13 @@ export function ChatProvider({
             error: transcriptionResponse.error,
           });
 
-          // Wait for placeholder update to propagate
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          // Wait for placeholder update to propagate - longer wait to ensure completion
+          console.log("Waiting for transcription to complete and propagate...");
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           await receiveThread(threadId);
+
+          // Additional wait to ensure UI is updated before proceeding
+          await new Promise((resolve) => setTimeout(resolve, 500));
 
           // If transcription failed, try alternative approach
           if (!transcriptionResponse.success || !transcriptionResponse.transcription) {
@@ -645,6 +652,7 @@ export function ChatProvider({
                     threadId: threadId,
                     messageId: placeholderMessageId,
                     processAudio: true,
+                    skipTextDisplay: true, // Don't display the transcription text again
                   },
                 );
 
@@ -660,7 +668,8 @@ export function ChatProvider({
             }
 
             // Refresh the thread regardless
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            console.log("Waiting for alternative processing to complete...");
+            await new Promise((resolve) => setTimeout(resolve, 2000)); // Longer wait for alternative approach
             await receiveThread(threadId);
 
             // Return placeholder ID
@@ -702,7 +711,8 @@ export function ChatProvider({
             console.error("Error generating AI response:", error);
           } finally {
             // Wait for response to propagate regardless of success/failure
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            console.log("Waiting for AI response to propagate...");
+            await new Promise((resolve) => setTimeout(resolve, 2000)); // Longer wait for AI processing
             await receiveThread(threadId);
           }
 
@@ -747,6 +757,7 @@ export function ChatProvider({
                 messageId: newCommunication.id,
                 textInput: message,
                 audioData,
+                skipMessageCreation: true, // Don't create a new message, update the existing one
               }).catch((e) => {
                 console.error("Error processing with reflection guide:", e);
                 onError?.(e as Error);
@@ -761,7 +772,7 @@ export function ChatProvider({
         throw err;
       }
     },
-    [profile, threads, threadCommMap, medplum, onError, receiveThread, processWithReflectionGuide],
+    [profile, threads, threadCommMap, medplum, onError, receiveThread],
   );
 
   const markMessageAsRead = useCallback(
@@ -825,13 +836,19 @@ export function ChatProvider({
       messageId,
       textInput,
       audioData,
+      skipMessageCreation,
     }: {
       threadId: string;
       messageId?: string;
       textInput?: string;
       audioData?: string;
+      skipMessageCreation?: boolean;
     }) => {
       if (!profile) return;
+
+      // Set processing state to true for this thread
+      setIsBotProcessingMap((prev) => new Map([...prev, [threadId, true]]));
+      console.log(`Bot processing starting for thread: ${threadId}`);
 
       try {
         console.log("Processing with reflection guide bot:", {
@@ -925,6 +942,7 @@ export function ChatProvider({
             messageId: messageId,
             textInput: textInput || (audioData ? "[Audio message]" : undefined),
             audioBinaryId: audioBinaryId,
+            skipMessageCreation: skipMessageCreation, // Don't create a new message when updating an existing one
             config: {
               voiceModel: "aura-2-cora-en",
               persona: "empathetic, supportive guide",
@@ -941,6 +959,15 @@ export function ChatProvider({
         });
 
         if (!response.success) {
+          // Find the thread first to make sure it exists
+          const thread = threads.find((t) => t.id === threadId);
+          if (!thread) {
+            console.error(
+              `Thread with ID ${threadId} not found when trying to create error message`,
+            );
+            return;
+          }
+
           // Create an error message in the thread
           await createThreadMessageComm({
             medplum,
@@ -952,7 +979,7 @@ export function ChatProvider({
             patientRef:
               profile.resourceType === "Patient"
                 ? ({ reference: `Patient/${profile.id}` } as Reference<Patient>)
-                : (threads.find((t) => t.id === threadId)?.subject as Reference<Patient>),
+                : (thread.subject as Reference<Patient>),
             message: `Sorry, I couldn't process your message. ${response.error || "Please try again later."}`,
             threadId: threadId,
           });
@@ -964,6 +991,15 @@ export function ChatProvider({
         console.error("Error processing with reflection guide:", err);
 
         try {
+          // Find the thread first to make sure it exists
+          const thread = threads.find((t) => t.id === threadId);
+          if (!thread) {
+            console.error(
+              `Thread with ID ${threadId} not found when trying to create error message`,
+            );
+            return;
+          }
+
           // Create an error message in the thread
           await createThreadMessageComm({
             medplum,
@@ -975,7 +1011,7 @@ export function ChatProvider({
             patientRef:
               profile.resourceType === "Patient"
                 ? ({ reference: `Patient/${profile.id}` } as Reference<Patient>)
-                : (threads.find((t) => t.id === threadId)?.subject as Reference<Patient>),
+                : (thread.subject as Reference<Patient>),
             message:
               "I'm sorry, I encountered an error while processing your message. Please try again later.",
             threadId: threadId,
@@ -988,15 +1024,20 @@ export function ChatProvider({
         }
 
         onError?.(err as Error);
+      } finally {
+        // Set processing state back to false for this thread
+        setIsBotProcessingMap((prev) => new Map([...prev, [threadId, false]]));
+        console.log(`Bot processing completed for thread: ${threadId}`);
       }
     },
-    [medplum, profile, receiveThread, onError, threads],
+    [medplum, profile, receiveThread, onError, threads, setIsBotProcessingMap],
   );
 
   const value = {
     threads: threadsOut,
     isLoadingThreads,
     isLoadingMessagesMap,
+    isBotProcessingMap,
     connectedOnce,
     reconnecting,
     createThread,

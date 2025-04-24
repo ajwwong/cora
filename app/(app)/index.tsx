@@ -1,12 +1,14 @@
 import { useMedplumContext } from "@medplum/react-hooks";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 
 import { CreateThreadModal } from "@/components/CreateThreadModal";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { ThreadList } from "@/components/ThreadList";
 import { ThreadListHeader } from "@/components/ThreadListHeader";
+import { WelcomeWalkthrough } from "@/components/WelcomeWalkthrough";
 import { useAvatars } from "@/hooks/useAvatars";
 import { useThreads } from "@/hooks/useThreads";
 import { PushNotificationTokenManager } from "@/utils/notifications";
@@ -24,7 +26,35 @@ export default function Index() {
   );
   const { getAvatarURL, isLoading: isAvatarsLoading } = useAvatars(avatarReferences);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const notificationManager = useMemo(() => new PushNotificationTokenManager(medplum), [medplum]);
+
+  // Check if we need to show the welcome walkthrough
+  useEffect(() => {
+    async function checkWelcomeStatus() {
+      try {
+        const hasSeenWelcome = await AsyncStorage.getItem("cora-reflection-welcomed");
+        if (hasSeenWelcome !== "true") {
+          setShowWelcome(true);
+        }
+      } catch (error) {
+        console.error("Error checking welcome status:", error);
+        // If there's an error reading from storage, default to showing the welcome
+        setShowWelcome(true);
+      }
+    }
+
+    checkWelcomeStatus();
+  }, []);
+
+  const handleWelcomeClose = useCallback(async () => {
+    setShowWelcome(false);
+    try {
+      await AsyncStorage.setItem("cora-reflection-welcomed", "true");
+    } catch (error) {
+      console.error("Error saving welcome status:", error);
+    }
+  }, []);
 
   const handleLogout = useCallback(async () => {
     // Clear push notification token
@@ -50,6 +80,7 @@ export default function Index() {
         onClose={() => setIsCreateModalOpen(false)}
         onCreateThread={createThread}
       />
+      <WelcomeWalkthrough opened={showWelcome} onClose={handleWelcomeClose} />
     </View>
   );
 }

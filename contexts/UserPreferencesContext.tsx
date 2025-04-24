@@ -29,6 +29,7 @@ export function UserPreferencesProvider({ children }: UserPreferencesProviderPro
   // Log the initial autoplay state when the provider mounts
   React.useEffect(() => {
     console.log("UserPreferencesProvider mounted with autoplay:", isAutoplayEnabled);
+    console.log("Using SecureHealth's simpler autoplay model - only global on/off control");
     if (isAutoplayEnabled) {
       console.log("AUTOPLAY ENABLED BY DEFAULT");
     }

@@ -238,36 +238,27 @@ function AudioAttachment({
     };
   }, [sound]);
 
-  // Autoplay logic - only runs once when component mounts
+  // Simpler autoplay logic based on SecureHealth's model
+  // Autoplay is now controlled by isAutoplayEnabled only, without tracking message-specific status
   useEffect(() => {
-    // Log the autoplay state for debugging
-    console.log(
-      `Audio message: autoplay enabled=${isAutoplayEnabled}, already played=${isAutoplayed}, is most recent=${isMostRecentAudioMessage}`,
-    );
+    console.log(`Audio message: autoplay enabled=${isAutoplayEnabled}`);
 
-    // Only autoplay if:
-    // 1. Autoplay is enabled in user preferences
-    // 2. The message hasn't been autoplayed yet
-    // 3. This is the most recent audio message in the thread
-    if (isAutoplayEnabled && !isAutoplayed && isMostRecentAudioMessage) {
-      console.log("Attempting to autoplay most recent audio message");
+    // Only autoplay if autoplay is enabled in user preferences
+    if (isAutoplayEnabled && isCurrentPlayingMessage === undefined) {
+      console.log("Attempting to autoplay audio message based on global setting");
 
-      // Longer delay to ensure UI and audio data are fully loaded
+      // Short delay to ensure UI and audio data are fully loaded
       const timer = setTimeout(() => {
-        console.log("Executing autoplay for most recent audio message");
+        console.log("Executing autoplay for audio message");
         handlePlay();
-      }, 1000);
+      }, 500);
 
       return () => clearTimeout(timer);
-    } else if (isAutoplayEnabled && !isAutoplayed && !isMostRecentAudioMessage) {
-      console.log("Skipping autoplay - not the most recent audio message");
-      // Still mark it as autoplayed so it won't try again
-      markAsAutoplayed?.();
     }
 
     // Always set this to false after the first render
     isFirstRender.current = false;
-  }, [isAutoplayEnabled, isAutoplayed, isMostRecentAudioMessage, handlePlay, markAsAutoplayed]);
+  }, [isAutoplayEnabled, handlePlay, isCurrentPlayingMessage]);
 
   // Calculate progress percentage
   const progress = duration > 0 ? (position / duration) * 100 : 0;

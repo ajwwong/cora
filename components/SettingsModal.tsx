@@ -53,8 +53,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </View>
 
             <Text className="text-sm text-typography-600">
-              When enabled, audio messages will automatically play when you open a thread or receive
-              new messages.
+              When enabled, audio messages will automatically play when available. This setting
+              provides a simple global control for all audio playback.
             </Text>
 
             <View className="items-center pt-4">

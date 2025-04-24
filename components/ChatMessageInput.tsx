@@ -1,5 +1,5 @@
 import { MicIcon, SendIcon, StopCircleIcon } from "lucide-react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Animated } from "react-native";
 
 import { TextareaResizable, TextareaResizableInput } from "@/components/textarea-resizable";
@@ -18,6 +18,7 @@ interface ChatMessageInputProps {
   isRecording?: boolean;
   isReflectionThread?: boolean;
   recordingDuration?: number;
+  isBotProcessing?: boolean;
 }
 
 export function ChatMessageInput({
@@ -30,15 +31,16 @@ export function ChatMessageInput({
   isRecording = false,
   isReflectionThread = false,
   recordingDuration = 0,
+  isBotProcessing = false,
 }: ChatMessageInputProps) {
   // Add a pulsing animation for recording indicator
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  
+
   // Set up pulsing animation when recording
   useEffect(() => {
     // Store animation reference for cleanup
     let animationRef: Animated.CompositeAnimation | null = null;
-    
+
     if (isRecording) {
       // Create the animation sequence but don't start it yet
       animationRef = Animated.loop(
@@ -53,16 +55,16 @@ export function ChatMessageInput({
             duration: 1500, // Slower animation (1.5s instead of 1s)
             useNativeDriver: true,
           }),
-        ])
+        ]),
       );
-      
+
       // Start the animation
       animationRef.start();
     } else {
       // Reset the animation value when not recording
       pulseAnim.setValue(1);
     }
-    
+
     // Clean up animation on unmount or when dependency changes
     return () => {
       if (animationRef) {
@@ -73,23 +75,25 @@ export function ChatMessageInput({
   }, [isRecording, pulseAnim]);
   return (
     <View className="flex-row items-center bg-background-0 p-3">
-      <Pressable 
+      <Pressable
         onPress={() => {
           console.log("Record button pressed via Pressable");
           onAttachment();
         }}
         className={`mr-3 aspect-square rounded-md p-3 ${
-          isRecording 
-            ? "bg-red-500" 
-            : "bg-gray-200"
+          isRecording ? "bg-red-500" : "bg-gray-200"
         }`}
-        disabled={isSending || disabled}
+        disabled={isSending || disabled || isBotProcessing}
         accessibilityLabel={isRecording ? "Stop recording" : "Start recording"}
         style={({ pressed }) => [
           {
-            backgroundColor: pressed 
-              ? (isRecording ? '#b71c1c' : '#e0e0e0') 
-              : (isRecording ? '#ef4444' : '#f3f4f6'),
+            backgroundColor: pressed
+              ? isRecording
+                ? "#b71c1c"
+                : "#e0e0e0"
+              : isRecording
+                ? "#ef4444"
+                : "#f3f4f6",
             transform: [{ scale: pressed ? 0.96 : 1 }],
           },
         ]}
@@ -100,31 +104,52 @@ export function ChatMessageInput({
           <MicIcon size={24} color="#374151" />
         )}
       </Pressable>
-      <View className="flex-1 relative">
+      <View className="relative flex-1">
         {isRecording && (
-          <Animated.View 
-            style={{ 
-              position: 'absolute',
+          <Animated.View
+            style={{
+              position: "absolute",
               top: 4,
               right: 8,
               zIndex: 10,
-              transform: [{ scale: pulseAnim }]
+              transform: [{ scale: pulseAnim }],
             }}
           >
-            <View className="bg-red-500 rounded-full p-1 flex-row items-center">
-              <View className="w-2 h-2 rounded-full bg-white mr-1" />
-              <Text className="text-white text-xs">{recordingDuration}s</Text>
+            <View className="flex-row items-center rounded-full bg-red-500 p-1">
+              <View className="mr-1 h-2 w-2 rounded-full bg-white" />
+              <Text className="text-xs text-white">{recordingDuration}s</Text>
             </View>
           </Animated.View>
         )}
-        <TextareaResizable size="md" className="flex-1" isDisabled={isSending || disabled || isRecording}>
+        {isBotProcessing && !isRecording && (
+          <View
+            style={{
+              position: "absolute",
+              top: 4,
+              right: 8,
+              zIndex: 10,
+            }}
+          >
+            <View className="flex-row items-center rounded-full bg-primary-500 p-1">
+              <View className="mr-1 h-2 w-2 rounded-full bg-white" />
+              <Text className="text-xs text-white">AI is responding...</Text>
+            </View>
+          </View>
+        )}
+        <TextareaResizable
+          size="md"
+          className="flex-1"
+          isDisabled={isSending || disabled || isRecording || isBotProcessing}
+        >
           <TextareaResizableInput
             placeholder={
-              isRecording 
-                ? "Recording audio..." 
-                : isSending 
-                  ? "Sending..." 
-                  : "Type a message..."
+              isRecording
+                ? "Recording audio..."
+                : isSending
+                  ? "Sending..."
+                  : isBotProcessing
+                    ? "Waiting for response..."
+                    : "Type a message..."
             }
             value={message}
             onChangeText={setMessage}
@@ -137,7 +162,7 @@ export function ChatMessageInput({
         variant="solid"
         size="md"
         onPress={() => onSend()}
-        disabled={(!message.trim() || isSending || disabled || isRecording)}
+        disabled={!message.trim() || isSending || disabled || isRecording || isBotProcessing}
         className={`ml-3 aspect-square rounded-full p-2 disabled:bg-background-300 ${
           isReflectionThread ? "bg-primary-500" : "bg-success-500"
         }`}
