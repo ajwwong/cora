@@ -1,7 +1,7 @@
 import { useMedplumContext } from "@medplum/react-hooks";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState, useContext } from "react";
+import { useCallback, useEffect, useState, useContext, useMemo } from "react";
 import { Alert, View } from "react-native";
 
 import { ChatHeader } from "@/components/ChatHeader";
@@ -50,16 +50,36 @@ export default function ThreadPage() {
     useSingleThread({
       threadId: id,
     });
-  const { getAvatarURL, isLoading: isAvatarsLoading } = useAvatars([
-    thread?.getAvatarRef({ profile }),
-  ]);
+  const avatarRef = thread?.getAvatarRef({ profile });
+  const { getAvatarURL, isLoading: isAvatarsLoading } = useAvatars(
+    avatarRef?.reference ? [avatarRef] : []
+  );
   const [message, setMessage] = useState("");
   const [isAttaching, setIsAttaching] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const { isRecording, audioBlob, recordingDuration, startRecording, stopRecording } = useAudioRecording();
+  const { isRecording, recordingDuration, startRecording, stopRecording } = useAudioRecording();
+  // Audio playback state
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [currentPlayingMessageId, setCurrentPlayingMessageId] = useState<string | null>(null);
+  const [autoplayedMessageIds, setAutoplayedMessageIds] = useState<Set<string>>(new Set());
+  
+  // Track the most recent audio message
+  const mostRecentAudioMessageId = useMemo(() => {
+    // Sort messages by sentAt date (descending) and find the first with audio
+    const sortedMessages = [...(thread?.messages || [])].sort(
+      (a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
+    );
+    const mostRecent = sortedMessages.find(msg => !!msg.audioData);
+    
+    if (mostRecent) {
+      console.log(`Most recent audio message ID: ${mostRecent.id}, sent at: ${mostRecent.sentAt}`);
+      return mostRecent.id;
+    }
+    return null;
+  }, [thread?.messages]);
   // The chatContext is not needed since we get the sendMessage function directly from useSingleThread
 
   // If thread is not loading and the thread undefined, redirect to the index page
@@ -78,6 +98,35 @@ export default function ThreadPage() {
       }
     });
   }, [thread, markMessageAsRead]);
+  
+  // Audio control handlers
+  const handleAudioPlay = useCallback((messageId: string) => {
+    // Update global audio state
+    setIsAudioPlaying(true);
+    setCurrentPlayingMessageId(messageId);
+    
+    // If any other audio is playing, it will stop itself when it sees
+    // that it's no longer the current playing message
+  }, []);
+  
+  const handleAudioStop = useCallback((messageId: string) => {
+    // Only update global state if this is the current playing message
+    if (currentPlayingMessageId === messageId) {
+      setIsAudioPlaying(false);
+      setCurrentPlayingMessageId(null);
+    }
+  }, [currentPlayingMessageId]);
+  
+  // Mark a message as autoplayed
+  const markMessageAsAutoplayed = useCallback((messageId: string) => {
+    console.log(`Thread: marking message as autoplayed: ${messageId}`);
+    setAutoplayedMessageIds(prev => {
+      const newSet = new Set(prev);
+      newSet.add(messageId);
+      console.log(`Thread: autoplayed messages count: ${newSet.size}`);
+      return newSet;
+    });
+  }, []);
 
   const handleSendMessage = useCallback(
     async (attachment?: ImagePicker.ImagePickerAsset, audioData?: string) => {
@@ -276,6 +325,14 @@ export default function ThreadPage() {
         selectedMessages={selectedMessages}
         onMessageSelect={handleMessageSelect}
         selectionEnabled={selectedMessages.size > 0}
+        // Audio control props
+        isAudioPlaying={isAudioPlaying}
+        currentPlayingMessageId={currentPlayingMessageId}
+        autoplayedMessageIds={autoplayedMessageIds}
+        mostRecentAudioMessageId={mostRecentAudioMessageId}
+        onAudioPlay={handleAudioPlay}
+        onAudioStop={handleAudioStop}
+        markMessageAsAutoplayed={markMessageAsAutoplayed}
       />
       <ChatMessageInput
         message={message}

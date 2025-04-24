@@ -1,5 +1,5 @@
 import { useMedplumContext } from "@medplum/react-hooks";
-import { EllipsisVerticalIcon, PlusIcon } from "lucide-react-native";
+import { EllipsisVerticalIcon, PlusIcon, Settings } from "lucide-react-native";
 import { useState } from "react";
 import { Platform } from "react-native";
 
@@ -9,6 +9,7 @@ import { Popover, PopoverBackdrop, PopoverBody, PopoverContent } from "@/compone
 import { Pressable } from "@/components/ui/pressable";
 import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
+import { SettingsModal } from "@/components/SettingsModal";
 
 interface ThreadListHeaderProps {
   onLogout?: () => void;
@@ -19,6 +20,7 @@ export function ThreadListHeader({ onLogout, onCreateThread }: ThreadListHeaderP
   const { profile } = useMedplumContext();
   const isPatient = profile?.resourceType === "Patient";
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   return (
     <View className="border-b border-outline-100 bg-background-0">
@@ -34,6 +36,14 @@ export function ThreadListHeader({ onLogout, onCreateThread }: ThreadListHeaderP
               <ButtonText>New Thread</ButtonText>
             </Button>
           )}
+
+          {/* Settings button */}
+          <Pressable
+            onPress={() => setIsSettingsModalOpen(true)}
+            className="rounded-full p-2 active:bg-secondary-100"
+          >
+            <Icon as={Settings} size="md" className="text-typography-700" />
+          </Pressable>
 
           <Popover
             onClose={() => setIsMenuVisible(false)}
@@ -67,6 +77,12 @@ export function ThreadListHeader({ onLogout, onCreateThread }: ThreadListHeaderP
           </Popover>
         </View>
       </View>
+
+      {/* Settings modal */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
     </View>
   );
 }

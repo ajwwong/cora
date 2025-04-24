@@ -1,9 +1,10 @@
 import { Patient, Practitioner, Reference } from "@medplum/fhirtypes";
 import { useMedplumContext } from "@medplum/react-hooks";
 import { useRouter } from "expo-router";
-import { ChevronLeftIcon, TrashIcon, UserRound, XIcon } from "lucide-react-native";
+import { ChevronLeftIcon, TrashIcon, UserRound, XIcon, VolumeIcon, Volume2Icon } from "lucide-react-native";
 import { useMemo } from "react";
 import { View } from "react-native";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 import { LoadingButtonSpinner } from "@/components/LoadingButtonSpinner";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
@@ -100,18 +101,39 @@ function SelectionInfo({ selectedCount, onDelete, isDeleting = false }: Selectio
 }
 
 function ThreadInfo({ currentThread, avatarURL }: ThreadInfoProps) {
+  const { isAutoplayEnabled, toggleAutoplay } = useUserPreferences();
+  
   return (
-    <View className="flex-1 flex-row items-center gap-3">
-      <Avatar size="md" className="border-2 border-primary-200">
-        <Icon as={UserRound} size="lg" className="stroke-typography-0" />
-        {avatarURL && <AvatarImage source={{ uri: avatarURL }} />}
-      </Avatar>
-      <View className="flex-col">
-        <Text size="md" bold className="text-typography-900">
-          {currentThread.topic}
-        </Text>
-        <ChatStatus currentThread={currentThread} />
+    <View className="flex-1 flex-row items-center justify-between">
+      <View className="flex-row items-center gap-3">
+        <Avatar size="md" className="border-2 border-primary-200">
+          <Icon as={UserRound} size="lg" className="stroke-typography-0" />
+          {avatarURL && <AvatarImage source={{ uri: avatarURL }} />}
+        </Avatar>
+        <View className="flex-col">
+          <Text size="md" bold className="text-typography-900">
+            {currentThread.topic}
+          </Text>
+          <ChatStatus currentThread={currentThread} />
+        </View>
       </View>
+      
+      {/* Only show autoplay toggle for reflection threads */}
+      {currentThread.isReflectionThread && (
+        <Pressable
+          className="mr-2 rounded-full p-2 active:bg-secondary-100"
+          onPress={toggleAutoplay}
+          accessibilityLabel={isAutoplayEnabled ? "Disable autoplay" : "Enable autoplay"}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: isAutoplayEnabled }}
+        >
+          <Icon
+            as={isAutoplayEnabled ? Volume2Icon : VolumeIcon}
+            size="md"
+            className={isAutoplayEnabled ? "text-primary-600" : "text-typography-500"}
+          />
+        </Pressable>
+      )}
     </View>
   );
 }

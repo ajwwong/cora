@@ -13,6 +13,14 @@ interface ChatMessageListProps {
   selectedMessages?: Set<string>;
   onMessageSelect?: (messageId: string) => void;
   selectionEnabled?: boolean;
+  // Audio control props
+  isAudioPlaying?: boolean;
+  currentPlayingMessageId?: string | null;
+  autoplayedMessageIds?: Set<string>;
+  mostRecentAudioMessageId?: string | null;
+  onAudioPlay?: (messageId: string) => void;
+  onAudioStop?: (messageId: string) => void;
+  markMessageAsAutoplayed?: (messageId: string) => void;
 }
 
 export function ChatMessageList({
@@ -21,6 +29,14 @@ export function ChatMessageList({
   selectedMessages = new Set(),
   onMessageSelect,
   selectionEnabled = false,
+  // Audio control props
+  isAudioPlaying,
+  currentPlayingMessageId,
+  autoplayedMessageIds = new Set(),
+  mostRecentAudioMessageId,
+  onAudioPlay,
+  onAudioStop,
+  markMessageAsAutoplayed,
 }: ChatMessageListProps) {
   const { getAvatarURL } = useAvatars(messages.map((message) => message.avatarRef));
 
@@ -32,9 +48,38 @@ export function ChatMessageList({
         selected={selectedMessages.has(message.id)}
         onSelect={onMessageSelect}
         selectionEnabled={selectionEnabled}
+        // Audio control props
+        isAudioPlaying={isAudioPlaying}
+        isCurrentPlayingMessage={currentPlayingMessageId === message.id}
+        isAutoplayed={autoplayedMessageIds.has(message.id)}
+        isMostRecentAudioMessage={message.id === mostRecentAudioMessageId}
+        onAudioPlay={() => {
+          console.log(`Audio play triggered for message: ${message.id}`);
+          onAudioPlay?.(message.id);
+        }}
+        onAudioStop={() => {
+          console.log(`Audio stop triggered for message: ${message.id}`);
+          onAudioStop?.(message.id);
+        }}
+        markAsAutoplayed={() => {
+          console.log(`Marking message as autoplayed: ${message.id}`);
+          markMessageAsAutoplayed?.(message.id);
+        }}
       />
     ),
-    [getAvatarURL, selectedMessages, onMessageSelect, selectionEnabled],
+    [
+      getAvatarURL, 
+      selectedMessages, 
+      onMessageSelect, 
+      selectionEnabled,
+      isAudioPlaying,
+      currentPlayingMessageId,
+      autoplayedMessageIds,
+      mostRecentAudioMessageId,
+      onAudioPlay,
+      onAudioStop,
+      markMessageAsAutoplayed
+    ],
   );
 
   return (

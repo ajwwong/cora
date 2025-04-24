@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { createContext, useContext } from 'react';
 import { createRadio } from '@gluestack-ui/radio';
 import { Pressable, View, Platform, Text } from 'react-native';
 import { tva } from '@gluestack-ui/nativewind-utils/tva';
@@ -12,6 +12,13 @@ import type { VariantProps } from '@gluestack-ui/nativewind-utils';
 import { PrimitiveIcon, UIIcon } from '@gluestack-ui/icon';
 
 const SCOPE = 'Radio';
+
+// Create a fallback RadioGroupContext to prevent errors
+const RadioGroupContext = createContext(null);
+const useRadioGroupContext = () => {
+  const context = useContext(RadioGroupContext);
+  return context;
+};
 
 const UIRadio = createRadio({
   Root: (Platform.OS === 'web'
@@ -99,6 +106,9 @@ type IRadioProps = Omit<React.ComponentProps<typeof UIRadio>, 'context'> &
   VariantProps<typeof radioStyle>;
 const Radio = React.forwardRef<React.ElementRef<typeof UIRadio>, IRadioProps>(
   ({ className, size = 'md', ...props }, ref) => {
+    // Always ensure we have a context
+    const contextValue = useRadioGroupContext();
+    
     return (
       <UIRadio
         className={radioStyle({ class: className, size })}
@@ -117,11 +127,13 @@ const RadioGroup = React.forwardRef<
   IRadioGroupProps
 >(({ className, ...props }, ref) => {
   return (
-    <UIRadio.Group
-      className={radioGroupStyle({ class: className })}
-      {...props}
-      ref={ref}
-    />
+    <RadioGroupContext.Provider value={props}>
+      <UIRadio.Group
+        className={radioGroupStyle({ class: className })}
+        {...props}
+        ref={ref}
+      />
+    </RadioGroupContext.Provider>
   );
 });
 

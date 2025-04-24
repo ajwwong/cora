@@ -24,6 +24,7 @@ import {
 
 import { GluestackUIProvider } from "@/components/gluestack-ui-provider";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
+import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import { oauth2ClientId } from "@/utils/medplum-oauth2";
 
 export const unstable_settings = {
@@ -65,15 +66,17 @@ export default function RootLayout() {
         <SafeAreaView className="h-full bg-background-0 md:w-full">
           <MedplumProvider medplum={medplum}>
             <NotificationsProvider>
-              <GestureHandlerRootView className="flex-1">
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    // Prevents flickering:
-                    animation: "none",
-                  }}
-                />
-              </GestureHandlerRootView>
+              <UserPreferencesProvider>
+                <GestureHandlerRootView className="flex-1">
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                      // Prevents flickering:
+                      animation: "none",
+                    }}
+                  />
+                </GestureHandlerRootView>
+              </UserPreferencesProvider>
             </NotificationsProvider>
           </MedplumProvider>
         </SafeAreaView>

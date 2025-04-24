@@ -33,8 +33,12 @@ export class ChatMessage {
   }
 
   get senderType(): "Patient" | "Practitioner" {
-    return this.originalCommunication.sender?.reference?.includes("Patient")
-      ? "Patient"
+    if (!this.originalCommunication.sender?.reference) {
+      // Default to Practitioner if reference is missing
+      return "Practitioner";
+    }
+    return this.originalCommunication.sender.reference.includes("Patient")
+      ? "Patient" 
       : "Practitioner";
   }
 
@@ -59,7 +63,10 @@ export class ChatMessage {
   }
 
   get avatarRef(): Reference<Patient | Practitioner> | undefined {
-    return this.originalCommunication.sender as Reference<Patient | Practitioner> | undefined;
+    if (!this.originalCommunication.sender?.reference) {
+      return undefined;
+    }
+    return this.originalCommunication.sender as Reference<Patient | Practitioner>;
   }
   
   // Add role property for AI compatibility
@@ -162,11 +169,17 @@ export class Thread {
   }
 
   get practitionerName(): string | undefined {
-    return this.lastProviderCommunication?.sender?.display;
+    if (!this.lastProviderCommunication?.sender) {
+      return undefined;
+    }
+    return this.lastProviderCommunication.sender.display;
   }
 
   get practitionerRef(): Reference<Practitioner> | undefined {
-    return this.lastProviderCommunication?.sender as Reference<Practitioner> | undefined;
+    if (!this.lastProviderCommunication?.sender?.reference) {
+      return undefined;
+    }
+    return this.lastProviderCommunication.sender as Reference<Practitioner>;
   }
 
   get patientName(): string | undefined {
@@ -174,7 +187,10 @@ export class Thread {
   }
 
   get patientRef(): Reference<Patient> | undefined {
-    return this.originalCommunication.subject as Reference<Patient> | undefined;
+    if (!this.originalCommunication.subject?.reference) {
+      return undefined;
+    }
+    return this.originalCommunication.subject as Reference<Patient>;
   }
 
   getAvatarRef({
@@ -186,7 +202,11 @@ export class Thread {
       return undefined;
     }
     // If the profile is a patient, we need to get the practitioner's avatar, else get the patient's avatar
-    return profile.resourceType === "Patient" ? this.practitionerRef : this.patientRef;
+    const ref = profile.resourceType === "Patient" ? this.practitionerRef : this.patientRef;
+    if (!ref?.reference) {
+      return undefined;
+    }
+    return ref;
   }
   
   // Add reflection-specific properties

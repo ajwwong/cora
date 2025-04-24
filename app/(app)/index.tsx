@@ -16,7 +16,9 @@ export default function Index() {
   const { threads, isLoading, createThread } = useThreads();
   const router = useRouter();
   const avatarReferences = useMemo(
-    () => threads.map((thread) => thread.getAvatarRef({ profile })),
+    () => threads
+      .map((thread) => thread.getAvatarRef({ profile }))
+      .filter((ref): ref is NonNullable<typeof ref> => !!ref?.reference), // Filter out undefined or invalid references
     [threads, profile],
   );
   const { getAvatarURL, isLoading: isAvatarsLoading } = useAvatars(avatarReferences);

@@ -472,10 +472,44 @@ export function ChatProvider({
       setThreadCommMap((prev) => {
         return new Map([...prev, [newThread.id!, []]]);
       });
+      
+      // Add a welcome message from the reflection guide bot
+      if (options?.isReflectionThread) {
+        try {
+          // Create a welcome message from the bot
+          const welcomeMessage = await medplum.createResource({
+            resourceType: "Communication",
+            status: "completed",
+            sent: new Date().toISOString(),
+            subject: { reference: `Patient/${profile.id}` },
+            sender: { reference: 'Practitioner/reflection-guide-bot' },
+            payload: [{ 
+              contentString: `Welcome to your reflection session on "${topic}". I'm here to guide you on a thoughtful journey of self-discovery. Feel free to share your thoughts, ask questions, or explore ideas related to this topic. You can type your messages or tap the microphone button to speak. What's been on your mind about this lately?` 
+            }],
+            partOf: [{ reference: `Communication/${newThread.id}` }]
+          });
+          
+          // Update thread map with the welcome message
+          setThreadCommMap((prev) => {
+            const existing = prev.get(newThread.id!) || [];
+            return new Map([...prev, [newThread.id!, [...existing, welcomeMessage]]]);
+          });
+          
+          // Update the last activity timestamp on the thread
+          await touchThreadLastChanged({
+            medplum,
+            threadId: newThread.id!,
+            value: welcomeMessage.sent!
+          });
+        } catch (error) {
+          console.error('Error adding welcome message:', error);
+          // Continue even if welcome message fails - user can still use the thread
+        }
+      }
 
       return newThread.id;
     },
-    [medplum, profile],
+    [medplum, profile, touchThreadLastChanged],
   );
 
   const sendMessage = useCallback(
