@@ -1,7 +1,7 @@
 import { useMedplumContext } from "@medplum/react-hooks";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState, useContext, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, View } from "react-native";
 
 import { ChatHeader } from "@/components/ChatHeader";
@@ -9,10 +9,9 @@ import { ChatMessageInput } from "@/components/ChatMessageInput";
 import { ChatMessageList } from "@/components/ChatMessageList";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { MessageDeleteModal } from "@/components/MessageDeleteModal";
+import { useAudioRecording } from "@/hooks/useAudioRecording";
 import { useAvatars } from "@/hooks/useAvatars";
 import { useSingleThread } from "@/hooks/useSingleThread";
-import { useAudioRecording } from "@/hooks/useAudioRecording";
-import { ChatContext } from "@/contexts/ChatContext";
 
 async function getAttachment() {
   try {
@@ -52,7 +51,7 @@ export default function ThreadPage() {
     });
   const avatarRef = thread?.getAvatarRef({ profile });
   const { getAvatarURL, isLoading: isAvatarsLoading } = useAvatars(
-    avatarRef?.reference ? [avatarRef] : []
+    avatarRef?.reference ? [avatarRef] : [],
   );
   const [message, setMessage] = useState("");
   const [isAttaching, setIsAttaching] = useState(false);
@@ -65,15 +64,15 @@ export default function ThreadPage() {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [currentPlayingMessageId, setCurrentPlayingMessageId] = useState<string | null>(null);
   const [autoplayedMessageIds, setAutoplayedMessageIds] = useState<Set<string>>(new Set());
-  
+
   // Track the most recent audio message
   const mostRecentAudioMessageId = useMemo(() => {
     // Sort messages by sentAt date (descending) and find the first with audio
     const sortedMessages = [...(thread?.messages || [])].sort(
-      (a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
+      (a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime(),
     );
-    const mostRecent = sortedMessages.find(msg => !!msg.audioData);
-    
+    const mostRecent = sortedMessages.find((msg) => !!msg.audioData);
+
     if (mostRecent) {
       console.log(`Most recent audio message ID: ${mostRecent.id}, sent at: ${mostRecent.sentAt}`);
       return mostRecent.id;
@@ -98,29 +97,32 @@ export default function ThreadPage() {
       }
     });
   }, [thread, markMessageAsRead]);
-  
+
   // Audio control handlers
   const handleAudioPlay = useCallback((messageId: string) => {
     // Update global audio state
     setIsAudioPlaying(true);
     setCurrentPlayingMessageId(messageId);
-    
+
     // If any other audio is playing, it will stop itself when it sees
     // that it's no longer the current playing message
   }, []);
-  
-  const handleAudioStop = useCallback((messageId: string) => {
-    // Only update global state if this is the current playing message
-    if (currentPlayingMessageId === messageId) {
-      setIsAudioPlaying(false);
-      setCurrentPlayingMessageId(null);
-    }
-  }, [currentPlayingMessageId]);
-  
+
+  const handleAudioStop = useCallback(
+    (messageId: string) => {
+      // Only update global state if this is the current playing message
+      if (currentPlayingMessageId === messageId) {
+        setIsAudioPlaying(false);
+        setCurrentPlayingMessageId(null);
+      }
+    },
+    [currentPlayingMessageId],
+  );
+
   // Mark a message as autoplayed
   const markMessageAsAutoplayed = useCallback((messageId: string) => {
     console.log(`Thread: marking message as autoplayed: ${messageId}`);
-    setAutoplayedMessageIds(prev => {
+    setAutoplayedMessageIds((prev) => {
       const newSet = new Set(prev);
       newSet.add(messageId);
       console.log(`Thread: autoplayed messages count: ${newSet.size}`);
@@ -139,15 +141,15 @@ export default function ThreadPage() {
         if (audioData) {
           // For audio messages, we want to use a different flow based on SecureHealth implementation
           console.log("Audio data detected, using transcription flow");
-          
+
           // 1. Create a placeholder message for transcription
           console.log("Creating transcription placeholder message");
           const placeholderId = await sendMessage({
             threadId: thread.id,
-            message: '[Audio message - Transcribing...]',
+            message: "[Audio message - Transcribing...]",
             skipAIProcessing: true, // Don't process this placeholder with AI
           });
-          
+
           // 2. Send the audio for transcription and processing
           console.log("Sending audio data for transcription and processing");
           await sendMessage({
@@ -168,7 +170,7 @@ export default function ThreadPage() {
           });
         }
       } catch (error) {
-        console.error('Error sending message:', error);
+        console.error("Error sending message:", error);
         setMessage(existingMessage);
         Alert.alert("Error", "Failed to send message. Please try again.");
       } finally {
@@ -180,9 +182,9 @@ export default function ThreadPage() {
 
   const handleAttachment = useCallback(async () => {
     if (!thread) return;
-    
+
     console.log("Attachment button clicked, isRecording:", isRecording);
-    
+
     // If already recording, stop recording and send audio
     if (isRecording) {
       console.log("Attempting to stop recording and process audio");
@@ -191,19 +193,19 @@ export default function ThreadPage() {
         // First stop the recording to get the blob
         const blob = await stopRecording();
         console.log("Recording stopped successfully, blob size:", blob.size);
-        
+
         // We don't need to call handleSendMessage directly here anymore
         // as we've implemented the SecureHealth style audio handling workflow
         try {
           // Convert blob to base64
           const base64Data = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
-            
+
             reader.onload = () => {
               try {
                 // Extract the base64 data (remove the data URL prefix)
                 const result = reader.result as string;
-                const base64 = result.split(',')[1];
+                const base64 = result.split(",")[1];
                 console.log("Base64 data extracted, length:", base64.length);
                 resolve(base64);
               } catch (err) {
@@ -211,16 +213,16 @@ export default function ThreadPage() {
                 reject(err);
               }
             };
-            
+
             reader.onerror = () => {
               console.error("FileReader error occurred");
               reject(new Error("FileReader error"));
             };
-            
+
             // Start reading the blob
             reader.readAsDataURL(blob);
           });
-          
+
           // handleSendMessage will automatically handle the audio transcription workflow
           // using the two-step process from SecureHealth
           console.log("Sending audio for processing...");

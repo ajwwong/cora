@@ -1,10 +1,16 @@
 import { Patient, Practitioner, Reference } from "@medplum/fhirtypes";
 import { useMedplumContext } from "@medplum/react-hooks";
 import { useRouter } from "expo-router";
-import { ChevronLeftIcon, TrashIcon, UserRound, XIcon, VolumeIcon, Volume2Icon } from "lucide-react-native";
+import {
+  ChevronLeftIcon,
+  TrashIcon,
+  UserRound,
+  Volume2Icon,
+  VolumeIcon,
+  XIcon,
+} from "lucide-react-native";
 import { useMemo } from "react";
 import { View } from "react-native";
-import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 import { LoadingButtonSpinner } from "@/components/LoadingButtonSpinner";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +18,7 @@ import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Pressable } from "@/components/ui/pressable";
 import { Text } from "@/components/ui/text";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import { Thread } from "@/models/chat";
 
 // Types
@@ -102,7 +109,7 @@ function SelectionInfo({ selectedCount, onDelete, isDeleting = false }: Selectio
 
 function ThreadInfo({ currentThread, avatarURL }: ThreadInfoProps) {
   const { isAutoplayEnabled, toggleAutoplay } = useUserPreferences();
-  
+
   return (
     <View className="flex-1 flex-row items-center justify-between">
       <View className="flex-row items-center gap-3">
@@ -117,7 +124,7 @@ function ThreadInfo({ currentThread, avatarURL }: ThreadInfoProps) {
           <ChatStatus currentThread={currentThread} />
         </View>
       </View>
-      
+
       {/* Only show autoplay toggle for reflection threads */}
       {currentThread.isReflectionThread && (
         <Pressable

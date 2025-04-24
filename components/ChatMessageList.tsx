@@ -68,9 +68,9 @@ export function ChatMessageList({
       />
     ),
     [
-      getAvatarURL, 
-      selectedMessages, 
-      onMessageSelect, 
+      getAvatarURL,
+      selectedMessages,
+      onMessageSelect,
       selectionEnabled,
       isAudioPlaying,
       currentPlayingMessageId,
@@ -78,7 +78,7 @@ export function ChatMessageList({
       mostRecentAudioMessageId,
       onAudioPlay,
       onAudioStop,
-      markMessageAsAutoplayed
+      markMessageAsAutoplayed,
     ],
   );
 

@@ -1,5 +1,5 @@
 import { ProfileResource } from "@medplum/core";
-import { Attachment, Communication, Extension, Patient, Practitioner, Reference } from "@medplum/fhirtypes";
+import { Attachment, Communication, Patient, Practitioner, Reference } from "@medplum/fhirtypes";
 
 export class ChatMessage {
   readonly originalCommunication: Communication;
@@ -38,7 +38,7 @@ export class ChatMessage {
       return "Practitioner";
     }
     return this.originalCommunication.sender.reference.includes("Patient")
-      ? "Patient" 
+      ? "Patient"
       : "Practitioner";
   }
 
@@ -68,34 +68,37 @@ export class ChatMessage {
     }
     return this.originalCommunication.sender as Reference<Patient | Practitioner>;
   }
-  
+
   // Add role property for AI compatibility
-  get role(): 'user' | 'assistant' {
-    return this.senderType === 'Patient' ? 'user' : 'assistant';
+  get role(): "user" | "assistant" {
+    return this.senderType === "Patient" ? "user" : "assistant";
   }
-  
+
   // Add audio data accessor
   get audioData(): string | undefined {
     // Check for reflection guide extension first
-    const audioExt = this.originalCommunication.extension?.find(e => 
-      e.url === 'https://progressnotes.app/fhir/StructureDefinition/reflection-guide-audio-data'
+    const audioExt = this.originalCommunication.extension?.find(
+      (e) =>
+        e.url === "https://progressnotes.app/fhir/StructureDefinition/reflection-guide-audio-data",
     );
     if (audioExt?.valueString) return audioExt.valueString;
-    
+
     // Then check for attachment
     return this.attachment?.data;
   }
-  
+
   // Add transcription placeholder detection
   get isTranscriptionPlaceholder(): boolean {
-    return this.text === '[Audio message - Transcribing...]';
+    return this.text === "[Audio message - Transcribing...]";
   }
-  
+
   get audioContentType(): string | undefined {
-    const typeExt = this.originalCommunication.extension?.find(e => 
-      e.url === 'https://progressnotes.app/fhir/StructureDefinition/reflection-guide-audio-content-type'
+    const typeExt = this.originalCommunication.extension?.find(
+      (e) =>
+        e.url ===
+        "https://progressnotes.app/fhir/StructureDefinition/reflection-guide-audio-content-type",
     );
-    return typeExt?.valueString || this.attachment?.contentType || 'audio/wav';
+    return typeExt?.valueString || this.attachment?.contentType || "audio/wav";
   }
 }
 
@@ -208,25 +211,27 @@ export class Thread {
     }
     return ref;
   }
-  
+
   // Add reflection-specific properties
   get isReflectionThread(): boolean {
-    return this.originalCommunication.extension?.some(e => 
-      e.url === 'https://progressnotes.app/fhir/StructureDefinition/reflection-thread'
-    ) ?? false;
+    return (
+      this.originalCommunication.extension?.some(
+        (e) => e.url === "https://progressnotes.app/fhir/StructureDefinition/reflection-thread",
+      ) ?? false
+    );
   }
-  
+
   get reflectionTheme(): string | undefined {
-    return this.originalCommunication.extension?.find(e => 
-      e.url === 'https://progressnotes.app/fhir/StructureDefinition/reflection-themes'
+    return this.originalCommunication.extension?.find(
+      (e) => e.url === "https://progressnotes.app/fhir/StructureDefinition/reflection-themes",
     )?.valueString;
   }
-  
+
   // For Claude messaging format
   getClaudeMessages(): { role: string; content: string }[] {
-    return this.messages.map(msg => ({
+    return this.messages.map((msg) => ({
       role: msg.role,
-      content: msg.text
+      content: msg.text,
     }));
   }
 }
