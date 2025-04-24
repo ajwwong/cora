@@ -990,7 +990,7 @@ export function ChatProvider({
         onError?.(err as Error);
       }
     },
-    [medplum, profile, receiveThread, onError, createThreadMessageComm, threads],
+    [medplum, profile, receiveThread, onError, threads],
   );
 
   const value = {
