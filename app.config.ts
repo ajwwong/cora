@@ -11,6 +11,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   jsEngine: "hermes",
+  platforms: ["android", "ios", "web"],
   notification: {
     androidMode: "collapse",
     androidCollapsedTitle: "New messages",
@@ -47,6 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-router",
+    "expo-font",
     [
       "expo-splash-screen",
       {
@@ -87,6 +89,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         color: "#ffffff",
       },
     ],
+    "expo-web-browser",
   ],
   experiments: {
     typedRoutes: true,

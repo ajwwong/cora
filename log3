@@ -1,0 +1,53 @@
+Direct Access After Starting Expo Server
+
+0. Enable Web Platform (if needed)
+# If you see "Skipping web setup" error, add web to platforms array in app.config.ts
+# Edit app.config.ts and add:
+platforms: ["android", "ios", "web"],
+
+# Or as a quick fix, you can just start with the web flag
+npx expo start --web
+
+1. Build the App First
+# First, clean and build the development client 
+npx expo prebuild --clean
+
+# Build the app (option 1 - if emulator is already set up)
+npx expo run:android --device
+
+# OR build just the APK (option 2 - if emulator issues exist)
+cd android
+./gradlew assembleDebug
+
+# Install the built APK
+wadb install android/app/build/outputs/apk/debug/app-debug.apk
+
+# Start your Expo dev server
+npx expo start --dev-client
+
+After building and running npx expo start --dev-client --lan, follow these steps to directly access your app:
+
+1. Set Up Your ADB Alias
+# Set up the Windows ADB alias 
+alias wadb='/mnt/c/Users/ajwwo/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554'
+
+
+2. Launch Your App (if not already running)
+
+# Launch the app on emulator
+wadb shell monkey -p com.vinta.healthapp 1
+
+
+3. Direct Connect to Dev Server
+
+# Get your WSL IP address
+export WSL_IP=$(ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+
+# Connect directly to your development server
+wadb shell am start -a android.intent.action.VIEW -d "exp+health-app://expo-development-client/?url=http%3A%2F%2F$WSL_IP%3A8081"
+4. Alternative Manual Connection
+If the direct intent doesn't work:
+In the emulator, press Ctrl+M to open the dev menu
+Select "Connect to development server"
+Enter your WSL IP with port: http://172.26.87.240:8081
+These steps should connect your running app directly to your development server. The advantage of using the direct intent is that it bypasses the need for manually entering the URL.

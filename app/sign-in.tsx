@@ -112,15 +112,7 @@ export default function SignIn() {
 
   const handleLogin = useCallback(() => {
     setIsLoginLoading(true);
-    console.log("Starting Medplum login process...");
-    console.log("Using client ID:", oauth2ClientId);
-    medplumLogin()
-      .then(() => console.log("Login completed successfully"))
-      .catch((error) => console.error("Login error:", error))
-      .finally(() => {
-        console.log("Login process finished");
-        setIsLoginLoading(false);
-      });
+    medplumLogin().finally(() => setIsLoginLoading(false));
   }, [medplumLogin]);
 
   return (
