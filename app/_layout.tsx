@@ -34,21 +34,48 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 polyfillMedplumWebAPIs();
+
+console.log("Initializing Medplum client with OAuth client ID:", oauth2ClientId);
+
+// Create the Medplum client
 const medplum = new MedplumClient({
   baseUrl: "https://api.progressnotes.app/",
   clientId: oauth2ClientId,
   storage: new ExpoClientStorage(),
   onUnauthenticated: () => {
+    console.log("Session is unauthenticated, redirecting to sign-in");
     Alert.alert("Your session has expired", "Please sign in again.");
     router.replace("/sign-in");
   },
 });
-initWebSocketManager(medplum);
+
+// Initialize WebSocket manager
+try {
+  initWebSocketManager(medplum);
+  console.log("WebSocket manager initialized successfully");
+} catch (error) {
+  console.error("Error initializing WebSocket manager:", error);
+}
 
 export default function RootLayout() {
   useEffect(() => {
-    // Prevents flickering:
-    requestAnimationFrame(SplashScreen.hideAsync);
+    // Ensures the splash screen always dismisses, even if other initialization fails
+    const splashTimer = setTimeout(async () => {
+      try {
+        await SplashScreen.hideAsync();
+        console.log("Splash screen hidden successfully");
+      } catch (e) {
+        console.error("Error hiding splash screen:", e);
+        // Force hide again after another delay as a fallback
+        setTimeout(() => {
+          SplashScreen.hideAsync().catch((err) =>
+            console.error("Final attempt to hide splash screen failed:", err),
+          );
+        }, 2000);
+      }
+    }, 1000);
+
+    return () => clearTimeout(splashTimer); // Clean up timeout
   }, []);
 
   useEffect(() => {
