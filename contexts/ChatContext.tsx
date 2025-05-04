@@ -528,7 +528,7 @@ export function ChatProvider({
       message,
       attachment,
       audioData,
-      processWithAI = false,
+      processWithAI = true,
       skipAIProcessing = false,
       placeholderMessageId,
     }: {

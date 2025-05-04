@@ -1,0 +1,11 @@
+"expo": {
+  "sdkVersion": "52.0.0",
+  "platforms": ["ios", "android"],
+  "name": "your-app-name",
+  "version": "1.0.0",
+  "extra": {
+    "eas": {
+      "projectId": "your-project-id"
+    }
+  }
+}

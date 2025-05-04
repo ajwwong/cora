@@ -13,7 +13,7 @@ interface WelcomeWalkthroughProps {
 }
 
 /**
- * Multi-step welcome walkthrough for first-time users of the Reflection Guide
+ * Multi-step welcome walkthrough for first-time users of the Reflection Guide app
  */
 export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps) {
   const [step, setStep] = useState(0);
@@ -53,16 +53,16 @@ export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps)
 
               <View className="mt-4">
                 <View className="mb-2 flex-row items-center">
-                  <MessageSquareIcon size={18} color="#4B5563" className="mr-2" />
-                  <Text className="text-sm">Type messages or record audio</Text>
+                  <MessageSquareIcon size={18} color="#4B5563" />
+                  <Text className="ml-2 text-sm">Type messages or record audio</Text>
                 </View>
                 <View className="mb-2 flex-row items-center">
-                  <LockIcon size={18} color="#4B5563" className="mr-2" />
-                  <Text className="text-sm">Private and secure conversations</Text>
+                  <LockIcon size={18} color="#4B5563" />
+                  <Text className="ml-2 text-sm">Private and secure conversations</Text>
                 </View>
                 <View className="flex-row items-center">
-                  <AlertCircleIcon size={18} color="#4B5563" className="mr-2" />
-                  <Text className="text-sm">Supportive AI guidance for reflection</Text>
+                  <AlertCircleIcon size={18} color="#4B5563" />
+                  <Text className="ml-2 text-sm">Supportive AI guidance for reflection</Text>
                 </View>
               </View>
             </View>
@@ -110,18 +110,18 @@ export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps)
 
               <View className="mb-4 mt-2">
                 <View className="mb-2 flex-row items-center">
-                  <MicIcon size={18} color="#4B5563" className="mr-2" />
-                  <Text className="text-sm">
+                  <MicIcon size={18} color="#4B5563" />
+                  <Text className="ml-2 text-sm">
                     Expressing emotions that are hard to put into words
                   </Text>
                 </View>
                 <View className="mb-2 flex-row items-center">
-                  <MicIcon size={18} color="#4B5563" className="mr-2" />
-                  <Text className="text-sm">When you prefer speaking over typing</Text>
+                  <MicIcon size={18} color="#4B5563" />
+                  <Text className="ml-2 text-sm">When you prefer speaking over typing</Text>
                 </View>
                 <View className="mb-2 flex-row items-center">
-                  <MicIcon size={18} color="#4B5563" className="mr-2" />
-                  <Text className="text-sm">Capturing thoughts quickly on the go</Text>
+                  <MicIcon size={18} color="#4B5563" />
+                  <Text className="ml-2 text-sm">Capturing thoughts quickly on the go</Text>
                 </View>
               </View>
 
@@ -148,18 +148,18 @@ export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps)
 
               <View className="mb-4 mt-2">
                 <View className="mb-2 flex-row items-center">
-                  <LockIcon size={18} color="#4B5563" className="mr-2" />
-                  <Text className="text-sm">Your conversations are private and encrypted</Text>
+                  <LockIcon size={18} color="#4B5563" />
+                  <Text className="ml-2 text-sm">Your conversations are private and encrypted</Text>
                 </View>
                 <View className="mb-2 flex-row items-center">
-                  <LockIcon size={18} color="#4B5563" className="mr-2" />
-                  <Text className="text-sm">
+                  <LockIcon size={18} color="#4B5563" />
+                  <Text className="ml-2 text-sm">
                     Your therapist may review these reflections as part of your care
                   </Text>
                 </View>
                 <View className="mb-2 flex-row items-center">
-                  <LockIcon size={18} color="#4B5563" className="mr-2" />
-                  <Text className="text-sm">
+                  <LockIcon size={18} color="#4B5563" />
+                  <Text className="ml-2 text-sm">
                     The AI does not store or use your data for training
                   </Text>
                 </View>
@@ -173,7 +173,7 @@ export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps)
                   your therapist or emergency services.
                 </Text>
                 <Text className="text-sm">
-                  • This tool supplements but does not replace professional therapy.
+                  • This tool is not a replacement for professional therapy.
                 </Text>
               </View>
             </View>
