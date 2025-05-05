@@ -1,0 +1,13 @@
+android/
+android/app/build/
+ios/
+.gradle/
+node_modules/
+coverage/
+build/
+dist/
+*.apk
+*.aab
+*.ipa
+*.so
+*.a

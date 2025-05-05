@@ -60,9 +60,6 @@ ios/
 *.ipa
 .gradle/
 
-# Bolt IDE files
-.bolt/
-
 # Temporary files
 *.log
 *.tmp
