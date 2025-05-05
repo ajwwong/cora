@@ -1,3 +1,4 @@
+// Load StackBlitz environment variables first when in web environments
 import "@/global.css";
 import "expo-dev-client";
 
@@ -26,6 +27,12 @@ import { GluestackUIProvider } from "@/components/gluestack-ui-provider";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import { oauth2ClientId } from "@/utils/medplum-oauth2";
+
+if (typeof window !== "undefined") {
+  import("../stackblitz-env.js").catch((err) =>
+    console.warn("Could not load StackBlitz environment:", err),
+  );
+}
 
 export const unstable_settings = {
   initialRouteName: "/(app)",
