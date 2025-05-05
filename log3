@@ -8,7 +8,7 @@ platforms: ["android", "ios", "web"],
 # Or as a quick fix, you can just start with the web flag
 npx expo start --web
 
-1. Build the App First
+#1. Build the App First
 # First, clean and build the development client 
 npx expo prebuild --clean
 
@@ -25,9 +25,9 @@ wadb install android/app/build/outputs/apk/debug/app-debug.apk
 # Start your Expo dev server
 npx expo start --dev-client
 
-After building and running npx expo start --dev-client --lan, follow these steps to directly access your app:
+#After building and running npx expo start --dev-client --lan, follow these steps to directly access your app:
 
-1. Set Up Your ADB Alias
+#1. Set Up Your ADB Alias
 # Set up the Windows ADB alias 
 alias wadb='/mnt/c/Users/ajwwo/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554'
 
