@@ -1,6 +1,10 @@
 {
   "expo": {
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "name": "feelheard-me",
     "slug": "feelheard-me",
     "version": "1.0.0",
@@ -9,7 +13,9 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true
     },
@@ -25,6 +31,7 @@
       "eas": {
         "projectId": "your-project-id"
       }
-    }
+    },
+    "owner": "ajwwong"
   }
 }

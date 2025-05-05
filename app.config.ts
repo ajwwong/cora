@@ -3,7 +3,7 @@ import { ConfigContext, ExpoConfig } from "expo/config";
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "health-app",
-  slug: "health-app",
+  slug: "feelheard-me",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
@@ -99,7 +99,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       origin: false,
     },
     eas: {
-      projectId: "b90347a9-ca6d-4949-9545-82fcce6ed6aa",
+      projectId: "222a9bab-0916-46bd-82f9-760a0ccd59d3",
     },
   },
 });

@@ -51,3 +51,19 @@ _dev/
 # Pre-build files
 android/
 ios/
+
+# Native libraries and build artifacts
+*.so
+*.a
+*.apk
+*.aab
+*.ipa
+.gradle/
+
+# Bolt IDE files
+.bolt/
+
+# Temporary files
+*.log
+*.tmp
+.cache/
