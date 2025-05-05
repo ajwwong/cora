@@ -1,0 +1,51 @@
+i get the message "incorrect redirect_uri" after i click /root/mts/v1/cora/app/sign-in.tsx "Connect to Medplum but my Redirect URI is set to this in the medplum settings, I believe. 
+exp://172.26.87.240:8081
+
+<think>
+You're getting an "incorrect redirect_uri" error when trying to authenticate with Medplum. This typically happens when the redirect URI configured in your Medplum OAuth settings doesn't match the one being used by your application.
+Let's analyze your code:
+In your sign-in.tsx file, you're using makeRedirectUri() from expo-auth-session:
+The makeRedirectUri() function dynamically generates a redirect URI based on your Expo environment. By default, it will create something like:
+In development: exp://EXPO_IP:PORT/--/*
+In production: A scheme based on your app's name (like com.yourapp://*)The issue is that you've configured exp://172.26.87.240:8081 in Medplum's settings, but your app is likely generating a slightly different redirect URI.To fix this, you should:1. Use makeRedirectUri() with explicit options to match your Medplum configuration2. Or, check the exact URI being generated and update your Medplum configurationLet me prepare a recommendation.</think># Fix the Redirect URI Mismatch ErrorYou're encountering a classic OAuth2 error - the redirect URI used in your code doesn't exactly match what's configured in Medplum. Let's fix it:## Solution - Update Your Code:language=tsx:mts/v1/cora/app/sign-in.tsx
+// ... existing code ...
+const medplumLogin = useCallback(async () => {
+// Log the exact redirect URI that will be used
+const redirectUri = makeRedirectUri({
+scheme: "exp",
+path: "--/",
+});
+console.log("Using redirect URI:", redirectUri);
+const loginRequest = new AuthRequest({
+clientId: oauth2ClientId,
+usePKCE: true,
+// Use explicit configuration instead of default
+redirectUri: redirectUri,
+scopes: ["openid"],
+});
+// ... rest of the function remains the same
+
+
+The key issue is that `makeRedirectUri()` without parameters generates a URI that includes additional path components like `/--/` that might not be in your Medplum configuration.
+
+## After Making This Change:
+
+1. **Start your Metro server again** with:
+   ```bash
+   cd /root/mts/v1/cora
+   npx expo start --dev-client --lan --clear
+   ```
+
+2. **Launch your app**:
+   ```bash
+   alias wadb='/mnt/c/Users/ajwwo/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554'
+   wadb shell monkey -p com.vinta.healthapp 1
+   ```
+
+3. **Connect to your dev server** (if needed)
+
+4. When you click "Connect to Medplum", check your console logs to see the exact redirect URI being used.
+
+5. **Make sure this exact URI is configured in Medplum** (including any path components like `/--/` that might be generated)
+
+The OAuth2 specification requires an exact character-for-character match between the redirect URI provided during authorization and what's configured with the auth provider.
