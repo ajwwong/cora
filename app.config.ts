@@ -40,6 +40,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     package: "com.vinta.healthapp",
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON || "./_dev/google-services.json",
+    edgeToEdgeEnabled: true,
   },
   web: {
     bundler: "metro",
