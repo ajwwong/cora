@@ -305,16 +305,16 @@ Cora will implement in-app purchases using a hybrid approach based on the feel2 
    
    export const PRODUCT_IDS = {
      [PurchaseType.MONTHLY_SUBSCRIPTION]: {
-       ios: 'com.vinta.healthapp.monthly',
-       android: 'com.vinta.healthapp.monthly',
+       ios: 'me.feelheard.monthly',
+       android: 'me.feelheard.monthly',
      },
      [PurchaseType.ANNUAL_SUBSCRIPTION]: {
-       ios: 'com.vinta.healthapp.annual',
-       android: 'com.vinta.healthapp.annual',
+       ios: 'me.feelheard.annual',
+       android: 'me.feelheard.annual',
      },
      [PurchaseType.LIFETIME_ACCESS]: {
-       ios: 'com.vinta.healthapp.lifetime',
-       android: 'com.vinta.healthapp.lifetime',
+       ios: 'me.feelheard.lifetime',
+       android: 'me.feelheard.lifetime',
      },
    };
    ```

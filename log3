@@ -19,6 +19,13 @@ npx expo run:android --device
 cd android
 ./gradlew assembleDebug
 
+#1. Set Up Your ADB Alias
+
+# Set up the Windows ADB alias 
+cd /root/mts/v1/cora
+alias wadb='/mnt/c/Users/ajwwo/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554'
+
+
 # Install the built APK
 wadb install android/app/build/outputs/apk/debug/app-debug.apk
 
@@ -27,12 +34,12 @@ npx expo start --dev-client
 
 #After building and running npx expo start --dev-client --lan, follow these steps to directly access your app:
 
-#1. Set Up Your ADB Alias
+
 # Set up the Windows ADB alias 
 alias wadb='/mnt/c/Users/ajwwo/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554'
 
 # Launch the app on emulator
-wadb shell monkey -p com.vinta.healthapp 1
+wadb shell monkey -p me.feelheard 1
 
 # Get your WSL IP address
 export WSL_IP=$(ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')

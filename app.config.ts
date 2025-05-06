@@ -21,7 +21,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     config: {
       usesNonExemptEncryption: false,
     },
-    bundleIdentifier: "com.vinta.healthapp",
+    bundleIdentifier: "me.feelheard",
     infoPlist: {
       UIBackgroundModes: ["remote-notification"],
     },
@@ -38,7 +38,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "android.permission.POST_NOTIFICATIONS",
       "android.permission.USE_FULL_SCREEN_INTENT",
     ],
-    package: "com.vinta.healthapp",
+    package: "me.feelheard",
     googleServicesFile: process.env.GOOGLE_SERVICES_JSON || "./_dev/google-services.json",
     edgeToEdgeEnabled: true,
   },
@@ -81,6 +81,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         supportsBackgroundPlayback: true,
         supportsPictureInPicture: true,
+      },
+    ],
+    [
+      "expo-audio",
+      {
+        microphonePermission: "The app needs microphone access to record audio messages.",
       },
     ],
     [

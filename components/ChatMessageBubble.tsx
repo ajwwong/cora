@@ -1,5 +1,5 @@
 import { useMedplumProfile } from "@medplum/react-hooks";
-import { Audio } from "expo-av";
+import { Audio } from "expo-av"; // Keep using expo-av for now
 import { useVideoPlayer } from "expo-video";
 import { VideoView } from "expo-video";
 import { CirclePlay, FileDown, Headphones, Mic, UserRound } from "lucide-react-native";
@@ -18,6 +18,17 @@ import type { ChatMessage } from "@/models/chat";
 import type { AttachmentWithUrl } from "@/types/attachment";
 import { formatTime } from "@/utils/datetime";
 import { isMediaExpired, mediaKey, shareFile } from "@/utils/media";
+
+interface AudioAttachmentProps {
+  audioData: string;
+  isAudioPlaying?: boolean;
+  isCurrentPlayingMessage?: boolean;
+  isAutoplayed?: boolean;
+  isMostRecentAudioMessage?: boolean;
+  onAudioPlay?: () => void;
+  onAudioStop?: () => void;
+  markAsAutoplayed?: () => void;
+}
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;

@@ -39,7 +39,7 @@ The key issue is that `makeRedirectUri()` without parameters generates a URI tha
 2. **Launch your app**:
    ```bash
    alias wadb='/mnt/c/Users/ajwwo/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554'
-   wadb shell monkey -p com.vinta.healthapp 1
+   wadb shell monkey -p me.feelheard 1
    ```
 
 3. **Connect to your dev server** (if needed)

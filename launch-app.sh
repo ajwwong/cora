@@ -8,8 +8,8 @@ $WADB devices
 
 # Launch the app
 echo "Launching app on emulator..."
-$WADB shell monkey -p com.vinta.healthapp 1
+$WADB shell monkey -p me.feelheard 1
 
 echo "App should now be launched on your emulator"
 echo "If you're seeing only the splash screen, check the logs with:"
-echo "$WADB logcat *:E | grep 'Medplum\|progressnotes\|com.vinta.healthapp'"
+echo "$WADB logcat *:E | grep 'Medplum\|progressnotes\|me.feelheard'"
