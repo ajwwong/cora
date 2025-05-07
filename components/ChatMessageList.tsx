@@ -41,32 +41,39 @@ export function ChatMessageList({
   const { getAvatarURL } = useAvatars(messages.map((message) => message.avatarRef));
 
   const renderItem: ListRenderItem<ChatMessage> = useCallback(
-    ({ item: message }) => (
-      <ChatMessageBubble
-        message={message}
-        avatarURL={getAvatarURL(message.avatarRef)}
-        selected={selectedMessages.has(message.id)}
-        onSelect={onMessageSelect}
-        selectionEnabled={selectionEnabled}
-        // Audio control props
-        isAudioPlaying={isAudioPlaying}
-        isCurrentPlayingMessage={currentPlayingMessageId === message.id}
-        isAutoplayed={autoplayedMessageIds.has(message.id)}
-        isMostRecentAudioMessage={message.id === mostRecentAudioMessageId}
-        onAudioPlay={() => {
-          console.log(`Audio play triggered for message: ${message.id}`);
-          onAudioPlay?.(message.id);
-        }}
-        onAudioStop={() => {
-          console.log(`Audio stop triggered for message: ${message.id}`);
-          onAudioStop?.(message.id);
-        }}
-        markAsAutoplayed={() => {
-          console.log(`Marking message as autoplayed: ${message.id}`);
-          markMessageAsAutoplayed?.(message.id);
-        }}
-      />
-    ),
+    ({ item: message, index }) => {
+      // Pass the entire messages array and current index to let the component handle its own logic
+      return (
+        <ChatMessageBubble
+          message={message}
+          avatarURL={getAvatarURL(message.avatarRef)}
+          selected={selectedMessages.has(message.id)}
+          onSelect={onMessageSelect}
+          selectionEnabled={selectionEnabled}
+          // Audio control props
+          isAudioPlaying={isAudioPlaying}
+          isCurrentPlayingMessage={currentPlayingMessageId === message.id}
+          isAutoplayed={autoplayedMessageIds.has(message.id)}
+          isMostRecentAudioMessage={message.id === mostRecentAudioMessageId}
+          onAudioPlay={() => {
+            console.log(`Audio play triggered for message: ${message.id}`);
+            onAudioPlay?.(message.id);
+          }}
+          onAudioStop={() => {
+            console.log(`Audio stop triggered for message: ${message.id}`);
+            onAudioStop?.(message.id);
+          }}
+          markAsAutoplayed={() => {
+            console.log(`Marking message as autoplayed: ${message.id}`);
+            markMessageAsAutoplayed?.(message.id);
+          }}
+          // Timestamp context - pass the entire messages array and index
+          allMessages={messages}
+          messageIndex={index}
+          isInverted={true} // Indicate that this is an inverted FlatList
+        />
+      );
+    },
     [
       getAvatarURL,
       selectedMessages,
@@ -84,7 +91,10 @@ export function ChatMessageList({
 
   return (
     <FlatList
-      className="flex-1 bg-background-50"
+      style={{
+        flex: 1,
+        backgroundColor: "#f8f8fc", // Light purplish background
+      }}
       data={[...messages].reverse()}
       renderItem={renderItem}
       keyExtractor={(message) => message.id}

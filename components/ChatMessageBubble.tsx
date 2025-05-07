@@ -1,33 +1,23 @@
 import { useMedplumProfile } from "@medplum/react-hooks";
-import { Audio } from "expo-av"; // Keep using expo-av for now
+// Keep using expo-av for now
 import { useVideoPlayer } from "expo-video";
 import { VideoView } from "expo-video";
-import { CirclePlay, FileDown, Headphones, Mic } from "lucide-react-native";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { CirclePlay, FileDown } from "lucide-react-native";
+import { memo, useCallback, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Alert } from "react-native";
 
 import { FullscreenImage } from "@/components/FullscreenImage";
 import { LoadingButtonSpinner } from "@/components/LoadingButtonSpinner";
+import { MinimalAudioPlayer } from "@/components/MinimalAudioPlayer";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import type { ChatMessage } from "@/models/chat";
 import type { AttachmentWithUrl } from "@/types/attachment";
-import { formatTime } from "@/utils/datetime";
 import { isMediaExpired, mediaKey, shareFile } from "@/utils/media";
 
-interface AudioAttachmentProps {
-  audioData: string;
-  isAudioPlaying?: boolean;
-  isCurrentPlayingMessage?: boolean;
-  isAutoplayed?: boolean;
-  isMostRecentAudioMessage?: boolean;
-  onAudioPlay?: () => void;
-  onAudioStop?: () => void;
-  markAsAutoplayed?: () => void;
-}
+// AudioAttachmentProps removed as we now use MinimalAudioPlayer
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -103,201 +93,7 @@ const VideoAttachment = memo(
 );
 VideoAttachment.displayName = "VideoAttachment";
 
-// This interface is already defined on lines 22-31
-
-function AudioAttachment({
-  audioData,
-  isAudioPlaying,
-  isCurrentPlayingMessage,
-  isAutoplayed,
-  isMostRecentAudioMessage,
-  onAudioPlay,
-  onAudioStop,
-  markAsAutoplayed,
-}: AudioAttachmentProps) {
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const { isAutoplayEnabled } = useUserPreferences();
-  const isFirstRender = useRef(true);
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Local playing state synced with thread-level state
-  const isPlaying = isCurrentPlayingMessage && isAudioPlaying;
-
-  // Define handlePlay first so we can use it in useEffect
-  const handlePlay = useCallback(async () => {
-    // If already playing, stop it
-    if (isPlaying && sound) {
-      await sound.stopAsync();
-      onAudioStop?.();
-
-      // Clear interval if we're stopping
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-
-      return;
-    }
-
-    // If another audio is playing, thread controller will handle stopping it
-
-    setIsLoading(true);
-    try {
-      // If we don't have a sound object yet, create one
-      if (!sound) {
-        // Convert base64 to URI
-        const base64Audio = `data:audio/mp3;base64,${audioData}`;
-        const { sound: newSound } = await Audio.Sound.createAsync(
-          { uri: base64Audio },
-          { shouldPlay: true },
-          (status) => {
-            if (status.isLoaded && status.positionMillis === status.durationMillis) {
-              onAudioStop?.();
-              setPosition(0);
-
-              // Clear interval when finished
-              if (progressIntervalRef.current) {
-                clearInterval(progressIntervalRef.current);
-                progressIntervalRef.current = null;
-              }
-            }
-          },
-        );
-
-        // Get the duration
-        const status = await newSound.getStatusAsync();
-        if (status.isLoaded) {
-          setDuration(status.durationMillis || 0);
-        }
-
-        setSound(newSound);
-
-        // Start the progress interval
-        progressIntervalRef.current = setInterval(async () => {
-          if (newSound) {
-            const status = await newSound.getStatusAsync();
-            if (status.isLoaded) {
-              setPosition(status.positionMillis);
-            }
-          }
-        }, 100);
-      } else {
-        // Otherwise, play the existing sound
-        await sound.playAsync();
-
-        // Start the progress interval
-        progressIntervalRef.current = setInterval(async () => {
-          if (sound) {
-            const status = await sound.getStatusAsync();
-            if (status.isLoaded) {
-              setPosition(status.positionMillis);
-            }
-          }
-        }, 100);
-      }
-
-      // Notify thread controller that this audio is playing
-      onAudioPlay?.();
-      // Mark this as autoplayed so it won't autoplay again
-      markAsAutoplayed?.();
-    } catch (error) {
-      console.error("Error playing audio:", error);
-      Alert.alert("Error", "Failed to play audio. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [audioData, sound, isPlaying, onAudioPlay, onAudioStop, markAsAutoplayed]);
-
-  // Stop playback if this message was playing but is no longer the current playing message
-  useEffect(() => {
-    if (sound && !isCurrentPlayingMessage && isPlaying) {
-      sound.stopAsync();
-
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-    }
-  }, [sound, isCurrentPlayingMessage, isPlaying]);
-
-  // Cleanup function for the sound object and interval
-  useEffect(() => {
-    return () => {
-      // Clean up sound
-      if (sound) {
-        sound.unloadAsync();
-      }
-
-      // Clean up interval
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-    };
-  }, [sound]);
-
-  // Simpler autoplay logic based on SecureHealth's model
-  // Autoplay is now controlled by isAutoplayEnabled only, without tracking message-specific status
-  useEffect(() => {
-    console.log(`Audio message: autoplay enabled=${isAutoplayEnabled}`);
-
-    // Only autoplay if autoplay is enabled in user preferences
-    if (isAutoplayEnabled && isCurrentPlayingMessage === undefined) {
-      console.log("Attempting to autoplay audio message based on global setting");
-
-      // Short delay to ensure UI and audio data are fully loaded
-      const timer = setTimeout(() => {
-        console.log("Executing autoplay for audio message");
-        handlePlay();
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-
-    // Always set this to false after the first render
-    isFirstRender.current = false;
-  }, [isAutoplayEnabled, handlePlay, isCurrentPlayingMessage]);
-
-  // Calculate progress percentage
-  const progress = duration > 0 ? (position / duration) * 100 : 0;
-
-  return (
-    <View className="my-1 flex-row items-center rounded-xl bg-background-100 p-2">
-      {/* Play/Pause Button */}
-      <Pressable
-        onPress={handlePlay}
-        disabled={isLoading}
-        className={`mr-3 h-8 w-8 items-center justify-center rounded-full ${isPlaying ? "bg-primary-500" : "bg-primary-400"}`}
-      >
-        {isLoading ? (
-          <LoadingButtonSpinner />
-        ) : (
-          <Icon as={isPlaying ? Headphones : Mic} size="sm" className="text-typography-0" />
-        )}
-      </Pressable>
-
-      {/* Progress Bar and Timer */}
-      <View className="flex-1">
-        {/* Waveform/Progress Bar */}
-        <View className="mb-1.5 h-1.5 overflow-hidden rounded-full bg-background-200">
-          <View className="h-full rounded-full bg-primary-500" style={{ width: `${progress}%` }} />
-        </View>
-
-        {/* Duration Text */}
-        <View className="flex-row justify-between">
-          <Text className="text-xs text-typography-500">
-            {`${Math.floor(position / 60000)}:${String(Math.floor((position / 1000) % 60)).padStart(2, "0")}`}
-          </Text>
-          <Text className="text-xs text-typography-500">
-            {`${Math.floor(duration / 60000)}:${String(Math.floor((duration / 1000) % 60)).padStart(2, "0")}`}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
-}
+// AudioAttachment function removed as we now use MinimalAudioPlayer
 
 function FileAttachment({ attachment }: { attachment: AttachmentWithUrl }) {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -346,7 +142,15 @@ export function ChatMessageBubble({
   onAudioPlay,
   onAudioStop,
   markAsAutoplayed,
-}: ChatMessageBubbleProps) {
+  // New props for timestamp context - feel2 style direct access
+  allMessages,
+  messageIndex,
+  isInverted = false,
+}: ChatMessageBubbleProps & {
+  allMessages: ChatMessage[];
+  messageIndex: number;
+  isInverted?: boolean;
+}) {
   const profile = useMedplumProfile();
   const isPatientMessage = message.senderType === "Patient";
   const isCurrentUser = message.senderType === profile?.resourceType;
@@ -357,20 +161,17 @@ export function ChatMessageBubble({
   // Check if this is a message from the AI assistant
   const isAIMessage = !isCurrentUser && !isPatientMessage;
 
-  // For determining if this is a new message (for autoplay)
-  // const isRecentMessage = Date.now() - new Date(message.sentAt).getTime() < 10000; // Within last 10 seconds
-
   const wrapperAlignment = isCurrentUser ? "self-end" : "self-start";
   const bubbleColor = isPatientMessage
-    ? "bg-secondary-200"
+    ? "bg-[#f8e6df]" // Muted, lighter pink for patient messages
     : isAIMessage
-      ? "bg-primary-50"
-      : "bg-tertiary-200";
+      ? "bg-[#f0f0f0]" // Match bolt-expo AI bubble color
+      : "bg-[#e8e0f0]"; // Muted, lighter purple for user messages
   const borderColor = isPatientMessage
-    ? "border-secondary-300"
+    ? "border-[#edd6cc]" // Slightly darker border for patient messages
     : isAIMessage
-      ? "border-primary-200"
-      : "border-tertiary-300";
+      ? "border-[#e0e0e0]" // Lighter border for AI messages
+      : "border-[#d9cce3]"; // Slightly darker border for user messages
   const flexDirection = isCurrentUser ? "flex-row-reverse" : "flex-row";
 
   const handleLongPress = useCallback(() => {
@@ -395,6 +196,10 @@ export function ChatMessageBubble({
     (messageStatus === "in-progress" && hasAudio) || isTranscriptionPlaceholder;
   const isProcessing = messageStatus === "in-progress" && !hasAudio && !isTranscriptionPlaceholder;
 
+  // Disabling timestamp calculation to improve performance
+  const shouldShowTimestamp = false;
+  const formattedTimestamp = null;
+
   return (
     <Pressable
       className={`relative w-full ${wrapperAlignment}`}
@@ -406,9 +211,17 @@ export function ChatMessageBubble({
       {selected && <View className="absolute inset-0 bg-background-100" />}
 
       <View className={`max-w-[80%] ${wrapperAlignment} p-2`}>
+        {/* Timestamp display - disabled for performance */}
+
         <View
-          style={{ width: "100%" }}
-          className={`rounded-xl border p-3 ${bubbleColor} ${borderColor} ${
+          style={{
+            width: "100%",
+            borderRadius: 20,
+            borderTopLeftRadius: isCurrentUser ? 20 : 4,
+            borderTopRightRadius: isCurrentUser ? 4 : 20,
+            padding: 12,
+          }}
+          className={`border ${bubbleColor} ${borderColor} ${
             selected ? "border-primary-500" : ""
           } overflow-hidden`}
         >
@@ -430,10 +243,35 @@ export function ChatMessageBubble({
             </View>
           )}
 
-          {/* Audio attachment */}
+          {/* Status indicators */}
+          {isTranscribing && (
+            <View className="flex-row items-center gap-2">
+              <LoadingButtonSpinner />
+              <Text className="text-sm italic text-typography-500">Transcribing audio...</Text>
+            </View>
+          )}
+
+          {/* Message text - don't show if it's just the placeholder text */}
+          {Boolean(message.text) && !isTranscriptionPlaceholder && (
+            <Text
+              style={{
+                maxWidth: "100%",
+                flexShrink: 1,
+                fontFamily: "Nunito-Regular",
+                fontSize: 16,
+                lineHeight: 24,
+                color: "#333", // Dark text for all messages for better readability
+              }}
+              className="max-w-full"
+            >
+              {message.text}
+            </Text>
+          )}
+
+          {/* Audio attachment - back to its original position in bottom line */}
           {hasAudio && (
-            <View className="mb-1">
-              <AudioAttachment
+            <View className="mt-2">
+              <MinimalAudioPlayer
                 audioData={message.audioData!}
                 isAudioPlaying={isAudioPlaying}
                 isCurrentPlayingMessage={isCurrentPlayingMessage}
@@ -445,31 +283,6 @@ export function ChatMessageBubble({
               />
             </View>
           )}
-
-          {/* Status indicators */}
-          {isTranscribing && (
-            <View className="mb-2 flex-row items-center gap-2">
-              <LoadingButtonSpinner />
-              <Text className="text-sm italic text-typography-500">Transcribing audio...</Text>
-            </View>
-          )}
-          {/* Processing indicator removed */}
-
-          {/* Message text - don't show if it's just the placeholder text */}
-          {Boolean(message.text) && !isTranscriptionPlaceholder && (
-            <Text
-              style={{
-                maxWidth: "100%",
-                flexShrink: 1,
-              }}
-              className="max-w-full text-typography-900"
-            >
-              {message.text}
-            </Text>
-          )}
-
-          {/* Timestamp */}
-          <Text className="mt-1 text-xs text-typography-600">{formatTime(message.sentAt)}</Text>
         </View>
       </View>
     </Pressable>

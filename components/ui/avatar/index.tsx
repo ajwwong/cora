@@ -21,7 +21,7 @@ const UIAvatar = createAvatar({
 });
 
 const avatarStyle = tva({
-  base: 'rounded-full justify-center items-center relative bg-primary-600 group-[.avatar-group]/avatar-group:-ml-2.5',
+  base: 'rounded-full justify-center items-center relative bg-[#a6c1d6] group-[.avatar-group]/avatar-group:-ml-2.5',
   variants: {
     size: {
       'xs': 'w-6 h-6',
@@ -35,7 +35,7 @@ const avatarStyle = tva({
 });
 
 const avatarFallbackTextStyle = tva({
-  base: 'text-typography-0 font-semibold overflow-hidden text-transform:uppercase web:cursor-default',
+  base: 'text-[#333] font-semibold overflow-hidden text-transform:uppercase web:cursor-default',
 
   parentVariants: {
     size: {

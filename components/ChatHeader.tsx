@@ -149,30 +149,7 @@ function ChatStatus({ currentThread }: ChatStatusProps) {
   const { profile } = useMedplumContext();
   const isPatient = profile?.resourceType === "Patient";
 
-  // Calculate conversation duration
-  const getConversationDuration = () => {
-    if (!currentThread.createdAt) return "New";
-
-    const startDate = new Date(currentThread.createdAt);
-    const now = new Date();
-    const diffInMs = now.getTime() - startDate.getTime();
-
-    // Less than an hour
-    if (diffInMs < 60 * 60 * 1000) {
-      const minutes = Math.floor(diffInMs / (60 * 1000));
-      return `${minutes} min${minutes !== 1 ? "s" : ""}`;
-    }
-
-    // Less than a day
-    if (diffInMs < 24 * 60 * 60 * 1000) {
-      const hours = Math.floor(diffInMs / (60 * 60 * 1000));
-      return `${hours} hour${hours !== 1 ? "s" : ""}`;
-    }
-
-    // More than a day
-    const days = Math.floor(diffInMs / (24 * 60 * 60 * 1000));
-    return `${days} day${days !== 1 ? "s" : ""}`;
-  };
+  // We no longer need the duration calculation, as we'll show timestamps inline with messages instead
 
   const { color, message }: StatusConfig = useMemo(() => {
     if (!isPatient && !currentThread.lastMessageSentAt) {
@@ -194,12 +171,10 @@ function ChatStatus({ currentThread }: ChatStatusProps) {
       };
     }
 
-    // For active conversations, show the duration with context-appropriate wording
+    // For active conversations, show active status with shorter, cleaner message
     return {
       color: "bg-success-500",
-      message: currentThread.isReflectionThread
-        ? `Reflecting for ${getConversationDuration()}`
-        : `Active for ${getConversationDuration()}`,
+      message: currentThread.isReflectionThread ? "Reflection in progress" : "Conversation active",
     };
   }, [currentThread, isPatient]);
 

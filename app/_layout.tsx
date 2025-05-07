@@ -2,6 +2,7 @@
 import "@/global.css";
 import "expo-dev-client";
 
+import { Nunito_400Regular, Nunito_700Bold, useFonts } from "@expo-google-fonts/nunito";
 import { MedplumClient } from "@medplum/core";
 import {
   ExpoClientStorage,
@@ -65,25 +66,29 @@ try {
 }
 
 export default function RootLayout() {
+  // Load Nunito fonts
+  const [fontsLoaded, fontError] = useFonts({
+    "Nunito-Regular": Nunito_400Regular,
+    "Nunito-Bold": Nunito_700Bold,
+  });
+
   useEffect(() => {
-    // Ensures the splash screen always dismisses, even if other initialization fails
-    const splashTimer = setTimeout(async () => {
+    // Ensures the splash screen dismisses after fonts load or on error
+    if (fontsLoaded || fontError) {
       try {
-        await SplashScreen.hideAsync();
+        SplashScreen.hideAsync();
         console.log("Splash screen hidden successfully");
       } catch (e) {
         console.error("Error hiding splash screen:", e);
-        // Force hide again after another delay as a fallback
+        // Force hide again after delay as fallback
         setTimeout(() => {
           SplashScreen.hideAsync().catch((err) =>
             console.error("Final attempt to hide splash screen failed:", err),
           );
         }, 2000);
       }
-    }, 1000);
-
-    return () => clearTimeout(splashTimer); // Clean up timeout
-  }, []);
+    }
+  }, [fontsLoaded, fontError]);
 
   useEffect(() => {
     // Print redirect URL on startup

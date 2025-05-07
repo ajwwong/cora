@@ -1,51 +1,184 @@
-i get the message "incorrect redirect_uri" after i click /root/mts/v1/cora/app/sign-in.tsx "Connect to Medplum but my Redirect URI is set to this in the medplum settings, I believe. 
-exp://172.26.87.240:8081
-
-<think>
-You're getting an "incorrect redirect_uri" error when trying to authenticate with Medplum. This typically happens when the redirect URI configured in your Medplum OAuth settings doesn't match the one being used by your application.
-Let's analyze your code:
-In your sign-in.tsx file, you're using makeRedirectUri() from expo-auth-session:
-The makeRedirectUri() function dynamically generates a redirect URI based on your Expo environment. By default, it will create something like:
-In development: exp://EXPO_IP:PORT/--/*
-In production: A scheme based on your app's name (like com.yourapp://*)The issue is that you've configured exp://172.26.87.240:8081 in Medplum's settings, but your app is likely generating a slightly different redirect URI.To fix this, you should:1. Use makeRedirectUri() with explicit options to match your Medplum configuration2. Or, check the exact URI being generated and update your Medplum configurationLet me prepare a recommendation.</think># Fix the Redirect URI Mismatch ErrorYou're encountering a classic OAuth2 error - the redirect URI used in your code doesn't exactly match what's configured in Medplum. Let's fix it:## Solution - Update Your Code:language=tsx:mts/v1/cora/app/sign-in.tsx
-// ... existing code ...
-const medplumLogin = useCallback(async () => {
-// Log the exact redirect URI that will be used
-const redirectUri = makeRedirectUri({
-scheme: "exp",
-path: "--/",
-});
-console.log("Using redirect URI:", redirectUri);
-const loginRequest = new AuthRequest({
-clientId: oauth2ClientId,
-usePKCE: true,
-// Use explicit configuration instead of default
-redirectUri: redirectUri,
-scopes: ["openid"],
-});
-// ... rest of the function remains the same
-
-
-The key issue is that `makeRedirectUri()` without parameters generates a URI that includes additional path components like `/--/` that might not be in your Medplum configuration.
-
-## After Making This Change:
-
-1. **Start your Metro server again** with:
-   ```bash
-   cd /root/mts/v1/cora
-   npx expo start --dev-client --lan --clear
-   ```
-
-2. **Launch your app**:
-   ```bash
-   alias wadb='/mnt/c/Users/ajwwo/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554'
-   wadb shell monkey -p me.feelheard 1
-   ```
-
-3. **Connect to your dev server** (if needed)
-
-4. When you click "Connect to Medplum", check your console logs to see the exact redirect URI being used.
-
-5. **Make sure this exact URI is configured in Medplum** (including any path components like `/--/` that might be generated)
-
-The OAuth2 specification requires an exact character-for-character match between the redirect URI provided during authorization and what's configured with the auth provider.
+aybe you could try", "sentAt": 2025-05-07T05:22:13.444Z}
+ LOG  [MessageTimestamp] Time gap: 0.9 minutes between: {"current": "2025-05-07T05:22:13.444Z", "previous": "2025-05-07T05:23:09.204Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 11 {"messageId": "0196a930-89ab-7119-aecf-1bc8ccf88da2", "messageText": "I'm really sorry abo", "sentAt": 2025-05-07T05:20:52.632Z}
+ LOG  [MessageTimestamp] Time gap: 3.5 minutes between: {"current": "2025-05-07T05:20:52.632Z", "previous": "2025-05-07T05:24:21.989Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 12 {"messageId": "0196a930-1607-77eb-80d1-459bd92dba33", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T05:20:21.818Z}
+ LOG  [MessageTimestamp] Time gap: 5.1 minutes between: {"current": "2025-05-07T05:20:21.818Z", "previous": "2025-05-07T05:25:25.257Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 13 {"messageId": "0196a92d-afa6-7321-a689-4fe9a9c61ecb", "messageText": "I... yeah, I complet", "sentAt": 2025-05-07T05:17:45.740Z}
+ LOG  [MessageTimestamp] Time gap: 20.3 minutes between: {"current": "2025-05-07T05:17:45.740Z", "previous": "2025-05-07T05:38:00.796Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 14 {"messageId": "0196a92d-4549-70ea-8822-70226e4b0ba2", "messageText": "no, it's really hard", "sentAt": 2025-05-07T05:17:16.951Z}
+ LOG  [MessageTimestamp] Time gap: 21.9 minutes between: {"current": "2025-05-07T05:17:16.951Z", "previous": "2025-05-07T05:39:08.607Z"}
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Most recent audio message ID: 0196a957-226b-774b-9058-fc618787eacc, sent at: Tue May 06 2025 23:03:02 GMT-0700
+ LOG  [MessageTimestamp] Checking timestamp for message 0 {"messageId": "0196a958-2cbb-76fa-88ca-c5e34b628267", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T06:04:08.912Z}
+ LOG  [MessageTimestamp] Time gap: 60.0 minutes between: {"current": "2025-05-07T06:04:08.912Z", "previous": "2025-05-07T05:04:08.097Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 1 {"messageId": "0196a957-226b-774b-9058-fc618787eacc", "messageText": "I understand this is", "sentAt": 2025-05-07T06:03:02.082Z}
+ LOG  [MessageTimestamp] Time gap: 56.6 minutes between: {"current": "2025-05-07T06:03:02.082Z", "previous": "2025-05-07T05:06:25.215Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 2 {"messageId": "0196a956-5e0e-753b-887a-40f12cfb81e2", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T06:02:10.340Z}
+ LOG  [MessageTimestamp] Time gap: 55.4 minutes between: {"current": "2025-05-07T06:02:10.340Z", "previous": "2025-05-07T05:06:45.434Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 3 {"messageId": "0196a94d-588a-7755-9498-214ce7d1fa0b", "messageText": "I'm really sorry we ", "sentAt": 2025-05-07T05:52:20.592Z}
+ LOG  [MessageTimestamp] Time gap: 45.0 minutes between: {"current": "2025-05-07T05:52:20.592Z", "previous": "2025-05-07T05:07:22.320Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 4 {"messageId": "0196a94c-58f6-7321-a8dc-b7fb9f9a4d09", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T05:51:13.997Z}
+ LOG  [MessageTimestamp] Time gap: 43.0 minutes between: {"current": "2025-05-07T05:51:13.997Z", "previous": "2025-05-07T05:08:11.152Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 5 {"messageId": "0196a941-42d3-723d-8f18-85206a3da187", "messageText": "I can sense that dee", "sentAt": 2025-05-07T05:39:08.607Z}
+ LOG  [MessageTimestamp] Time gap: 21.9 minutes between: {"current": "2025-05-07T05:39:08.607Z", "previous": "2025-05-07T05:17:16.951Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 6 {"messageId": "0196a940-3f32-7201-8bcb-0e50b26afd14", "messageText": "
+Well, I I wanna be ", "sentAt": 2025-05-07T05:38:00.796Z}
+ LOG  [MessageTimestamp] Time gap: 20.3 minutes between: {"current": "2025-05-07T05:38:00.796Z", "previous": "2025-05-07T05:17:45.740Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 7 {"messageId": "0196a934-b29d-727d-9a1f-92b5cd5290ac", "messageText": "Oh, I see... I under", "sentAt": 2025-05-07T05:25:25.257Z}
+ LOG  [MessageTimestamp] Time gap: 5.1 minutes between: {"current": "2025-05-07T05:25:25.257Z", "previous": "2025-05-07T05:20:21.818Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 8 {"messageId": "0196a933-c0a2-7788-b2b0-1fc608d92a2a", "messageText": "
+Actually, I'm speak", "sentAt": 2025-05-07T05:24:21.989Z}
+ LOG  [MessageTimestamp] Time gap: 3.5 minutes between: {"current": "2025-05-07T05:24:21.989Z", "previous": "2025-05-07T05:20:52.632Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 9 {"messageId": "0196a932-9f2f-74de-919b-332c39aa9b4b", "messageText": "Um... I can see your", "sentAt": 2025-05-07T05:23:09.204Z}
+ LOG  [MessageTimestamp] Time gap: 0.9 minutes between: {"current": "2025-05-07T05:23:09.204Z", "previous": "2025-05-07T05:22:13.444Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 10 {"messageId": "0196a931-ca8a-7199-ae63-c1bc44191572", "messageText": "
+Maybe you could try", "sentAt": 2025-05-07T05:22:13.444Z}
+ LOG  [MessageTimestamp] Time gap: 0.9 minutes between: {"current": "2025-05-07T05:22:13.444Z", "previous": "2025-05-07T05:23:09.204Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 11 {"messageId": "0196a930-89ab-7119-aecf-1bc8ccf88da2", "messageText": "I'm really sorry abo", "sentAt": 2025-05-07T05:20:52.632Z}
+ LOG  [MessageTimestamp] Time gap: 3.5 minutes between: {"current": "2025-05-07T05:20:52.632Z", "previous": "2025-05-07T05:24:21.989Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 12 {"messageId": "0196a930-1607-77eb-80d1-459bd92dba33", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T05:20:21.818Z}
+ LOG  [MessageTimestamp] Time gap: 5.1 minutes between: {"current": "2025-05-07T05:20:21.818Z", "previous": "2025-05-07T05:25:25.257Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 13 {"messageId": "0196a92d-afa6-7321-a689-4fe9a9c61ecb", "messageText": "I... yeah, I complet", "sentAt": 2025-05-07T05:17:45.740Z}
+ LOG  [MessageTimestamp] Time gap: 20.3 minutes between: {"current": "2025-05-07T05:17:45.740Z", "previous": "2025-05-07T05:38:00.796Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 14 {"messageId": "0196a92d-4549-70ea-8822-70226e4b0ba2", "messageText": "no, it's really hard", "sentAt": 2025-05-07T05:17:16.951Z}
+ LOG  [MessageTimestamp] Time gap: 21.9 minutes between: {"current": "2025-05-07T05:17:16.951Z", "previous": "2025-05-07T05:39:08.607Z"}
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  STEP 2: Generating AI response to transcription: I didn't catch what you said.
+ LOG  Reflection guide bot response: {"error": undefined, "hasAudio": true, "hasResponseContent": true, "success": true}
+ LOG  Waiting for AI response to propagate...
+ LOG  [MessageTimestamp] Checking timestamp for message 0 {"messageId": "0196a958-2cbb-76fa-88ca-c5e34b628267", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T06:04:08.912Z}
+ LOG  [MessageTimestamp] Time gap: 60.0 minutes between: {"current": "2025-05-07T06:04:08.912Z", "previous": "2025-05-07T05:04:08.097Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 1 {"messageId": "0196a957-226b-774b-9058-fc618787eacc", "messageText": "I understand this is", "sentAt": 2025-05-07T06:03:02.082Z}
+ LOG  [MessageTimestamp] Time gap: 56.6 minutes between: {"current": "2025-05-07T06:03:02.082Z", "previous": "2025-05-07T05:06:25.215Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 2 {"messageId": "0196a956-5e0e-753b-887a-40f12cfb81e2", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T06:02:10.340Z}
+ LOG  [MessageTimestamp] Time gap: 55.4 minutes between: {"current": "2025-05-07T06:02:10.340Z", "previous": "2025-05-07T05:06:45.434Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 3 {"messageId": "0196a94d-588a-7755-9498-214ce7d1fa0b", "messageText": "I'm really sorry we ", "sentAt": 2025-05-07T05:52:20.592Z}
+ LOG  [MessageTimestamp] Time gap: 45.0 minutes between: {"current": "2025-05-07T05:52:20.592Z", "previous": "2025-05-07T05:07:22.320Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 4 {"messageId": "0196a94c-58f6-7321-a8dc-b7fb9f9a4d09", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T05:51:13.997Z}
+ LOG  [MessageTimestamp] Time gap: 43.0 minutes between: {"current": "2025-05-07T05:51:13.997Z", "previous": "2025-05-07T05:08:11.152Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 5 {"messageId": "0196a941-42d3-723d-8f18-85206a3da187", "messageText": "I can sense that dee", "sentAt": 2025-05-07T05:39:08.607Z}
+ LOG  [MessageTimestamp] Time gap: 21.9 minutes between: {"current": "2025-05-07T05:39:08.607Z", "previous": "2025-05-07T05:17:16.951Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 6 {"messageId": "0196a940-3f32-7201-8bcb-0e50b26afd14", "messageText": "
+Well, I I wanna be ", "sentAt": 2025-05-07T05:38:00.796Z}
+ LOG  [MessageTimestamp] Time gap: 20.3 minutes between: {"current": "2025-05-07T05:38:00.796Z", "previous": "2025-05-07T05:17:45.740Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 7 {"messageId": "0196a934-b29d-727d-9a1f-92b5cd5290ac", "messageText": "Oh, I see... I under", "sentAt": 2025-05-07T05:25:25.257Z}
+ LOG  [MessageTimestamp] Time gap: 5.1 minutes between: {"current": "2025-05-07T05:25:25.257Z", "previous": "2025-05-07T05:20:21.818Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 8 {"messageId": "0196a933-c0a2-7788-b2b0-1fc608d92a2a", "messageText": "
+Actually, I'm speak", "sentAt": 2025-05-07T05:24:21.989Z}
+ LOG  [MessageTimestamp] Time gap: 3.5 minutes between: {"current": "2025-05-07T05:24:21.989Z", "previous": "2025-05-07T05:20:52.632Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 9 {"messageId": "0196a932-9f2f-74de-919b-332c39aa9b4b", "messageText": "Um... I can see your", "sentAt": 2025-05-07T05:23:09.204Z}
+ LOG  [MessageTimestamp] Time gap: 0.9 minutes between: {"current": "2025-05-07T05:23:09.204Z", "previous": "2025-05-07T05:22:13.444Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 10 {"messageId": "0196a931-ca8a-7199-ae63-c1bc44191572", "messageText": "
+Maybe you could try", "sentAt": 2025-05-07T05:22:13.444Z}
+ LOG  [MessageTimestamp] Time gap: 0.9 minutes between: {"current": "2025-05-07T05:22:13.444Z", "previous": "2025-05-07T05:23:09.204Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 11 {"messageId": "0196a930-89ab-7119-aecf-1bc8ccf88da2", "messageText": "I'm really sorry abo", "sentAt": 2025-05-07T05:20:52.632Z}
+ LOG  [MessageTimestamp] Time gap: 3.5 minutes between: {"current": "2025-05-07T05:20:52.632Z", "previous": "2025-05-07T05:24:21.989Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 12 {"messageId": "0196a930-1607-77eb-80d1-459bd92dba33", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T05:20:21.818Z}
+ LOG  [MessageTimestamp] Time gap: 5.1 minutes between: {"current": "2025-05-07T05:20:21.818Z", "previous": "2025-05-07T05:25:25.257Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 13 {"messageId": "0196a92d-afa6-7321-a689-4fe9a9c61ecb", "messageText": "I... yeah, I complet", "sentAt": 2025-05-07T05:17:45.740Z}
+ LOG  [MessageTimestamp] Time gap: 20.3 minutes between: {"current": "2025-05-07T05:17:45.740Z", "previous": "2025-05-07T05:38:00.796Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 14 {"messageId": "0196a92d-4549-70ea-8822-70226e4b0ba2", "messageText": "no, it's really hard", "sentAt": 2025-05-07T05:17:16.951Z}
+ LOG  [MessageTimestamp] Time gap: 21.9 minutes between: {"current": "2025-05-07T05:17:16.951Z", "previous": "2025-05-07T05:39:08.607Z"}
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio processing initiated successfully
+ LOG  [MessageTimestamp] Checking timestamp for message 0 {"messageId": "0196a958-2cbb-76fa-88ca-c5e34b628267", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T06:04:08.912Z}
+ LOG  [MessageTimestamp] Time gap: 60.0 minutes between: {"current": "2025-05-07T06:04:08.912Z", "previous": "2025-05-07T05:04:08.097Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 1 {"messageId": "0196a957-226b-774b-9058-fc618787eacc", "messageText": "I understand this is", "sentAt": 2025-05-07T06:03:02.082Z}
+ LOG  [MessageTimestamp] Time gap: 56.6 minutes between: {"current": "2025-05-07T06:03:02.082Z", "previous": "2025-05-07T05:06:25.215Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 2 {"messageId": "0196a956-5e0e-753b-887a-40f12cfb81e2", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T06:02:10.340Z}
+ LOG  [MessageTimestamp] Time gap: 55.4 minutes between: {"current": "2025-05-07T06:02:10.340Z", "previous": "2025-05-07T05:06:45.434Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 3 {"messageId": "0196a94d-588a-7755-9498-214ce7d1fa0b", "messageText": "I'm really sorry we ", "sentAt": 2025-05-07T05:52:20.592Z}
+ LOG  [MessageTimestamp] Time gap: 45.0 minutes between: {"current": "2025-05-07T05:52:20.592Z", "previous": "2025-05-07T05:07:22.320Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 4 {"messageId": "0196a94c-58f6-7321-a8dc-b7fb9f9a4d09", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T05:51:13.997Z}
+ LOG  [MessageTimestamp] Time gap: 43.0 minutes between: {"current": "2025-05-07T05:51:13.997Z", "previous": "2025-05-07T05:08:11.152Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 5 {"messageId": "0196a941-42d3-723d-8f18-85206a3da187", "messageText": "I can sense that dee", "sentAt": 2025-05-07T05:39:08.607Z}
+ LOG  [MessageTimestamp] Time gap: 21.9 minutes between: {"current": "2025-05-07T05:39:08.607Z", "previous": "2025-05-07T05:17:16.951Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 6 {"messageId": "0196a940-3f32-7201-8bcb-0e50b26afd14", "messageText": "
+Well, I I wanna be ", "sentAt": 2025-05-07T05:38:00.796Z}
+ LOG  [MessageTimestamp] Time gap: 20.3 minutes between: {"current": "2025-05-07T05:38:00.796Z", "previous": "2025-05-07T05:17:45.740Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 7 {"messageId": "0196a934-b29d-727d-9a1f-92b5cd5290ac", "messageText": "Oh, I see... I under", "sentAt": 2025-05-07T05:25:25.257Z}
+ LOG  [MessageTimestamp] Time gap: 5.1 minutes between: {"current": "2025-05-07T05:25:25.257Z", "previous": "2025-05-07T05:20:21.818Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 8 {"messageId": "0196a933-c0a2-7788-b2b0-1fc608d92a2a", "messageText": "
+Actually, I'm speak", "sentAt": 2025-05-07T05:24:21.989Z}
+ LOG  [MessageTimestamp] Time gap: 3.5 minutes between: {"current": "2025-05-07T05:24:21.989Z", "previous": "2025-05-07T05:20:52.632Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 9 {"messageId": "0196a932-9f2f-74de-919b-332c39aa9b4b", "messageText": "Um... I can see your", "sentAt": 2025-05-07T05:23:09.204Z}
+ LOG  [MessageTimestamp] Time gap: 0.9 minutes between: {"current": "2025-05-07T05:23:09.204Z", "previous": "2025-05-07T05:22:13.444Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 10 {"messageId": "0196a931-ca8a-7199-ae63-c1bc44191572", "messageText": "
+Maybe you could try", "sentAt": 2025-05-07T05:22:13.444Z}
+ LOG  [MessageTimestamp] Time gap: 0.9 minutes between: {"current": "2025-05-07T05:22:13.444Z", "previous": "2025-05-07T05:23:09.204Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 11 {"messageId": "0196a930-89ab-7119-aecf-1bc8ccf88da2", "messageText": "I'm really sorry abo", "sentAt": 2025-05-07T05:20:52.632Z}
+ LOG  [MessageTimestamp] Time gap: 3.5 minutes between: {"current": "2025-05-07T05:20:52.632Z", "previous": "2025-05-07T05:24:21.989Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 12 {"messageId": "0196a930-1607-77eb-80d1-459bd92dba33", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T05:20:21.818Z}
+ LOG  [MessageTimestamp] Time gap: 5.1 minutes between: {"current": "2025-05-07T05:20:21.818Z", "previous": "2025-05-07T05:25:25.257Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 13 {"messageId": "0196a92d-afa6-7321-a689-4fe9a9c61ecb", "messageText": "I... yeah, I complet", "sentAt": 2025-05-07T05:17:45.740Z}
+ LOG  [MessageTimestamp] Time gap: 20.3 minutes between: {"current": "2025-05-07T05:17:45.740Z", "previous": "2025-05-07T05:38:00.796Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 14 {"messageId": "0196a92d-4549-70ea-8822-70226e4b0ba2", "messageText": "no, it's really hard", "sentAt": 2025-05-07T05:17:16.951Z}
+ LOG  [MessageTimestamp] Time gap: 21.9 minutes between: {"current": "2025-05-07T05:17:16.951Z", "previous": "2025-05-07T05:39:08.607Z"}
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Most recent audio message ID: 0196a959-0966-723f-b561-3ba7623e45ea, sent at: Tue May 06 2025 23:05:06 GMT-0700
+ LOG  [MessageTimestamp] Checking timestamp for message 0 {"messageId": "0196a959-0966-723f-b561-3ba7623e45ea", "messageText": "I'm sorry about the ", "sentAt": 2025-05-07T06:05:06.762Z}
+ LOG  [MessageTimestamp] Time gap: 58.4 minutes between: {"current": "2025-05-07T06:05:06.762Z", "previous": "2025-05-07T05:06:45.434Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 1 {"messageId": "0196a958-2cbb-76fa-88ca-c5e34b628267", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T06:04:08.912Z}
+ LOG  [MessageTimestamp] Time gap: 56.8 minutes between: {"current": "2025-05-07T06:04:08.912Z", "previous": "2025-05-07T05:07:22.320Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 2 {"messageId": "0196a957-226b-774b-9058-fc618787eacc", "messageText": "I understand this is", "sentAt": 2025-05-07T06:03:02.082Z}
+ LOG  [MessageTimestamp] Time gap: 54.8 minutes between: {"current": "2025-05-07T06:03:02.082Z", "previous": "2025-05-07T05:08:11.152Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 3 {"messageId": "0196a956-5e0e-753b-887a-40f12cfb81e2", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T06:02:10.340Z}
+ LOG  [MessageTimestamp] Time gap: 44.9 minutes between: {"current": "2025-05-07T06:02:10.340Z", "previous": "2025-05-07T05:17:16.951Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 4 {"messageId": "0196a94d-588a-7755-9498-214ce7d1fa0b", "messageText": "I'm really sorry we ", "sentAt": 2025-05-07T05:52:20.592Z}
+ LOG  [MessageTimestamp] Time gap: 34.6 minutes between: {"current": "2025-05-07T05:52:20.592Z", "previous": "2025-05-07T05:17:45.740Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 5 {"messageId": "0196a94c-58f6-7321-a8dc-b7fb9f9a4d09", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T05:51:13.997Z}
+ LOG  [MessageTimestamp] Time gap: 30.9 minutes between: {"current": "2025-05-07T05:51:13.997Z", "previous": "2025-05-07T05:20:21.818Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 6 {"messageId": "0196a941-42d3-723d-8f18-85206a3da187", "messageText": "I can sense that dee", "sentAt": 2025-05-07T05:39:08.607Z}
+ LOG  [MessageTimestamp] Time gap: 18.3 minutes between: {"current": "2025-05-07T05:39:08.607Z", "previous": "2025-05-07T05:20:52.632Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 7 {"messageId": "0196a940-3f32-7201-8bcb-0e50b26afd14", "messageText": "
+Well, I I wanna be ", "sentAt": 2025-05-07T05:38:00.796Z}
+ LOG  [MessageTimestamp] Time gap: 15.8 minutes between: {"current": "2025-05-07T05:38:00.796Z", "previous": "2025-05-07T05:22:13.444Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 8 {"messageId": "0196a934-b29d-727d-9a1f-92b5cd5290ac", "messageText": "Oh, I see... I under", "sentAt": 2025-05-07T05:25:25.257Z}
+ LOG  [MessageTimestamp] Time gap: 2.3 minutes between: {"current": "2025-05-07T05:25:25.257Z", "previous": "2025-05-07T05:23:09.204Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 9 {"messageId": "0196a933-c0a2-7788-b2b0-1fc608d92a2a", "messageText": "
+Actually, I'm speak", "sentAt": 2025-05-07T05:24:21.989Z}
+ LOG  [MessageTimestamp] Time gap: 0.0 minutes between: {"current": "2025-05-07T05:24:21.989Z", "previous": "2025-05-07T05:24:21.989Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 10 {"messageId": "0196a932-9f2f-74de-919b-332c39aa9b4b", "messageText": "Um... I can see your", "sentAt": 2025-05-07T05:23:09.204Z}
+ LOG  [MessageTimestamp] Time gap: 2.3 minutes between: {"current": "2025-05-07T05:23:09.204Z", "previous": "2025-05-07T05:25:25.257Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 11 {"messageId": "0196a931-ca8a-7199-ae63-c1bc44191572", "messageText": "
+Maybe you could try", "sentAt": 2025-05-07T05:22:13.444Z}
+ LOG  [MessageTimestamp] Time gap: 15.8 minutes between: {"current": "2025-05-07T05:22:13.444Z", "previous": "2025-05-07T05:38:00.796Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 12 {"messageId": "0196a930-89ab-7119-aecf-1bc8ccf88da2", "messageText": "I'm really sorry abo", "sentAt": 2025-05-07T05:20:52.632Z}
+ LOG  [MessageTimestamp] Time gap: 18.3 minutes between: {"current": "2025-05-07T05:20:52.632Z", "previous": "2025-05-07T05:39:08.607Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 13 {"messageId": "0196a930-1607-77eb-80d1-459bd92dba33", "messageText": "I didn't catch what ", "sentAt": 2025-05-07T05:20:21.818Z}
+ LOG  [MessageTimestamp] Time gap: 30.9 minutes between: {"current": "2025-05-07T05:20:21.818Z", "previous": "2025-05-07T05:51:13.997Z"}
+ LOG  [MessageTimestamp] Checking timestamp for message 14 {"messageId": "0196a92d-afa6-7321-a689-4fe9a9c61ecb", "messageText": "I... yeah, I complet", "sentAt": 2025-05-07T05:17:45.740Z}
+ LOG  [MessageTimestamp] Time gap: 34.6 minutes between: {"current": "2025-05-07T05:17:45.740Z", "previous": "2025-05-07T05:52:20.592Z"}
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
+ LOG  Audio message: autoplay enabled=true
