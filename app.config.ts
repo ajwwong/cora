@@ -2,12 +2,12 @@ import { ConfigContext, ExpoConfig } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "health-app",
+  name: "FeelHeard",
   slug: "feelheard-me",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
-  scheme: "myapp",
+  scheme: "feelheard",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   jsEngine: "hermes",

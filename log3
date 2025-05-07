@@ -36,6 +36,7 @@ npx expo start --dev-client
 
 
 # Set up the Windows ADB alias 
+cd /root/mts/v1/cora
 alias wadb='/mnt/c/Users/ajwwo/AppData/Local/Android/Sdk/platform-tools/adb.exe -s emulator-5554'
 
 # Launch the app on emulator
