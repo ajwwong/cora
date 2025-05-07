@@ -194,10 +194,12 @@ function ChatStatus({ currentThread }: ChatStatusProps) {
       };
     }
 
-    // For active conversations, show the duration
+    // For active conversations, show the duration with context-appropriate wording
     return {
       color: "bg-success-500",
-      message: `Active for ${getConversationDuration()}`,
+      message: currentThread.isReflectionThread
+        ? `Reflecting for ${getConversationDuration()}`
+        : `Active for ${getConversationDuration()}`,
     };
   }, [currentThread, isPatient]);
 
