@@ -179,7 +179,7 @@ async function createThreadMessageComm({
   threadId,
   attachment,
   audioData,
-  audioContentType = "audio/wav",
+  audioContentType = "audio/mp3",
 }: {
   medplum: MedplumClient;
   profile: ProfileResource;
@@ -570,7 +570,7 @@ export function ChatProvider({
           console.log("Creating Binary resource for audio data...");
           const binary = await medplum.createResource({
             resourceType: "Binary",
-            contentType: "audio/wav",
+            contentType: "audio/mp3",
             data: audioData,
           });
 
@@ -727,7 +727,7 @@ export function ChatProvider({
             threadId,
             attachment: uploadedAttachment,
             audioData,
-            audioContentType: "audio/wav", // Assuming WAV format for now
+            audioContentType: "audio/mp3", // Using MP3 format
           });
 
           // Touch the thread last changed date
@@ -917,10 +917,10 @@ export function ChatProvider({
               byteArrays.push(new Uint8Array(byteNumbers));
             }
 
-            const blob = new Blob(byteArrays, { type: "audio/wav" });
+            const blob = new Blob(byteArrays, { type: "audio/mp3" });
             const audioAttachment = await medplum.createAttachment({
               data: blob,
-              contentType: "audio/wav",
+              contentType: "audio/mp3",
             });
 
             audioBinaryId = audioAttachment.id;

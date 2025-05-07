@@ -176,7 +176,7 @@ function ChatStatus({ currentThread }: ChatStatusProps) {
     }
     return {
       color: "bg-tertiary-500",
-      message: "A provider will respond to you soon",
+      message: " will respond to you soon",
     };
   }, [currentThread, isPatient]);
 

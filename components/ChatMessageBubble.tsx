@@ -2,14 +2,13 @@ import { useMedplumProfile } from "@medplum/react-hooks";
 import { Audio } from "expo-av"; // Keep using expo-av for now
 import { useVideoPlayer } from "expo-video";
 import { VideoView } from "expo-video";
-import { CirclePlay, FileDown, Headphones, Mic, UserRound } from "lucide-react-native";
+import { CirclePlay, FileDown, Headphones, Mic } from "lucide-react-native";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Alert } from "react-native";
 
 import { FullscreenImage } from "@/components/FullscreenImage";
 import { LoadingButtonSpinner } from "@/components/LoadingButtonSpinner";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
@@ -104,17 +103,7 @@ const VideoAttachment = memo(
 );
 VideoAttachment.displayName = "VideoAttachment";
 
-interface AudioAttachmentProps {
-  audioData: string;
-  // Thread-level audio control props
-  isAudioPlaying?: boolean;
-  isCurrentPlayingMessage?: boolean;
-  isAutoplayed?: boolean;
-  isMostRecentAudioMessage?: boolean;
-  onAudioPlay?: () => void;
-  onAudioStop?: () => void;
-  markAsAutoplayed?: () => void;
-}
+// This interface is already defined on lines 22-31
 
 function AudioAttachment({
   audioData,
@@ -160,7 +149,7 @@ function AudioAttachment({
       // If we don't have a sound object yet, create one
       if (!sound) {
         // Convert base64 to URI
-        const base64Audio = `data:audio/wav;base64,${audioData}`;
+        const base64Audio = `data:audio/mp3;base64,${audioData}`;
         const { sound: newSound } = await Audio.Sound.createAsync(
           { uri: base64Audio },
           { shouldPlay: true },
@@ -416,14 +405,7 @@ export function ChatMessageBubble({
       {/* Selection background */}
       {selected && <View className="absolute inset-0 bg-background-100" />}
 
-      <View className={`max-w-[80%] ${wrapperAlignment} p-2 ${flexDirection} items-end gap-2`}>
-        <Avatar
-          size="sm"
-          className={`border ${selected ? "border-primary-500" : "border-primary-200"}`}
-        >
-          <Icon as={UserRound} size="sm" className="stroke-typography-0" />
-          {avatarURL && <AvatarImage source={{ uri: avatarURL }} />}
-        </Avatar>
+      <View className={`max-w-[80%] ${wrapperAlignment} p-2`}>
         <View
           style={{ width: "100%" }}
           className={`rounded-xl border p-3 ${bubbleColor} ${borderColor} ${
@@ -471,12 +453,7 @@ export function ChatMessageBubble({
               <Text className="text-sm italic text-typography-500">Transcribing audio...</Text>
             </View>
           )}
-          {isProcessing && (
-            <View className="mb-2 flex-row items-center gap-2">
-              <LoadingButtonSpinner />
-              <Text className="text-sm italic text-typography-500">Processing message...</Text>
-            </View>
-          )}
+          {/* Processing indicator removed */}
 
           {/* Message text - don't show if it's just the placeholder text */}
           {Boolean(message.text) && !isTranscriptionPlaceholder && (

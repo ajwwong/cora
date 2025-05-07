@@ -110,12 +110,44 @@ export function useAudioRecording(): UseAudioRecordingReturn {
 
       try {
         // Use LOW_QUALITY on web to reduce processing
-        const preset =
+        // Create MP3 recording options
+        const baseOptions =
           Platform.OS === "web"
             ? Audio.RecordingOptionsPresets.LOW_QUALITY
             : Audio.RecordingOptionsPresets.HIGH_QUALITY;
 
-        console.log("Using recording preset for platform:", Platform.OS);
+        // Customize to use MP3 format
+        const preset = {
+          ...baseOptions,
+          android: {
+            ...baseOptions.android,
+            extension: ".mp3",
+            outputFormat: Audio.AndroidOutputFormat.MPEG_4,
+            audioEncoder: Audio.AndroidAudioEncoder.AAC,
+            sampleRate: 44100,
+            numberOfChannels: 1,
+            bitRate: 128000,
+          },
+          ios: {
+            ...baseOptions.ios,
+            extension: ".mp3",
+            outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
+            audioQuality: Audio.IOSAudioQuality.MEDIUM,
+            sampleRate: 44100,
+            numberOfChannels: 1,
+            bitRate: 128000,
+            linearPCMBitDepth: 16,
+            linearPCMIsBigEndian: false,
+            linearPCMIsFloat: false,
+          },
+          web: {
+            ...baseOptions.web,
+            mimeType: "audio/mp3",
+            bitsPerSecond: 128000,
+          },
+        };
+
+        console.log("Using MP3 recording preset for platform:", Platform.OS);
         console.log("Preparing to record...");
 
         const options = {
