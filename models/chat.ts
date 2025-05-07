@@ -148,6 +148,13 @@ export class Thread {
     return lastMsg?.sentAt;
   }
 
+  get createdAt(): Date {
+    // Use the timestamp when the thread itself was created
+    return new Date(
+      this.originalCommunication.sent || this.originalCommunication.meta?.lastUpdated || new Date(),
+    );
+  }
+
   get threadOrder(): number {
     return new Date(
       this.lastMessageSentAt ||

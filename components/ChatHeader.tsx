@@ -149,6 +149,31 @@ function ChatStatus({ currentThread }: ChatStatusProps) {
   const { profile } = useMedplumContext();
   const isPatient = profile?.resourceType === "Patient";
 
+  // Calculate conversation duration
+  const getConversationDuration = () => {
+    if (!currentThread.createdAt) return "New";
+
+    const startDate = new Date(currentThread.createdAt);
+    const now = new Date();
+    const diffInMs = now.getTime() - startDate.getTime();
+
+    // Less than an hour
+    if (diffInMs < 60 * 60 * 1000) {
+      const minutes = Math.floor(diffInMs / (60 * 1000));
+      return `${minutes} min${minutes !== 1 ? "s" : ""}`;
+    }
+
+    // Less than a day
+    if (diffInMs < 24 * 60 * 60 * 1000) {
+      const hours = Math.floor(diffInMs / (60 * 60 * 1000));
+      return `${hours} hour${hours !== 1 ? "s" : ""}`;
+    }
+
+    // More than a day
+    const days = Math.floor(diffInMs / (24 * 60 * 60 * 1000));
+    return `${days} day${days !== 1 ? "s" : ""}`;
+  };
+
   const { color, message }: StatusConfig = useMemo(() => {
     if (!isPatient && !currentThread.lastMessageSentAt) {
       return {
@@ -165,18 +190,14 @@ function ChatStatus({ currentThread }: ChatStatusProps) {
     if (!currentThread.lastMessageSentAt) {
       return {
         color: "bg-warning-500",
-        message: "Please start the conversation",
+        message: "Start the conversation",
       };
     }
-    if (currentThread.practitionerName) {
-      return {
-        color: "bg-success-500",
-        message: `${currentThread.practitionerName} is active`,
-      };
-    }
+
+    // For active conversations, show the duration
     return {
-      color: "bg-tertiary-500",
-      message: " will respond to you soon",
+      color: "bg-success-500",
+      message: `Active for ${getConversationDuration()}`,
     };
   }, [currentThread, isPatient]);
 
