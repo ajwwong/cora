@@ -4,7 +4,7 @@ import { useVideoPlayer } from "expo-video";
 import { VideoView } from "expo-video";
 import { CirclePlay, FileDown } from "lucide-react-native";
 import { memo, useCallback, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { Alert } from "react-native";
 
 import { FullscreenImage } from "@/components/FullscreenImage";
@@ -259,8 +259,13 @@ export function ChatMessageBubble({
                 flexShrink: 1,
                 fontFamily: "Nunito-Regular",
                 fontSize: 16,
-                lineHeight: 24,
+                lineHeight: Platform.OS === "web" ? 1.5 : 24, // Adjusted for web platforms
                 color: "#333", // Dark text for all messages for better readability
+                ...(Platform.OS === "web" && {
+                  // Web-specific styles to fix line spacing
+                  whiteSpace: "pre-line",
+                  display: "inline-block",
+                }),
               }}
               className="max-w-full"
             >
@@ -280,6 +285,8 @@ export function ChatMessageBubble({
                 onAudioPlay={onAudioPlay}
                 onAudioStop={onAudioStop}
                 markAsAutoplayed={markAsAutoplayed}
+                messageText={message.text}
+                messageRole={message.role}
               />
             </View>
           )}

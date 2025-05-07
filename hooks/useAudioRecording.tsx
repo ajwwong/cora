@@ -142,7 +142,7 @@ export function useAudioRecording(): UseAudioRecordingReturn {
           },
           web: {
             ...baseOptions.web,
-            mimeType: "audio/mp3",
+            mimeType: "audio/webm",
             bitsPerSecond: 128000,
           },
         };
