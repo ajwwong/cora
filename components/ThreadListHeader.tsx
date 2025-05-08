@@ -25,8 +25,8 @@ export function ThreadListHeader({ onLogout, onCreateThread }: ThreadListHeaderP
   return (
     <View className="border-b border-outline-100 bg-background-0">
       <View className="h-16 flex-row items-center justify-between px-4">
-        <Text size="lg" bold className="text-typography-900">
-          Chat threads
+        <Text size="lg" bold className="font-['Nunito-Bold'] text-typography-900">
+          Reflection threads
         </Text>
 
         <View className="flex-row items-center gap-2">

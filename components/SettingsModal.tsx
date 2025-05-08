@@ -1,4 +1,4 @@
-import { Moon, Sun } from "lucide-react-native";
+import { Loader, Moon, Sun } from "lucide-react-native";
 import { useCallback } from "react";
 
 import { Button, ButtonText } from "@/components/ui/button";
@@ -22,7 +22,7 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const { isAutoplayEnabled, toggleAutoplay } = useUserPreferences();
+  const { isAutoplayEnabled, isLoadingPreference, toggleAutoplay } = useUserPreferences();
 
   const handleToggleAutoplay = useCallback(() => {
     toggleAutoplay();
@@ -49,12 +49,19 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 />
                 <Text className="text-typography-900">Autoplay Audio Messages</Text>
               </View>
-              <Switch value={isAutoplayEnabled} onValueChange={handleToggleAutoplay} />
+              {isLoadingPreference ? (
+                <View className="h-6 w-10 items-center justify-center">
+                  <Icon as={Loader} size="sm" className="text-primary-500" />
+                </View>
+              ) : (
+                <Switch value={isAutoplayEnabled} onValueChange={handleToggleAutoplay} />
+              )}
             </View>
 
             <Text className="text-sm text-typography-600">
-              When enabled, audio messages will automatically play when available. This setting
-              provides a simple global control for all audio playback.
+              When enabled, audio messages will automatically play when received within the last 2
+              minutes. This preference is saved to your account and will persist across all your
+              devices.
             </Text>
 
             <View className="items-center pt-4">

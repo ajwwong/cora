@@ -1,6 +1,7 @@
 import { Patient, Practitioner, Reference } from "@medplum/fhirtypes";
 import { useMedplumContext } from "@medplum/react-hooks";
 import { useRouter } from "expo-router";
+import { Loader } from "lucide-react-native";
 import {
   ChevronLeftIcon,
   TrashIcon,
@@ -108,7 +109,7 @@ function SelectionInfo({ selectedCount, onDelete, isDeleting = false }: Selectio
 }
 
 function ThreadInfo({ currentThread, avatarURL }: ThreadInfoProps) {
-  const { isAutoplayEnabled, toggleAutoplay } = useUserPreferences();
+  const { isAutoplayEnabled, isLoadingPreference, toggleAutoplay } = useUserPreferences();
 
   return (
     <View className="flex-1 flex-row items-center justify-between">
@@ -130,15 +131,20 @@ function ThreadInfo({ currentThread, avatarURL }: ThreadInfoProps) {
         <Pressable
           className="mr-2 rounded-full p-2 active:bg-secondary-100"
           onPress={toggleAutoplay}
+          disabled={isLoadingPreference}
           accessibilityLabel={isAutoplayEnabled ? "Disable autoplay" : "Enable autoplay"}
           accessibilityRole="switch"
           accessibilityState={{ checked: isAutoplayEnabled }}
         >
-          <Icon
-            as={isAutoplayEnabled ? Volume2Icon : VolumeIcon}
-            size="md"
-            className={isAutoplayEnabled ? "text-primary-600" : "text-typography-500"}
-          />
+          {isLoadingPreference ? (
+            <Icon as={Loader} size="md" className="text-primary-400" />
+          ) : (
+            <Icon
+              as={isAutoplayEnabled ? Volume2Icon : VolumeIcon}
+              size="md"
+              className={isAutoplayEnabled ? "text-primary-600" : "text-typography-500"}
+            />
+          )}
         </Pressable>
       )}
     </View>

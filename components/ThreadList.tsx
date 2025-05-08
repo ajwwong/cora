@@ -52,7 +52,10 @@ function ThreadItem({
 
         <View className="flex-1">
           <View className="flex-row items-center gap-2">
-            <Text className="text-sm font-semibold text-typography-900" isTruncated={true}>
+            <Text
+              className="font-['Nunito-Bold'] text-sm font-semibold text-typography-900"
+              isTruncated={true}
+            >
               {isPractitioner ? `${thread.patientName}: ${thread.topic}` : thread.topic}
             </Text>
             {thread.isReflectionThread && thread.reflectionTheme && (
@@ -68,7 +71,10 @@ function ThreadItem({
               </View>
             )}
           </View>
-          <Text className="mt-0.5 text-sm text-typography-600" isTruncated={true}>
+          <Text
+            className="mt-0.5 font-['Nunito-Regular'] text-sm text-typography-600"
+            isTruncated={true}
+          >
             {thread.lastMessage}
           </Text>
         </View>

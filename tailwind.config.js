@@ -164,9 +164,9 @@ module.exports = {
         },
       },
       fontFamily: {
-        heading: undefined,
-        body: undefined,
-        mono: undefined,
+        heading: ["Nunito-Bold", "sans-serif"],
+        body: ["Nunito-Regular", "sans-serif"],
+        mono: ["ui-monospace", "SFMono-Regular", "monospace"],
         roboto: ["Roboto", "sans-serif"],
       },
       fontWeight: {

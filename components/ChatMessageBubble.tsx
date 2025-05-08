@@ -287,6 +287,7 @@ export function ChatMessageBubble({
                 markAsAutoplayed={markAsAutoplayed}
                 messageText={message.text}
                 messageRole={message.role}
+                messageSentAt={message.sentAt}
               />
             </View>
           )}

@@ -14,6 +14,7 @@ interface MinimalAudioPlayerProps {
   isMostRecentAudioMessage?: boolean;
   messageText?: string;
   messageRole?: string;
+  messageSentAt?: Date; // Add message timestamp
   onAudioPlay?: () => void;
   onAudioStop?: () => void;
   markAsAutoplayed?: () => void;
@@ -27,6 +28,7 @@ export function MinimalAudioPlayer({
   isMostRecentAudioMessage,
   messageText,
   messageRole,
+  messageSentAt,
   onAudioPlay,
   onAudioStop,
   markAsAutoplayed,
@@ -181,13 +183,28 @@ export function MinimalAudioPlayer({
       messageText: messageText ? messageText.substring(0, 30) + "..." : null,
       audioDataLength: audioData ? audioData.length : 0,
       soundObject: sound ? "exists" : "null",
+      messageSentAt: messageSentAt ? messageSentAt.toString() : null,
     });
+
+    // Check if message was sent within the last 2 minutes
+    const isRecentMessage = () => {
+      if (!messageSentAt) return false;
+
+      const now = new Date();
+      const diffMs = now.getTime() - messageSentAt.getTime();
+      const diffMinutes = diffMs / (1000 * 60);
+      console.log(`[AUTOPLAY DEBUG] Message time difference: ${diffMinutes.toFixed(2)} minutes`);
+      return diffMinutes <= 2; // Only autoplay if message is within last 2 minutes
+    };
 
     // Check if this is a transcription placeholder
     const isTranscriptionPlaceholder = messageText ? /Transcribing audio/.test(messageText) : false;
 
     // Check if this is an assistant message
     const isAssistantMessage = messageRole === "assistant";
+
+    // Check if message is recent (within last 2 minutes)
+    const isRecent = isRecentMessage();
 
     // Only autoplay for assistant messages that are not transcription placeholders
     if (
@@ -197,6 +214,7 @@ export function MinimalAudioPlayer({
       !isAutoplayed &&
       isAssistantMessage && // Must be an assistant message
       !isTranscriptionPlaceholder && // Not a placeholder
+      isRecent && // Must be a recent message (within 2 minutes)
       // Make sure there's actual audio data
       audioData &&
       audioData.length > 1000
