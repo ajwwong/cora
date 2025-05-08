@@ -74,6 +74,7 @@ function ThreadItem({
           <Text
             className="mt-0.5 font-['Nunito-Regular'] text-sm text-typography-600"
             isTruncated={true}
+            numberOfLines={4} // Show 4 lines with ellipsis for maximum context
           >
             {thread.lastMessage}
           </Text>
