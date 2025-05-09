@@ -283,6 +283,7 @@ interface ChatContextType {
     textInput?: string;
     audioData?: string;
   }) => Promise<void>;
+  regenerateAudio: (threadId: string, messageId: string) => Promise<boolean>;
 }
 
 export const ChatContext = createContext<ChatContextType>({
@@ -298,6 +299,7 @@ export const ChatContext = createContext<ChatContextType>({
   markMessageAsRead: async () => {},
   deleteMessages: async () => {},
   processWithReflectionGuide: async () => {},
+  regenerateAudio: async () => false,
 });
 
 interface ChatProviderProps {
@@ -1033,6 +1035,48 @@ export function ChatProvider({
     [medplum, profile, receiveThread, onError, threads, setIsBotProcessingMap],
   );
 
+  // Add regenerateAudio function
+  const regenerateAudio = useCallback(
+    async (threadId: string, messageId: string) => {
+      if (!profile) return false;
+
+      // Set processing state for the thread
+      setIsBotProcessingMap((prev) => new Map([...prev, [threadId, true]]));
+
+      try {
+        // Call the reflection-guide bot with regenerateTTS flag
+        const response = await medplum.executeBot(
+          {
+            system: "https://progressnotes.app",
+            value: "reflection-guide",
+          },
+          {
+            patientId: profile.id,
+            threadId: threadId,
+            messageId: messageId,
+            regenerateTTS: true,
+          },
+        );
+
+        if (!response.success) {
+          console.error("Voice regeneration failed:", response.error);
+          return false;
+        }
+
+        // Refresh thread to get updated message with new audio
+        await receiveThread(threadId);
+        return true;
+      } catch (error) {
+        console.error("Error regenerating voice:", error);
+        return false;
+      } finally {
+        // Reset processing state
+        setIsBotProcessingMap((prev) => new Map([...prev, [threadId, false]]));
+      }
+    },
+    [medplum, profile, receiveThread],
+  );
+
   const value = {
     threads: threadsOut,
     isLoadingThreads,
@@ -1046,6 +1090,7 @@ export function ChatProvider({
     markMessageAsRead,
     deleteMessages,
     processWithReflectionGuide,
+    regenerateAudio,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

@@ -218,7 +218,7 @@ Cora will implement in-app purchases using a hybrid approach based on the feel2 
 
 2. **Subscription Tiers**
    - **Text Companion** (Basic Tier): Text-based conversations only
-   - **Voice Companion** (Premium Tier): Voice messaging and enhanced features
+   - **Voice Connect** (Premium Tier): Voice messaging and enhanced features
    
 3. **Subscription Features**
    - Free trial period for new users

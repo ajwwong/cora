@@ -205,7 +205,7 @@ export function ChatMessageBubble({
       className={`relative w-full ${wrapperAlignment}`}
       onLongPress={handleLongPress}
       onPress={handlePress}
-      delayLongPress={200}
+      delayLongPress={800}
     >
       {/* Selection background */}
       {selected && <View className="absolute inset-0 bg-background-100" />}
@@ -278,6 +278,8 @@ export function ChatMessageBubble({
             <View className="mt-2">
               <MinimalAudioPlayer
                 audioData={message.audioData!}
+                messageId={message.id} // Add message ID
+                threadId={message.originalCommunication.partOf?.[0]?.reference?.split("/")[1] || ""} // Add thread ID
                 isAudioPlaying={isAudioPlaying}
                 isCurrentPlayingMessage={isCurrentPlayingMessage}
                 isAutoplayed={isAutoplayed}
@@ -288,6 +290,12 @@ export function ChatMessageBubble({
                 messageText={message.text}
                 messageRole={message.role}
                 messageSentAt={message.sentAt}
+                onRegenerateStart={() => {
+                  // Optional: Could add visual indication that regeneration started
+                }}
+                onRegenerateComplete={() => {
+                  // Optional: Could add visual indication that regeneration completed
+                }}
               />
             </View>
           )}

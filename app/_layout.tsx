@@ -25,6 +25,7 @@ import {
 } from "react-native-safe-area-context";
 
 import { GluestackUIProvider } from "@/components/gluestack-ui-provider";
+import { GlobalAudioProvider } from "@/contexts/GlobalAudioContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import { oauth2ClientId } from "@/utils/medplum-oauth2";
@@ -106,15 +107,17 @@ export default function RootLayout() {
           <MedplumProvider medplum={medplum}>
             <NotificationsProvider>
               <UserPreferencesProvider>
-                <GestureHandlerRootView className="flex-1">
-                  <Stack
-                    screenOptions={{
-                      headerShown: false,
-                      // Prevents flickering:
-                      animation: "none",
-                    }}
-                  />
-                </GestureHandlerRootView>
+                <GlobalAudioProvider>
+                  <GestureHandlerRootView className="flex-1">
+                    <Stack
+                      screenOptions={{
+                        headerShown: false,
+                        // Prevents flickering:
+                        animation: "none",
+                      }}
+                    />
+                  </GestureHandlerRootView>
+                </GlobalAudioProvider>
               </UserPreferencesProvider>
             </NotificationsProvider>
           </MedplumProvider>
