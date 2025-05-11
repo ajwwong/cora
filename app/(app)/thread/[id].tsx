@@ -10,6 +10,7 @@ import { ChatMessageInput } from "@/components/ChatMessageInput";
 import { ChatMessageList } from "@/components/ChatMessageList";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { MessageDeleteModal } from "@/components/MessageDeleteModal";
+import { useVoiceMessageGate } from "@/components/VoiceMessageGate";
 import { ChatContext } from "@/contexts/ChatContext";
 import { useAudioRecording } from "@/hooks/useAudioRecording";
 import { useAvatars } from "@/hooks/useAvatars";
@@ -67,9 +68,20 @@ export default function ThreadPage() {
   const [currentPlayingMessageId, setCurrentPlayingMessageId] = useState<string | null>(null);
   const [autoplayedMessageIds, setAutoplayedMessageIds] = useState<Set<string>>(new Set());
 
+  // Voice message tracking with FHIR extensions
+  const {
+    checkRecordingPermission,
+    incrementVoiceCount,
+    showLimitReachedAlert,
+    remainingFreeMessages,
+    hasPremium,
+  } = useVoiceMessageGate(id);
+  // Get medplum client (used in SubscriptionContext)
+  const { medplum: _medplum } = useMedplumContext();
+
   // Get the bot processing state and setter from context
   const isBotProcessingMap = useContextSelector(ChatContext, (ctx) => ctx.isBotProcessingMap);
-  const processWithReflectionGuide = useContextSelector(
+  const _processWithReflectionGuide = useContextSelector(
     ChatContext,
     (ctx) => ctx.processWithReflectionGuide,
   );
@@ -237,6 +249,13 @@ export default function ThreadPage() {
           console.log("Sending audio for processing...");
           await handleSendMessage(undefined, base64Data);
           console.log("Audio processing initiated successfully");
+
+          // Increment voice message count after sending audio message
+          console.log("📱 [handleAttachment] Incrementing voice message count after sending audio");
+          await incrementVoiceCount();
+
+          // Log the update
+          console.log(`📱 [handleAttachment] Voice message count incremented successfully`);
         } catch (error) {
           console.error("Error processing audio data:", error);
           Alert.alert("Error", "Failed to process the recording. Please try again.");
@@ -248,15 +267,33 @@ export default function ThreadPage() {
         setIsAttaching(false);
       }
     } else {
-      // If reflection thread, start recording
+      // If reflection thread, start recording (with subscription check)
       if (thread.isReflectionThread) {
-        try {
-          console.log("Attempting to start recording (reflection thread)");
-          await startRecording();
-          console.log("Recording started successfully");
-        } catch (error) {
-          console.error("Error starting recording:", error);
-          Alert.alert("Error", "Failed to start recording. Please check microphone permissions.");
+        // Check if user can record voice messages based on subscription status
+        const canRecord = await checkRecordingPermission();
+
+        if (canRecord) {
+          try {
+            console.log("Attempting to start recording (reflection thread)");
+            await startRecording();
+            console.log("Recording started successfully");
+
+            // If not premium, show remaining message count
+            if (!hasPremium && remainingFreeMessages > 0) {
+              Alert.alert(
+                "Voice Message",
+                `You have ${remainingFreeMessages} voice messages remaining today.`,
+                [{ text: "OK" }],
+                { cancelable: true },
+              );
+            }
+          } catch (error) {
+            console.error("Error starting recording:", error);
+            Alert.alert("Error", "Failed to start recording. Please check microphone permissions.");
+          }
+        } else {
+          // User has reached daily limit, show upgrade prompt
+          showLimitReachedAlert();
         }
       } else {
         // Regular attachment flow
@@ -275,7 +312,18 @@ export default function ThreadPage() {
         }
       }
     }
-  }, [thread, handleSendMessage, isRecording, startRecording, stopRecording]);
+  }, [
+    thread,
+    handleSendMessage,
+    isRecording,
+    startRecording,
+    stopRecording,
+    checkRecordingPermission,
+    showLimitReachedAlert,
+    hasPremium,
+    remainingFreeMessages,
+    incrementVoiceCount,
+  ]);
 
   const handleMessageSelect = useCallback((messageId: string) => {
     setSelectedMessages((prev) => {
@@ -356,6 +404,8 @@ export default function ThreadPage() {
         isReflectionThread={thread.isReflectionThread}
         recordingDuration={recordingDuration}
         isBotProcessing={isBotProcessingMap.get(thread.id) || false}
+        remainingFreeMessages={remainingFreeMessages}
+        hasPremium={hasPremium}
       />
       <MessageDeleteModal
         isOpen={isDeleteModalOpen}

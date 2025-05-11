@@ -14,7 +14,8 @@
     "production": {
       "autoIncrement": true,
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "credentialsSource": "remote"
       }
     },
     "apk": {
@@ -28,6 +29,15 @@
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease",
+        "distribution": "internal",
+        "withoutCredentials": true
+      }
+    },
+    "local-aab": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease",
         "distribution": "internal",
         "withoutCredentials": true
       }

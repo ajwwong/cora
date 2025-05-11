@@ -39,7 +39,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "android.permission.USE_FULL_SCREEN_INTENT",
     ],
     package: "me.feelheard",
-    googleServicesFile: process.env.GOOGLE_SERVICES_JSON || "./_dev/google-services.json",
+    googleServicesFile: "./google-services.json",
     edgeToEdgeEnabled: true,
   },
   web: {
@@ -96,6 +96,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         color: "#ffffff",
       },
     ],
+    // RevenueCat is initialized in code rather than as a plugin
+    // Plugin doesn't seem to be compatible with this version of Expo
     "expo-web-browser",
   ],
   experiments: {

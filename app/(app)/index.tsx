@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
+import Purchases from "react-native-purchases";
 
 import { CreateThreadModal } from "@/components/CreateThreadModal";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -57,10 +58,28 @@ export default function Index() {
   }, []);
 
   const handleLogout = useCallback(async () => {
-    // Clear push notification token
-    await notificationManager.clearProfilePushToken();
-    medplum.signOut();
-    router.replace("/sign-in");
+    try {
+      // Clear push notification token
+      await notificationManager.clearProfilePushToken();
+
+      // Logout from RevenueCat
+      try {
+        console.log("Logging out from RevenueCat");
+        await Purchases.logOut();
+        console.log("Successfully logged out from RevenueCat");
+      } catch (error) {
+        console.error("Error logging out from RevenueCat:", error);
+        // Continue with Medplum logout even if RevenueCat logout fails
+      }
+
+      // Logout from Medplum
+      medplum.signOut();
+
+      // Redirect to sign-in
+      router.replace("/sign-in");
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
   }, [medplum, router, notificationManager]);
 
   if (isLoading || isAvatarsLoading) {

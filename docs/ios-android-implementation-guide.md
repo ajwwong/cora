@@ -217,12 +217,13 @@ Cora will implement in-app purchases using a hybrid approach based on the feel2 
    - Consistent subscription experience across all platforms
 
 2. **Subscription Tiers**
-   - **Text Companion** (Basic Tier): Text-based conversations only
-   - **Voice Connect** (Premium Tier): Voice messaging and enhanced features
+   - **Text Companion** (Free Tier): Text-based conversations and limited voice messaging (10 voice messages per day)
+   - **Voice Connect** (Premium Tier): Unlimited voice messaging and enhanced features
    
 3. **Subscription Features**
-   - Free trial period for new users
-   - Monthly and annual billing options (with annual discount)
+   - Free tier with full text-based conversation functionality and limited voice messaging (10 messages/day)
+   - Premium tier for unlimited voice messaging and enhanced features
+   - Monthly and annual billing options for premium tier (with annual discount)
    - Secure payment processing with Stripe and RevenueCat
    - Subscription status tracking via Medplum extensions
    
@@ -298,23 +299,18 @@ Cora will implement in-app purchases using a hybrid approach based on the feel2 
 3. **Product Management** (to be created in `models/subscription.ts`)
    ```typescript
    export enum PurchaseType {
-     MONTHLY_SUBSCRIPTION = 'monthly_subscription',
-     ANNUAL_SUBSCRIPTION = 'annual_subscription',
-     LIFETIME_ACCESS = 'lifetime_access',
+     PREMIUM_MONTHLY = 'premium_monthly',
+     PREMIUM_ANNUAL = 'premium_annual',
    }
-   
+
    export const PRODUCT_IDS = {
-     [PurchaseType.MONTHLY_SUBSCRIPTION]: {
-       ios: 'me.feelheard.monthly',
-       android: 'me.feelheard.monthly',
+     [PurchaseType.PREMIUM_MONTHLY]: {
+       ios: 'feelheard_premium:monthly-autorenewing',
+       android: 'feelheard_premium:monthly-autorenewing',
      },
-     [PurchaseType.ANNUAL_SUBSCRIPTION]: {
-       ios: 'me.feelheard.annual',
-       android: 'me.feelheard.annual',
-     },
-     [PurchaseType.LIFETIME_ACCESS]: {
-       ios: 'me.feelheard.lifetime',
-       android: 'me.feelheard.lifetime',
+     [PurchaseType.PREMIUM_ANNUAL]: {
+       ios: 'feelheard_premium:annual-autorenewing',
+       android: 'feelheard_premium:annual-autorenewing',
      },
    };
    ```
@@ -333,7 +329,7 @@ Cora will implement in-app purchases using a hybrid approach based on the feel2 
      isLoading: boolean;
      customerInfo: CustomerInfo | null;
      availablePackages: PurchasesPackage[] | null;
-     isPremium: boolean;
+     hasVoiceAccess: boolean;
      purchasePackage: (pkg: PurchasesPackage) => Promise<void>;
      restorePurchases: () => Promise<void>;
    }
@@ -393,10 +389,10 @@ Cora will implement in-app purchases using a hybrid approach based on the feel2 
 4. **Checking Entitlements**
    ```typescript
    const checkEntitlements = async (customerInfo: CustomerInfo) => {
-     const isPremium = 
-       customerInfo.entitlements.active['premium'] !== undefined ||
-       customerInfo.entitlements.active['pro'] !== undefined;
-     setIsPremium(isPremium);
+     // Only check for voice_features entitlement since text is now free
+     const hasVoiceFeatures =
+       customerInfo.entitlements.active['voice_features'] !== undefined;
+     setHasVoiceFeatures(hasVoiceFeatures);
    };
    ```
 

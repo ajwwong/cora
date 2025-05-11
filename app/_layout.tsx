@@ -27,6 +27,7 @@ import {
 import { GluestackUIProvider } from "@/components/gluestack-ui-provider";
 import { GlobalAudioProvider } from "@/contexts/GlobalAudioContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import { oauth2ClientId } from "@/utils/medplum-oauth2";
 
@@ -107,17 +108,19 @@ export default function RootLayout() {
           <MedplumProvider medplum={medplum}>
             <NotificationsProvider>
               <UserPreferencesProvider>
-                <GlobalAudioProvider>
-                  <GestureHandlerRootView className="flex-1">
-                    <Stack
-                      screenOptions={{
-                        headerShown: false,
-                        // Prevents flickering:
-                        animation: "none",
-                      }}
-                    />
-                  </GestureHandlerRootView>
-                </GlobalAudioProvider>
+                <SubscriptionProvider>
+                  <GlobalAudioProvider>
+                    <GestureHandlerRootView className="flex-1">
+                      <Stack
+                        screenOptions={{
+                          headerShown: false,
+                          // Prevents flickering:
+                          animation: "none",
+                        }}
+                      />
+                    </GestureHandlerRootView>
+                  </GlobalAudioProvider>
+                </SubscriptionProvider>
               </UserPreferencesProvider>
             </NotificationsProvider>
           </MedplumProvider>

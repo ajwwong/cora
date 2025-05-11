@@ -1,7 +1,9 @@
-import { Loader, Moon, Sun } from "lucide-react-native";
+import { router } from "expo-router";
+import { CreditCard, Loader, Moon, Sun } from "lucide-react-native";
 import { useCallback } from "react";
 
-import { Button, ButtonText } from "@/components/ui/button";
+import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
+import { Divider } from "@/components/ui/divider";
 import { Icon } from "@/components/ui/icon";
 import {
   Modal,
@@ -14,6 +16,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 interface SettingsModalProps {
@@ -23,10 +26,16 @@ interface SettingsModalProps {
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { isAutoplayEnabled, isLoadingPreference, toggleAutoplay } = useUserPreferences();
+  const { isPremium } = useSubscription();
 
   const handleToggleAutoplay = useCallback(() => {
     toggleAutoplay();
   }, [toggleAutoplay]);
+
+  const navigateToSubscription = useCallback(() => {
+    onClose(); // Close the modal first
+    router.push("/subscription");
+  }, [onClose]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -63,6 +72,28 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               minutes. This preference is saved to your account and will persist across all your
               devices.
             </Text>
+
+            <Divider my={4} />
+
+            {/* Subscription Management */}
+            <View className="flex-row items-center justify-between py-2">
+              <View className="flex-row items-center gap-2">
+                <Icon as={CreditCard} size="sm" className="text-typography-700" />
+                <Text className="text-typography-900">Subscription</Text>
+              </View>
+              <View>
+                <Text className="text-typography-600">
+                  {isPremium ? "Voice Connect" : "Text Companion"}
+                </Text>
+              </View>
+            </View>
+
+            <Button variant="outline" onPress={navigateToSubscription} size="sm" className="mb-4">
+              <ButtonIcon as={CreditCard} size="sm" />
+              <ButtonText>
+                {isPremium ? "Manage Subscription" : "Upgrade to Voice Connect"}
+              </ButtonText>
+            </Button>
 
             <View className="items-center pt-4">
               <Button onPress={onClose} action="primary" variant="solid">

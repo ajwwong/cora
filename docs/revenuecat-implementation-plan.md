@@ -6,6 +6,8 @@ This document outlines the implementation plan for integrating RevenueCat's subs
 
 RevenueCat provides a unified API for handling in-app purchases and subscriptions across iOS and Android platforms. It simplifies receipt validation, subscription status tracking, and offers cross-platform purchase restoration.
 
+> **IMPORTANT UPDATE**: The Text Companion tier will be offered completely free to all users. The free tier will include up to 10 voice messages per day. Premium subscription (Voice Connect) will provide unlimited voice messaging and enhanced features.
+
 ## Implementation Timeline
 
 Estimated implementation time: 2-3 days
@@ -250,12 +252,12 @@ import { useSubscription } from '../contexts/SubscriptionContext';
 import { Box, Button, Text, VStack, HStack } from './ui';
 
 const SubscriptionScreen = () => {
-  const { 
+  const {
     isLoading,
     packages,
     currentSubscription,
     purchasePackage,
-    restorePurchases 
+    restorePurchases
   } = useSubscription();
 
   if (isLoading) {
@@ -274,7 +276,7 @@ const SubscriptionScreen = () => {
             You're subscribed!
           </Text>
           <Text>
-            You have an active subscription to Cora Pro.
+            You have an active subscription to Voice Connect with unlimited voice messaging.
           </Text>
         </VStack>
       </Box>
@@ -285,15 +287,39 @@ const SubscriptionScreen = () => {
     <Box flex={1} p={4}>
       <VStack space={6}>
         <Text fontSize="2xl" fontWeight="bold" textAlign="center">
-          Upgrade to Cora Pro
+          Upgrade to Voice Connect
         </Text>
-        
+
+        {/* Free tier info */}
+        <Box
+          borderWidth={1}
+          borderColor="gray.200"
+          borderRadius="md"
+          p={4}
+          bg="gray.50"
+        >
+          <VStack space={2}>
+            <Text fontSize="lg" fontWeight="bold">
+              Text Companion
+            </Text>
+            <Text>Text-based conversations with your reflection guide</Text>
+            <Text>Up to 10 voice messages per day</Text>
+            <Text fontSize="xl" fontWeight="bold">
+              Free
+            </Text>
+            <Text fontSize="sm" fontWeight="medium" color="green.600">
+              Your current plan
+            </Text>
+          </VStack>
+        </Box>
+
+        {/* Premium packages */}
         <VStack space={4}>
           {packages?.map((pkg) => (
-            <Box 
-              key={pkg.identifier} 
-              borderWidth={1} 
-              borderColor="gray.200" 
+            <Box
+              key={pkg.identifier}
+              borderWidth={1}
+              borderColor="gray.200"
               borderRadius="md"
               p={4}
             >
@@ -305,7 +331,7 @@ const SubscriptionScreen = () => {
                 <Text fontSize="xl" fontWeight="bold">
                   {pkg.product.priceString}
                 </Text>
-                <Button 
+                <Button
                   onPress={() => purchasePackage(pkg)}
                   mt={2}
                 >
@@ -315,9 +341,9 @@ const SubscriptionScreen = () => {
             </Box>
           ))}
         </VStack>
-        
-        <Button 
-          variant="outline" 
+
+        <Button
+          variant="outline"
           onPress={restorePurchases}
           mt={4}
         >
@@ -331,7 +357,131 @@ const SubscriptionScreen = () => {
 export default SubscriptionScreen;
 ```
 
-### 7. Update Root Layout with Provider
+### 7. Create Voice Message Counter Hook
+
+Create a hook to count today's voice messages directly from the database:
+
+```tsx
+// hooks/useVoiceMessageCount.tsx
+import { useState, useEffect } from 'react';
+import { useMedplum } from '@medplum/react';
+import { Communication } from '@medplum/fhirtypes';
+import { startOfDay, endOfDay } from 'date-fns';
+
+export function useVoiceMessageCount(threadId?: string) {
+  const [todayVoiceCount, setTodayVoiceCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const medplum = useMedplum();
+
+  useEffect(() => {
+    const fetchTodayVoiceMessages = async () => {
+      try {
+        setIsLoading(true);
+
+        // Get today's date range in ISO format
+        const today = new Date();
+        const todayStart = startOfDay(today).toISOString();
+        const todayEnd = endOfDay(today).toISOString();
+
+        // Build search query for messages with voice attachments
+        let query: Record<string, string> = {
+          'content-attachment-exists': 'true', // Only get messages with attachments
+          'sent:ge': todayStart,               // Only from today
+          'sent:le': todayEnd,
+          '_count': '50',                      // Reasonable limit for daily messages
+          '_sort': '-sent'                     // Newest first
+        };
+
+        // If a specific thread ID is provided, filter by that thread
+        if (threadId) {
+          query['part-of'] = threadId;
+        }
+
+        // Include only messages from the patient (not the reflection guide)
+        query['sender'] = medplum.getProfile().id as string;
+
+        // Execute the search
+        const messages = await medplum.search('Communication', query);
+
+        // Count only voice messages (checking for audio content type in attachments)
+        const voiceMessageCount = messages.entry?.reduce((count, entry) => {
+          const message = entry.resource as Communication;
+          const hasVoiceAttachment = message.payload?.some(payload =>
+            payload.contentAttachment?.contentType?.startsWith('audio/')
+          );
+          return hasVoiceAttachment ? count + 1 : count;
+        }, 0) || 0;
+
+        setTodayVoiceCount(voiceMessageCount);
+      } catch (error) {
+        console.error('Error counting voice messages:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTodayVoiceMessages();
+
+    // Set up a refresh interval (every 2 minutes)
+    const refreshInterval = setInterval(fetchTodayVoiceMessages, 2 * 60 * 1000);
+
+    return () => clearInterval(refreshInterval);
+  }, [medplum, threadId]);
+
+  // Function to force a refresh of the count
+  const refreshCount = async () => {
+    setIsLoading(true);
+    try {
+      // Get today's date range in ISO format
+      const today = new Date();
+      const todayStart = startOfDay(today).toISOString();
+      const todayEnd = endOfDay(today).toISOString();
+
+      let query: Record<string, string> = {
+        'content-attachment-exists': 'true',
+        'sent:ge': todayStart,
+        'sent:le': todayEnd,
+        '_count': '50',
+        '_sort': '-sent'
+      };
+
+      if (threadId) {
+        query['part-of'] = threadId;
+      }
+
+      query['sender'] = medplum.getProfile().id as string;
+
+      const messages = await medplum.search('Communication', query);
+
+      const voiceMessageCount = messages.entry?.reduce((count, entry) => {
+        const message = entry.resource as Communication;
+        const hasVoiceAttachment = message.payload?.some(payload =>
+          payload.contentAttachment?.contentType?.startsWith('audio/')
+        );
+        return hasVoiceAttachment ? count + 1 : count;
+      }, 0) || 0;
+
+      setTodayVoiceCount(voiceMessageCount);
+      return voiceMessageCount;
+    } catch (error) {
+      console.error('Error refreshing voice message count:', error);
+      return todayVoiceCount;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    voiceCount: todayVoiceCount,
+    isLoading,
+    refreshCount,
+    remainingFreeMessages: Math.max(0, 10 - todayVoiceCount),
+    hasReachedDailyLimit: todayVoiceCount >= 10
+  };
+}
+```
+
+## 8. Update Root Layout with Provider
 
 Modify `app/_layout.tsx` to include the SubscriptionProvider:
 
@@ -350,30 +500,48 @@ export default function RootLayout() {
 
 ### 8. Feature-Gate Protected Content
 
-To restrict features based on subscription status:
+For voice messaging, we'll implement a counter for free users and premium access for subscribers:
 
 ```tsx
 import { useSubscription } from '../contexts/SubscriptionContext';
+import { useVoiceMessageCount } from '../hooks/useVoiceMessageCount';
 
-const FeatureComponent = () => {
+const VoiceFeatureComponent = () => {
   const { checkEntitlementStatus } = useSubscription();
-  
-  const hasAccess = checkEntitlementStatus('pro_features');
-  
-  if (!hasAccess) {
+  const { voiceCount, hasReachedDailyLimit, remainingFreeMessages, refreshCount } = useVoiceMessageCount();
+
+  // Check for premium subscription status
+  const isPremium = checkEntitlementStatus('premium');
+
+  if (hasReachedDailyLimit && !isPremium) {
     return (
       <Box p={4}>
-        <Text>This feature requires a subscription</Text>
+        <Text>You've used all 10 daily voice messages</Text>
+        <Text mt={2} mb={3}>Upgrade to Voice Connect for unlimited voice messaging</Text>
         <Button onPress={() => navigate('SubscriptionScreen')}>
           Upgrade Now
         </Button>
       </Box>
     );
   }
-  
+
   return (
     <Box>
-      {/* Premium feature content */}
+      {!isPremium && (
+        <Text fontSize="xs" color="gray.600" mb={2}>
+          {remainingFreeMessages} voice messages remaining today
+        </Text>
+      )}
+      {/* Voice feature content */}
+      <Button
+        onPress={() => {
+          // Record voice message
+          // No need to manually increment - our hook will refresh automatically
+          // After recording, we can call refreshCount() to update immediately
+        }}
+      >
+        Record Voice Message
+      </Button>
     </Box>
   );
 };

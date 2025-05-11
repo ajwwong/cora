@@ -310,29 +310,36 @@ const ButtonText = React.forwardRef<
   React.ElementRef<typeof UIButton.Text>,
   IButtonTextProps
 >(({ className, variant, size, action, ...props }, ref) => {
-  const {
-    variant: parentVariant,
-    size: parentSize,
-    action: parentAction,
-  } = useStyleContext(SCOPE);
+  try {
+    const context = useStyleContext(SCOPE);
+    const {
+      variant: parentVariant,
+      size: parentSize,
+      action: parentAction,
+    } = context || { variant: 'solid', size: 'md', action: 'primary' };
 
-  return (
-    <UIButton.Text
-      ref={ref}
-      {...props}
-      className={buttonTextStyle({
-        parentVariants: {
-          variant: parentVariant,
-          size: parentSize,
-          action: parentAction,
-        },
-        variant,
-        size,
-        action,
-        class: className,
-      })}
-    />
-  );
+    return (
+      <UIButton.Text
+        ref={ref}
+        {...props}
+        className={buttonTextStyle({
+          parentVariants: {
+            variant: parentVariant,
+            size: parentSize,
+            action: parentAction,
+          },
+          variant,
+          size,
+          action,
+          class: className,
+        })}
+      />
+    );
+  } catch (error) {
+    console.error('Error rendering ButtonText:', error);
+    // Fallback to regular Text component
+    return <Text {...props} />;
+  }
 });
 
 const ButtonSpinner = UIButton.Spinner;

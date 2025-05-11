@@ -1,14 +1,53 @@
-
-# Find the path to Windows ADB executable
-WINDOWS_ADB="/mnt/c/Users/ajwwo/AppData/Local/Android/Sdk/platform-tools/adb.exe"
-
-# Kill ADB servers everywhere
-$WINDOWS_ADB kill-server
-adb kill-server
-
-# Use Windows ADB directly from WSL
-$WINDOWS_ADB devices
-
-# Now try connecting to your emulator using Windows ADB
-$WINDOWS_ADB connect 127.0.0.1:5555
-$WINDOWS_ADB devices
+Web Bundled 1621ms node_modules/expo-router/entry.js (1 module)
+Could not parse Expo config: android.googleServicesFile: "./google-services.json"
+Could not parse Expo config: android.googleServicesFile: "./google-services.json"
+ ERROR  Your app just crashed. See the error below.
+java.lang.RuntimeException: Unable to start activity ComponentInfo{me.feelheard/me.feelheard.MainActivity}: java.lang.IllegalArgumentException: App react context shouldn't be created before.
+  android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4280)
+  android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4467)
+  android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:222)
+  android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem(TransactionExecutor.java:133)
+  android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:103)
+  android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+  android.app.ActivityThread$H.handleMessage(ActivityThread.java:2823)
+  android.os.Handler.dispatchMessage(Handler.java:110)
+  android.os.Looper.loopOnce(Looper.java:248)
+  android.os.Looper.loop(Looper.java:338)
+  android.app.ActivityThread.main(ActivityThread.java:9067)
+  java.lang.reflect.Method.invoke(Native Method)
+  com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:593)
+  com.android.internal.os.ZygoteInit.main(ZygoteInit.java:932)
+Caused by java.lang.IllegalArgumentException: App react context shouldn't be created before.
+  expo.modules.devlauncher.launcher.loaders.DevLauncherAppLoader.createOnDelegateWillBeCreatedListener$lambda$1(DevLauncherAppLoader.kt:49)
+  expo.modules.devlauncher.launcher.loaders.DevLauncherAppLoader.$r8$lambda$qJDs5uQrozfB3coXC15_j-4Po8g(Unknown Source:0)
+  expo.modules.devlauncher.launcher.loaders.DevLauncherAppLoader$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+  expo.modules.devlauncher.launcher.DevLauncherLifecycle.delegateWillBeCreated(DevLauncherLifecycle.kt:16)
+  expo.modules.devlauncher.DevLauncherController$Companion.wrapReactActivityDelegate(DevLauncherController.kt:447)
+  expo.modules.devlauncher.DevLauncherPackageDelegate$createReactActivityHandlers$1.onDidCreateReactActivityDelegate(DevLauncherPackageDelegate.kt:55)
+  expo.modules.ReactActivityDelegateWrapper.onCreate$lambda$10(ReactActivityDelegateWrapper.kt:136)
+  expo.modules.ReactActivityDelegateWrapper.$r8$lambda$gh0m8oZ4w29xrj-g1p1mfPY-ikk(Unknown Source:0)
+  expo.modules.ReactActivityDelegateWrapper$$ExternalSyntheticLambda0.invoke(D8$$SyntheticClass:0)
+  kotlin.sequences.TransformingSequence$iterator$1.next(Sequences.kt:210)
+  kotlin.sequences.FilteringSequence$iterator$1.calcNext(Sequences.kt:170)
+  kotlin.sequences.FilteringSequence$iterator$1.hasNext(Sequences.kt:194)
+  kotlin.sequences.SequencesKt___SequencesKt.firstOrNull(_Sequences.kt:172)
+  expo.modules.ReactActivityDelegateWrapper.onCreate(ReactActivityDelegateWrapper.kt:137)
+  com.facebook.react.ReactActivity.onCreate(ReactActivity.java:47)
+  me.feelheard.MainActivity.onCreate(MainActivity.kt:23)
+  android.app.Activity.performCreate(Activity.java:9155)
+  android.app.Activity.performCreate(Activity.java:9133)
+  android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1521)
+  android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4262)
+  android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4467)
+  android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:222)
+  android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem(TransactionExecutor.java:133)
+  android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:103)
+  android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:80)
+  android.app.ActivityThread$H.handleMessage(ActivityThread.java:2823)
+  android.os.Handler.dispatchMessage(Handler.java:110)
+  android.os.Looper.loopOnce(Looper.java:248)
+  android.os.Looper.loop(Looper.java:338)
+  android.app.ActivityThread.main(ActivityThread.java:9067)
+  java.lang.reflect.Method.invoke(Native Method)
+  com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:593)
+  com.android.internal.os.ZygoteInit.main(ZygoteInit.java:932)

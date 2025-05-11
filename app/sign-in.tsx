@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useState } from "react";
 import { Alert, Button, View } from "react-native";
+import Purchases from "react-native-purchases";
 
 import { Spinner } from "@/components/ui/spinner";
 import { oauth2ClientId, oAuth2Discovery } from "@/utils/medplum-oauth2";
@@ -34,12 +35,32 @@ export default function SignIn() {
 
   const processTokenResponse = useCallback(
     async (tokenResponse: TokenResponse) => {
-      await medplum.setActiveLogin({
-        accessToken: tokenResponse.accessToken,
-        refreshToken: tokenResponse.refreshToken,
-      } as LoginState);
+      try {
+        // Set active login in Medplum
+        await medplum.setActiveLogin({
+          accessToken: tokenResponse.accessToken,
+          refreshToken: tokenResponse.refreshToken,
+        } as LoginState);
 
-      redirectAfterLogin();
+        // Get user profile to use as RevenueCat identifier
+        const profile = medplum.getProfile();
+        if (profile?.id) {
+          console.log("Logging in to RevenueCat with user ID:", profile.id);
+          try {
+            // Log in to RevenueCat with the user's Medplum ID
+            await Purchases.logIn(profile.id);
+            console.log("Successfully logged in to RevenueCat");
+          } catch (error) {
+            console.error("Error logging in to RevenueCat:", error);
+            // Don't block the login process if RevenueCat fails
+          }
+        }
+
+        redirectAfterLogin();
+      } catch (error) {
+        console.error("Error processing token response:", error);
+        Alert.alert("Authentication Error", "Failed to complete login process. Please try again.");
+      }
     },
     [medplum, redirectAfterLogin],
   );

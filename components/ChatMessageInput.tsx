@@ -19,6 +19,8 @@ interface ChatMessageInputProps {
   isReflectionThread?: boolean;
   recordingDuration?: number;
   isBotProcessing?: boolean;
+  remainingFreeMessages?: number;
+  hasPremium?: boolean;
 }
 
 export function ChatMessageInput({
@@ -32,6 +34,8 @@ export function ChatMessageInput({
   isReflectionThread = false,
   recordingDuration = 0,
   isBotProcessing = false,
+  remainingFreeMessages = 0,
+  hasPremium = false,
 }: ChatMessageInputProps) {
   // Add a pulsing animation for recording indicator
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -85,6 +89,13 @@ export function ChatMessageInput({
         }`}
         disabled={isSending || disabled || isBotProcessing}
         accessibilityLabel={isRecording ? "Stop recording" : "Start recording"}
+        aria-label={
+          isRecording
+            ? "Stop recording"
+            : !hasPremium
+              ? `Start recording (${remainingFreeMessages} left)`
+              : "Start recording"
+        }
         style={({ pressed }) => [
           {
             backgroundColor: pressed
@@ -101,7 +112,28 @@ export function ChatMessageInput({
         {isRecording ? (
           <StopCircleIcon size={24} color="white" />
         ) : (
-          <MicIcon size={24} color="#374151" />
+          <>
+            <MicIcon size={24} color="#374151" />
+            {!hasPremium && remainingFreeMessages > 0 && (
+              <View
+                style={{
+                  position: "absolute",
+                  top: -5,
+                  right: -5,
+                  backgroundColor: "#4338ca",
+                  borderRadius: 10,
+                  width: 20,
+                  height: 20,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontSize: 12, color: "white", fontWeight: "bold" }}>
+                  {remainingFreeMessages}
+                </Text>
+              </View>
+            )}
+          </>
         )}
       </Pressable>
       <View className="relative flex-1">

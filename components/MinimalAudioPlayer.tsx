@@ -29,6 +29,7 @@ export function MinimalAudioPlayer({
   audioData,
   messageId,
   threadId,
+  // These props are used internally in the component logic
   isAudioPlaying,
   isCurrentPlayingMessage,
   isAutoplayed,
@@ -107,17 +108,7 @@ export function MinimalAudioPlayer({
 
   // Autoplay logic - only for assistant messages
   useEffect(() => {
-    console.log(`[AUTOPLAY DEBUG] Component state:`, {
-      isAutoplayEnabled,
-      isThisPlaying,
-      globalPlayingId: playingId,
-      isAutoplayed,
-      isMostRecentAudioMessage,
-      messageRole,
-      messageText: messageText ? messageText.substring(0, 30) + "..." : null,
-      audioDataLength: audioData ? audioData.length : 0,
-      messageSentAt: messageSentAt ? messageSentAt.toString() : null,
-    });
+    // Removed autoplay debug logs to declutter console
 
     // Check if message was sent within the last 2 minutes
     const isRecentMessage = () => {
@@ -126,7 +117,7 @@ export function MinimalAudioPlayer({
       const now = new Date();
       const diffMs = now.getTime() - messageSentAt.getTime();
       const diffMinutes = diffMs / (1000 * 60);
-      console.log(`[AUTOPLAY DEBUG] Message time difference: ${diffMinutes.toFixed(2)} minutes`);
+      // Removed time difference debug log
       return diffMinutes <= 2; // Only autoplay if message is within last 2 minutes
     };
 
@@ -152,9 +143,8 @@ export function MinimalAudioPlayer({
       audioData &&
       audioData.length > 1000
     ) {
-      console.log(`[AUTOPLAY DEBUG] Conditions met for autoplay, scheduling playback in 500ms`);
+      // Start autoplay with a small delay
       const timer = setTimeout(() => {
-        console.log(`[AUTOPLAY DEBUG] Timer triggered, calling play() with global audio context`);
         // Use the global audio context's play function directly
         play(messageId, threadId, audioData)
           .then(() => {
@@ -163,23 +153,14 @@ export function MinimalAudioPlayer({
             markAsAutoplayed?.();
           })
           .catch((error) => {
-            console.error(`[AUTOPLAY DEBUG] Error starting autoplay:`, error);
+            console.error(`Error starting autoplay:`, error);
           });
       }, 500);
       return () => {
-        console.log(`[AUTOPLAY DEBUG] Cleaning up autoplay timer`);
         clearTimeout(timer);
       };
     } else {
-      console.log(`[AUTOPLAY DEBUG] Autoplay conditions NOT met:`, {
-        isAutoplayEnabled,
-        globalIsPlaying,
-        isMostRecentAudioMessage,
-        isAutoplayed,
-        isAssistantMessage,
-        hasAudioData: audioData && audioData.length > 1000,
-        isTranscriptionPlaceholder,
-      });
+      // Autoplay conditions not met - not logging details to keep console clean
     }
     isFirstRender.current = false;
   }, [
