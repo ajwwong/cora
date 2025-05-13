@@ -1,36 +1,125 @@
-entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:77785:16)
-    at entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:77759:69
-    at new Promise (<anonymous>)
-    at __awaiter (entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:77741:12)
-    at Purchases.throwIfNotConfigured (entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:79581:14)
-    at Purchases.<anonymous> (entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:78474:46)
-    at step (entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:77836:19)
-    at Object.next (entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:77785:16)
-    at entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:77759:69
-    at new Promise (<anonymous>)
-    at __awaiter (entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:77741:12)
-    at Purchases.getCustomerInfo (entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:78470:14)
-    at initializePurchases (entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:115783:54)
-registerError @ entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580Understand this error
-entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:148547 Splash screen hidden successfully
-api.progressnotes.app/fhir/R4/Subscription:1 
-            
-            
-           Failed to load resource: the server responded with a status of 403 ()Understand this error
-entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580 Forbidden
-registerError @ entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580Understand this error
-entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580 React does not recognize the `borderRadius` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `borderradius` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
-registerError @ entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580Understand this error
-entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580 React does not recognize the `alignItems` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `alignitems` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
-registerError @ entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580Understand this error
-entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580 React does not recognize the `justifyContent` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `justifycontent` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
-registerError @ entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580Understand this error
-entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580 React does not recognize the `textAlign` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `textalign` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
-registerError @ entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580Understand this error
-entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580 React does not recognize the `borderWidth` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `borderwidth` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
-registerError @ entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580Understand this error
-entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580 React does not recognize the `borderColor` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `bordercolor` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
-registerError @ entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580Understand this error
-8entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580 Unexpected text node: Return to Chat. A text node cannot be a child of a <View>.
-registerError @ entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580Understand this error
-3entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app:28580 Unexpected text node: Return to Chat. A text node cannot be a child of a <View>.
+
+	
+Last Updated
+
+
+Payload
+
+no filters	
+	5/12/2025, 7:27:05 AM	
+Content
+942 already has threads
+	5/12/2025, 7:27:03 AM	
+Content
+Welcome to your reflection session on "942 already has threads". I'm here to guide you on a thoughtful journey of self-discovery. Feel free to share your thoughts, ask questions, or explore ideas related to this topic. You can type your messages or tap the microphone button to speak. What's been on your mind about this lately?
+	5/12/2025, 7:25:41 AM	
+Content
+Authentication Error: RevenueCat Login Failed
+
+{
+  "error": "Cannot read property 'isConfigured' of null",
+  "profileId": "01969ccc-37e7-761a-a31e-405b20337a1d",
+  "timestamp": "2025-05-12T14:25:41.768Z"
+}
+	5/12/2025, 7:25:41 AM	
+Content
+Authentication Error: Login State Retrieved
+
+{
+  "hasLoginState": true,
+  "hasProfile": false,
+  "timestamp": "2025-05-12T14:25:41.439Z"
+}
+	5/12/2025, 7:25:41 AM	
+Content
+Authentication Error: Verifying Login
+
+{
+  "timestamp": "2025-05-12T14:25:41.117Z",
+  "status": "checking"
+}
+	5/12/2025, 7:06:43 AM	
+Content
+Authentication Error: RevenueCat Login Failed
+
+{
+  "error": "Cannot read properties of undefined (reading 'isConfigured')",
+  "profileId": "01969ccc-37e7-761a-a31e-405b20337a1d",
+  "timestamp": "2025-05-12T14:06:43.591Z"
+}
+	5/12/2025, 7:06:42 AM	
+Content
+Authentication Error: Login State Retrieved
+
+{
+  "hasLoginState": true,
+  "hasProfile": false,
+  "timestamp": "2025-05-12T14:06:43.408Z"
+}
+	5/12/2025, 7:06:42 AM	
+Content
+Authentication Error: Verifying Login
+
+{
+  "timestamp": "2025-05-12T14:06:43.234Z",
+  "status": "checking"
+}
+	5/12/2025, 7:00:02 AM	
+Content
+Authentication Error: RevenueCat Login Failed
+
+{
+  "error": "Cannot read properties of undefined (reading 'isConfigured')",
+  "profileId": "01969ccc-37e7-761a-a31e-405b20337a1d",
+  "timestamp": "2025-05-12T14:00:03.408Z"
+}
+	5/12/2025, 7:00:02 AM	
+Content
+Authentication Error: Login State Retrieved
+
+{
+  "hasLoginState": true,
+  "hasProfile": false,
+  "timestamp": "2025-05-12T14:00:03.108Z"
+}
+	5/12/2025, 7:00:02 AM	
+Content
+Authentication Error: Verifying Login
+
+{
+  "timestamp": "2025-05-12T14:00:02.870Z",
+  "status": "checking"
+}
+	5/12/2025, 6:58:38 AM	
+Content
+Authentication Error: RevenueCat Login Failed
+
+{
+  "error": "Cannot read properties of undefined (reading 'isConfigured')",
+  "profileId": "01969ccc-37e7-761a-a31e-405b20337a1d",
+  "timestamp": "2025-05-12T13:58:39.382Z"
+}
+	5/12/2025, 6:58:38 AM	
+Content
+Authentication Error: Login State Retrieved
+
+{
+  "hasLoginState": true,
+  "hasProfile": false,
+  "timestamp": "2025-05-12T13:58:39.204Z"
+}
+	5/12/2025, 6:58:38 AM	
+Content
+Authentication Error: Verifying Login
+
+{
+  "timestamp": "2025-05-12T13:58:39.005Z",
+  "status": "checking"
+}
+	5/11/2025, 11:21:52 PM	
+Content
+Yeah... I hear that feeling of being trapped in this... um... constant need to work. The way you say "it's horrible" - there's real pain in that.
+
+It's like... the work has become this thing that's taken over everything, right? And maybe there's this pressure that you... have to keep going, have to keep working, even when it feels... overwhelming or exhausting.
+
+I'm curious... when you say you

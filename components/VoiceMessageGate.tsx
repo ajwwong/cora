@@ -184,8 +184,8 @@ export function VoiceMessageGate({
  * @param threadId Thread ID to count voice messages for
  * @returns Functions to check and handle voice recording permission
  */
-export function useVoiceMessageGate(threadId: string) {
-  // threadId is used in queries within fetchVoiceUsage function below
+export function useVoiceMessageGate(_threadId: string) {
+  // _threadId is used in queries within fetchVoiceUsage function below
   const { isPremium, checkEntitlementStatus } = useSubscription();
   const medplum = useMedplum();
   const [voiceUsage, setVoiceUsage] = useState({
@@ -323,6 +323,6 @@ export function useVoiceMessageGate(threadId: string) {
     hasPremium,
     voiceCount: voiceUsage.dailyCount,
     monthlyCount: voiceUsage.monthlyCount,
-    isLoading,
+    isLoading: _isLoading,
   };
 }

@@ -11,13 +11,14 @@ import {
 } from "@medplum/expo-polyfills";
 import { MedplumProvider } from "@medplum/react-hooks";
 import { makeRedirectUri } from "expo-auth-session";
-import { router, Stack } from "expo-router";
+import { router, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "nativewind";
 import { useEffect } from "react";
-import { Alert } from "react-native";
+import { Alert, Linking } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Purchases from "react-native-purchases";
 import {
   initialWindowMetrics,
   SafeAreaProvider,
@@ -73,6 +74,92 @@ export default function RootLayout() {
     "Nunito-Regular": Nunito_400Regular,
     "Nunito-Bold": Nunito_700Bold,
   });
+
+  const _segments = useSegments();
+
+  // Handle deep linking
+  useEffect(() => {
+    // Function to handle deep link URLs
+    const handleDeepLink = async (event: { url: string }) => {
+      const { url } = event;
+
+      console.log("Handling deep link or navigation:", url);
+
+      // Handle both deep links and web navigation callbacks
+      if (url.startsWith("feelheard://register") || url.includes("/register-callback")) {
+        // Parse the URL to get parameters
+        const parsed = new URL(url);
+        const success = parsed.searchParams.get("success");
+
+        if (success === "true") {
+          // Check if we have auth tokens for auto-login
+          const accessToken = parsed.searchParams.get("access_token");
+          const refreshToken = parsed.searchParams.get("refresh_token");
+          const profileId = parsed.searchParams.get("profile_id");
+
+          if (accessToken && refreshToken) {
+            try {
+              // Set active login using the tokens from the web registration
+              await medplum.setActiveLogin({
+                accessToken,
+                refreshToken,
+                profile: profileId || undefined,
+              });
+
+              // Verify login was successful
+              await medplum.getActiveLogin();
+
+              // Link with RevenueCat if we have a profile ID
+              if (profileId) {
+                try {
+                  await Purchases.logIn(profileId);
+                } catch (rcError) {
+                  console.error("Error linking with RevenueCat:", rcError);
+                  // Continue even if RevenueCat fails - non-critical
+                }
+              }
+
+              // Redirect to main app
+              router.replace("/");
+            } catch (error) {
+              console.error("Auto-login failed:", error);
+              // If auto-login fails, redirect to sign-in page
+              Alert.alert(
+                "Authentication error",
+                "We couldn't automatically sign you in. Please sign in with your new account.",
+              );
+              router.replace("/sign-in");
+            }
+          } else {
+            // Registration was successful but without auth tokens
+            Alert.alert(
+              "Account Created",
+              "Your account has been created successfully. Please sign in.",
+            );
+            router.replace("/sign-in");
+          }
+        } else {
+          // Registration was cancelled or failed, go back to sign in
+          router.replace("/sign-in");
+        }
+      }
+    };
+
+    // Listen for deep links
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+
+    // Parse initial URL (app opened via deep link)
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        console.log("App opened with initial URL:", url);
+        handleDeepLink({ url });
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     // Ensures the splash screen dismisses after fonts load or on error

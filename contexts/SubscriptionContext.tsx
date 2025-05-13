@@ -4,8 +4,12 @@ import { useMedplum } from "@medplum/react-hooks";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Platform } from "react-native";
 // Import RevenueCat for all platforms
-import Purchases, { PurchasesDebugUI } from "react-native-purchases";
-import { LOG_LEVEL } from "react-native-purchases";
+import Purchases, {
+  CustomerInfo,
+  LOG_LEVEL,
+  PurchasesDebugUI,
+  PurchasesPackage,
+} from "react-native-purchases";
 
 import {
   ENTITLEMENT_IDS,
@@ -95,50 +99,76 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         );
 
         try {
-          // Set up custom log handler
-          Purchases.setLogHandler((logLevel, message) => {
-            const levels = {
-              [LOG_LEVEL.VERBOSE]: "VERBOSE",
-              [LOG_LEVEL.DEBUG]: "DEBUG",
-              [LOG_LEVEL.INFO]: "INFO",
-              [LOG_LEVEL.WARN]: "WARN",
-              [LOG_LEVEL.ERROR]: "ERROR",
-            };
+          // Check if RevenueCat SDK is available before using it
+          if (!Purchases) {
+            console.warn("📱 [SubscriptionContext] RevenueCat SDK is null or undefined");
+            setIsPremium(true); // Default to premium if SDK not available
+            return;
+          }
 
-            // Format log message with timestamp, level, and message
-            const formattedLevel = levels[logLevel] || "UNKNOWN";
-            const timestamp = new Date().toISOString();
-            const formattedMessage = `[${timestamp}] [RevenueCat][${formattedLevel}] ${message}`;
+          // Set up custom log handler with safety check
+          if (typeof Purchases.setLogHandler === "function") {
+            Purchases.setLogHandler((logLevel, message) => {
+              const levels = {
+                [LOG_LEVEL.VERBOSE]: "VERBOSE",
+                [LOG_LEVEL.DEBUG]: "DEBUG",
+                [LOG_LEVEL.INFO]: "INFO",
+                [LOG_LEVEL.WARN]: "WARN",
+                [LOG_LEVEL.ERROR]: "ERROR",
+              };
 
-            // Log to console with appropriate level
-            switch (logLevel) {
-              case LOG_LEVEL.ERROR:
-                console.error(formattedMessage);
-                break;
-              case LOG_LEVEL.WARN:
-                console.warn(formattedMessage);
-                break;
-              default:
-                console.log(formattedMessage);
-            }
+              // Format log message with timestamp, level, and message
+              const formattedLevel = levels[logLevel] || "UNKNOWN";
+              const timestamp = new Date().toISOString();
+              const formattedMessage = `[${timestamp}] [RevenueCat][${formattedLevel}] ${message}`;
 
-            // In a production app, you could also send logs to a remote logging service here
-          });
+              // Log to console with appropriate level
+              switch (logLevel) {
+                case LOG_LEVEL.ERROR:
+                  console.error(formattedMessage);
+                  break;
+                case LOG_LEVEL.WARN:
+                  console.warn(formattedMessage);
+                  break;
+                default:
+                  console.log(formattedMessage);
+              }
+
+              // In a production app, you could also send logs to a remote logging service here
+            });
+          } else {
+            console.warn("📱 [SubscriptionContext] RevenueCat setLogHandler method not available");
+          }
 
           // Set log level to VERBOSE for detailed logging
           console.log("📱 [SubscriptionContext] Setting log level to VERBOSE");
-          Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+          if (typeof Purchases.setLogLevel === "function") {
+            Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+          } else {
+            console.warn("📱 [SubscriptionContext] RevenueCat setLogLevel method not available");
+          }
 
           // Simple configuration based on RevenueCat docs
           console.log("📱 [SubscriptionContext] Configuring RevenueCat");
-          Purchases.configure({ apiKey });
-          console.log("📱 [SubscriptionContext] RevenueCat initialized successfully");
+          if (typeof Purchases.configure === "function") {
+            Purchases.configure({ apiKey });
+            console.log("📱 [SubscriptionContext] RevenueCat initialized successfully");
+          } else {
+            console.warn("📱 [SubscriptionContext] RevenueCat configure method not available");
+            setIsPremium(true); // Default to premium if configure method not available
+          }
 
           // Show debug UI overlay for easier debugging
-          if (Platform.OS !== "web") {
+          if (Platform.OS !== "web" && PurchasesDebugUI) {
             try {
               console.log("📱 [SubscriptionContext] Enabling RevenueCat Debug UI Overlay");
-              PurchasesDebugUI.showDebugUI();
+              if (typeof PurchasesDebugUI.showDebugUI === "function") {
+                PurchasesDebugUI.showDebugUI();
+              } else {
+                console.warn(
+                  "📱 [SubscriptionContext] RevenueCat showDebugUI method not available",
+                );
+              }
             } catch (error) {
               console.error("📱 [SubscriptionContext] Failed to enable Debug UI Overlay:", error);
             }
@@ -146,26 +176,46 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
           // Fetch offerings
           console.log("📱 [SubscriptionContext] Fetching offerings");
-          const offerings = await Purchases.getOfferings();
-          if (offerings && offerings.current?.availablePackages?.length) {
-            console.log(
-              `📱 [SubscriptionContext] Found ${offerings.current.availablePackages.length} packages`,
-            );
-            setAvailablePackages(offerings.current.availablePackages);
+          if (typeof Purchases.getOfferings === "function") {
+            try {
+              const offerings = await Purchases.getOfferings();
+              if (offerings && offerings.current?.availablePackages?.length) {
+                console.log(
+                  `📱 [SubscriptionContext] Found ${offerings.current.availablePackages.length} packages`,
+                );
+                setAvailablePackages(offerings.current.availablePackages);
+              } else {
+                console.log("📱 [SubscriptionContext] No packages found in current offering");
+              }
+            } catch (error) {
+              console.error("📱 [SubscriptionContext] Error fetching offerings:", error);
+            }
           } else {
-            console.log("📱 [SubscriptionContext] No packages found in current offering");
+            console.warn("📱 [SubscriptionContext] RevenueCat getOfferings method not available");
           }
 
           // Get customer info
           console.log("📱 [SubscriptionContext] Fetching customer info");
-          const info = await Purchases.getCustomerInfo();
-          if (info) {
-            setCustomerInfo(info);
-            const hasPremium = checkPremiumEntitlement(info);
-            console.log(`📱 [SubscriptionContext] Premium status: ${hasPremium}`);
+          if (typeof Purchases.getCustomerInfo === "function") {
+            try {
+              const info = await Purchases.getCustomerInfo();
+              if (info) {
+                setCustomerInfo(info);
+                const hasPremium = checkPremiumEntitlement(info);
+                console.log(`📱 [SubscriptionContext] Premium status: ${hasPremium}`);
+              } else {
+                console.warn("📱 [SubscriptionContext] Customer info returned null");
+                setIsPremium(true); // Default to premium during development
+              }
+            } catch (error) {
+              console.error("📱 [SubscriptionContext] Error fetching customer info:", error);
+              setIsPremium(true); // Default to premium if error
+            }
           } else {
-            console.warn("📱 [SubscriptionContext] Customer info returned null");
-            setIsPremium(true); // Default to premium during development
+            console.warn(
+              "📱 [SubscriptionContext] RevenueCat getCustomerInfo method not available",
+            );
+            setIsPremium(true); // Default to premium if method not available
           }
         } catch (error) {
           console.error("📱 [SubscriptionContext] RevenueCat initialization error:", error);
@@ -186,17 +236,23 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // Set up a listener for purchases on native platforms
     let purchaseListener: unknown = null;
-    if (Platform.OS !== "web") {
+    if (Platform.OS !== "web" && Purchases) {
       try {
-        purchaseListener = Purchases.addCustomerInfoUpdateListener((info) => {
-          console.log("📱 [SubscriptionContext] Customer info updated");
-          if (info) {
-            setCustomerInfo(info);
-            checkPremiumEntitlement(info);
-            storeSubscriptionStatusToMedplum(info);
-          }
-        });
-        console.log("📱 [SubscriptionContext] Purchase listener set up successfully");
+        if (typeof Purchases.addCustomerInfoUpdateListener === "function") {
+          purchaseListener = Purchases.addCustomerInfoUpdateListener((info) => {
+            console.log("📱 [SubscriptionContext] Customer info updated");
+            if (info) {
+              setCustomerInfo(info);
+              checkPremiumEntitlement(info);
+              storeSubscriptionStatusToMedplum(info);
+            }
+          });
+          console.log("📱 [SubscriptionContext] Purchase listener set up successfully");
+        } else {
+          console.warn(
+            "📱 [SubscriptionContext] RevenueCat addCustomerInfoUpdateListener method not available",
+          );
+        }
       } catch (error) {
         console.error("📱 [SubscriptionContext] Failed to set up purchase listener:", error);
       }
@@ -223,42 +279,45 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   // Save subscription status to Medplum as a FHIR extension
-  const storeSubscriptionStatusToMedplum = async (info: CustomerInfo) => {
-    // This function stores the subscription status in the Medplum FHIR record
-    try {
-      const profile = medplum.getProfile();
-      if (!profile?.id) return;
+  const storeSubscriptionStatusToMedplum = React.useCallback(
+    async (info: CustomerInfo) => {
+      // This function stores the subscription status in the Medplum FHIR record
+      try {
+        const profile = medplum.getProfile();
+        if (!profile?.id) return;
 
-      // Get the patient resource
-      const patient = await medplum.readResource("Patient", profile.id);
-      if (!patient) return;
+        // Get the patient resource
+        const patient = await medplum.readResource("Patient", profile.id);
+        if (!patient) return;
 
-      // Prepare updated patient with subscription info
-      const updatedPatient: Patient = {
-        ...patient,
-        extension: [
-          ...(patient.extension || []).filter(
-            (ext) => ext.url !== SUBSCRIPTION_STATUS_EXTENSION_URL,
-          ),
-          {
-            url: SUBSCRIPTION_STATUS_EXTENSION_URL,
-            valueString: JSON.stringify({
-              customerId: info.originalAppUserId,
-              isPremium: checkPremiumEntitlement(info),
-              expirationDate: info.entitlements.active[ENTITLEMENT_IDS.PREMIUM]?.expiresDate,
-              productIdentifier:
-                info.entitlements.active[ENTITLEMENT_IDS.PREMIUM]?.productIdentifier,
-            }),
-          },
-        ],
-      };
+        // Prepare updated patient with subscription info
+        const updatedPatient: Patient = {
+          ...patient,
+          extension: [
+            ...(patient.extension || []).filter(
+              (ext) => ext.url !== SUBSCRIPTION_STATUS_EXTENSION_URL,
+            ),
+            {
+              url: SUBSCRIPTION_STATUS_EXTENSION_URL,
+              valueString: JSON.stringify({
+                customerId: info.originalAppUserId,
+                isPremium: checkPremiumEntitlement(info),
+                expirationDate: info.entitlements.active[ENTITLEMENT_IDS.PREMIUM]?.expiresDate,
+                productIdentifier:
+                  info.entitlements.active[ENTITLEMENT_IDS.PREMIUM]?.productIdentifier,
+              }),
+            },
+          ],
+        };
 
-      // Update the patient resource
-      await medplum.updateResource(updatedPatient);
-    } catch (error) {
-      console.error("Error storing subscription status to Medplum:", error);
-    }
-  };
+        // Update the patient resource
+        await medplum.updateResource(updatedPatient);
+      } catch (error) {
+        console.error("Error storing subscription status to Medplum:", error);
+      }
+    },
+    [medplum, checkPremiumEntitlement],
+  );
 
   // Function to handle purchasing a package
   const purchasePackage = async (pkg: PurchasesPackage): Promise<boolean> => {
@@ -281,6 +340,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       // Make the purchase
+      if (typeof Purchases.purchasePackage !== "function") {
+        console.warn("📱 [SubscriptionContext] RevenueCat purchasePackage method not available");
+        setIsPremium(true); // Default to premium if method not available
+        return true;
+      }
       const { customerInfo } = await Purchases.purchasePackage(pkg);
 
       if (customerInfo) {
@@ -326,6 +390,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       // Restore purchases
+      if (typeof Purchases.restorePurchases !== "function") {
+        console.warn("📱 [SubscriptionContext] RevenueCat restorePurchases method not available");
+        setIsPremium(true); // Default to premium if method not available
+        return true;
+      }
       const customerInfo = await Purchases.restorePurchases();
 
       if (customerInfo) {
@@ -362,6 +431,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
+      if (!Purchases || typeof Purchases.getCustomerInfo !== "function") {
+        console.warn("📱 [SubscriptionContext] Debug: RevenueCat getCustomerInfo not available");
+        return;
+      }
       const info = await Purchases.getCustomerInfo();
       console.log(
         "📱 [SubscriptionContext] Debug: Customer info retrieved:",
@@ -387,6 +460,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
+      if (!Purchases || typeof Purchases.getOfferings !== "function") {
+        console.warn("📱 [SubscriptionContext] Debug: RevenueCat getOfferings not available");
+        return;
+      }
       const offerings = await Purchases.getOfferings();
       console.log(
         "📱 [SubscriptionContext] Debug: Offerings retrieved:",
@@ -414,14 +491,28 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
 
+    if (!PurchasesDebugUI) {
+      console.warn("📱 [SubscriptionContext] Debug: PurchasesDebugUI is not available");
+      return;
+    }
+
     try {
       console.log("📱 [SubscriptionContext] Debug: Refreshing Debug UI Overlay");
       // Hide and then show again to refresh
-      PurchasesDebugUI.hideDebugUI();
-      setTimeout(() => {
-        PurchasesDebugUI.showDebugUI();
-        console.log("📱 [SubscriptionContext] Debug: Debug UI refreshed");
-      }, 500);
+      if (typeof PurchasesDebugUI.hideDebugUI === "function") {
+        PurchasesDebugUI.hideDebugUI();
+
+        setTimeout(() => {
+          if (typeof PurchasesDebugUI.showDebugUI === "function") {
+            PurchasesDebugUI.showDebugUI();
+            console.log("📱 [SubscriptionContext] Debug: Debug UI refreshed");
+          } else {
+            console.warn("📱 [SubscriptionContext] Debug: showDebugUI method not available");
+          }
+        }, 500);
+      } else {
+        console.warn("📱 [SubscriptionContext] Debug: hideDebugUI method not available");
+      }
     } catch (error) {
       console.error("📱 [SubscriptionContext] Debug: Error refreshing Debug UI:", error);
     }
