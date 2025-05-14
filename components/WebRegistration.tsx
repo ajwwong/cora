@@ -11,7 +11,7 @@ interface WebRegistrationProps {
   onCancel: () => void;
 }
 
-export function WebRegistration({ _onSuccess, onCancel }: WebRegistrationProps) {
+export function WebRegistration({ onSuccess, onCancel }: WebRegistrationProps) {
   // Base URL for the web registration page
   const registrationUrl = "https://www.feelheard.me/register";
 

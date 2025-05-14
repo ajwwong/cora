@@ -39,13 +39,10 @@ export default function SignIn() {
   }, [router]);
 
   // Helper function to log authentication issues to console only
-  const logAuthError = useCallback(
-    (title: string, details: Record<string, unknown>) => {
-      // Log to console instead of creating Communication resources
-      console.log(`Auth Log: ${title}`, details);
-    },
-    [],
-  );
+  const logAuthError = useCallback((title: string, details: Record<string, unknown>) => {
+    // Log to console instead of creating Communication resources
+    console.log(`Auth Log: ${title}`, details);
+  }, []);
 
   const processTokenResponse = useCallback(
     async (tokenResponse: TokenResponse) => {
@@ -160,14 +157,14 @@ export default function SignIn() {
                   try {
                     Purchases.getAppUserID();
                     return true;
-                  } catch (e) {
+                  } catch {
                     // If this throws, it's not properly configured
                     return false;
                   }
                 }
 
                 return false;
-              } catch (_e) {
+              } catch {
                 // Any error means RevenueCat isn't properly available
                 return false;
               }
@@ -406,13 +403,10 @@ export default function SignIn() {
     medplumLogin().finally(() => setIsLoginLoading(false));
   }, [medplumLogin]);
 
-  const handleRegisterSuccess = useCallback(
-    (_e: unknown) => {
-      // Registration automatically logs the user in, so just redirect
-      redirectAfterLogin();
-    },
-    [redirectAfterLogin],
-  );
+  const handleRegisterSuccess = useCallback(() => {
+    // Registration automatically logs the user in, so just redirect
+    redirectAfterLogin();
+  }, [redirectAfterLogin]);
 
   const toggleRegistration = useCallback(() => {
     setShowRegister((prev) => !prev);

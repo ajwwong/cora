@@ -75,22 +75,22 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const medplum = useMedplum();
 
   // Safe execution helper for RevenueCat methods
-  const safelyExecuteRevenueCatMethod = async <T>(
+  const safelyExecuteRevenueCatMethod = async <T,>(
     methodName: string,
     method: () => Promise<T>,
-    fallbackValue: T
+    fallbackValue: T,
   ): Promise<T> => {
     if (Platform.OS === "web") {
       console.log(`📱 [SubscriptionContext] Web platform detected, skipping ${methodName}`);
       return fallbackValue;
     }
-    
+
     try {
       if (typeof method !== "function") {
         console.warn(`📱 [SubscriptionContext] RevenueCat ${methodName} not available`);
         return fallbackValue;
       }
-      
+
       return await method();
     } catch (error) {
       console.error(`📱 [SubscriptionContext] Error executing ${methodName}:`, error);
@@ -113,10 +113,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           setIsLoading(false);
           return;
         }
-        
+
         // CRUCIAL: Add a delay to ensure native modules are properly initialized
         // This helps prevent the "setLogHandler of null" error
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // Get the appropriate API key for the platform
         const apiKey =
@@ -128,7 +128,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         try {
           // Handle case where RevenueCat is not available at all
-          if (typeof Purchases !== 'object' || Purchases === null) {
+          if (typeof Purchases !== "object" || Purchases === null) {
             console.warn("📱 [SubscriptionContext] RevenueCat SDK is not available");
             setIsPremium(true); // Default to premium if SDK not available
             setIsLoading(false);
@@ -140,14 +140,14 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           if (typeof Purchases.configure === "function") {
             Purchases.configure({ apiKey });
             console.log("📱 [SubscriptionContext] RevenueCat configured successfully");
-            
+
             // Now set log level AFTER configuration
             if (typeof Purchases.setLogLevel === "function") {
               Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
             } else {
               console.warn("📱 [SubscriptionContext] RevenueCat setLogLevel method not available");
             }
-            
+
             // Now set log handler AFTER configuration
             if (typeof Purchases.setLogHandler === "function") {
               Purchases.setLogHandler((logLevel, message) => {
@@ -179,7 +179,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 // In a production app, you could also send logs to a remote logging service here
               });
             } else {
-              console.warn("📱 [SubscriptionContext] RevenueCat setLogHandler method not available");
+              console.warn(
+                "📱 [SubscriptionContext] RevenueCat setLogHandler method not available",
+              );
             }
           } else {
             console.warn("📱 [SubscriptionContext] RevenueCat configure method not available");
@@ -207,9 +209,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           const offerings = await safelyExecuteRevenueCatMethod(
             "getOfferings",
             () => Purchases.getOfferings(),
-            { current: null }
+            { current: null },
           );
-          
+
           if (offerings && offerings.current?.availablePackages?.length) {
             console.log(
               `📱 [SubscriptionContext] Found ${offerings.current.availablePackages.length} packages`,
@@ -224,9 +226,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           const info = await safelyExecuteRevenueCatMethod(
             "getCustomerInfo",
             () => Purchases.getCustomerInfo(),
-            null
+            null,
           );
-          
+
           if (info) {
             setCustomerInfo(info);
             const hasPremium = checkPremiumEntitlement(info);
@@ -287,7 +289,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
       }
     };
-  }, [medplum]);
+  }, [medplum, storeSubscriptionStatusToMedplum]);
 
   // Helper function to check if the user has premium entitlement
   const checkPremiumEntitlement = (info: CustomerInfo) => {
@@ -350,7 +352,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       // Check if RevenueCat SDK is available
-      if (typeof Purchases !== 'object' || Purchases === null) {
+      if (typeof Purchases !== "object" || Purchases === null) {
         console.warn("📱 [SubscriptionContext] RevenueCat SDK is not available");
         // During development, simulate successful purchase
         setIsPremium(true);
@@ -361,7 +363,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const purchaseResult = await safelyExecuteRevenueCatMethod(
         "purchasePackage",
         async () => Purchases.purchasePackage(pkg),
-        { customerInfo: null }
+        { customerInfo: null },
       );
 
       if (purchaseResult?.customerInfo) {
@@ -399,7 +401,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       // Check if RevenueCat SDK is available
-      if (typeof Purchases !== 'object' || Purchases === null) {
+      if (typeof Purchases !== "object" || Purchases === null) {
         console.warn("📱 [SubscriptionContext] RevenueCat SDK is not available");
         // During development, simulate successful restore
         setIsPremium(true);
@@ -410,7 +412,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const customerInfo = await safelyExecuteRevenueCatMethod(
         "restorePurchases",
         async () => Purchases.restorePurchases(),
-        null
+        null,
       );
 
       if (customerInfo) {
@@ -450,9 +452,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const info = await safelyExecuteRevenueCatMethod(
         "getCustomerInfo (debug)",
         async () => Purchases.getCustomerInfo(),
-        null
+        null,
       );
-      
+
       if (info) {
         console.log(
           "📱 [SubscriptionContext] Debug: Customer info retrieved:",
@@ -484,9 +486,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const offerings = await safelyExecuteRevenueCatMethod(
         "getOfferings (debug)",
         async () => Purchases.getOfferings(),
-        { current: null }
+        { current: null },
       );
-      
+
       if (offerings) {
         console.log(
           "📱 [SubscriptionContext] Debug: Offerings retrieved:",
@@ -517,16 +519,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
 
-    if (typeof PurchasesDebugUI !== 'object' || PurchasesDebugUI === null) {
+    if (typeof PurchasesDebugUI !== "object" || PurchasesDebugUI === null) {
       console.warn("📱 [SubscriptionContext] Debug: PurchasesDebugUI is not available");
       return;
     }
 
     try {
       console.log("📱 [SubscriptionContext] Debug: Refreshing Debug UI Overlay");
-      
+
       // Safely execute the hideDebugUI method
-      const safelyExecuteUIMethod = (methodName: string, method: Function): boolean => {
+      const safelyExecuteUIMethod = (methodName: string, method: () => void): boolean => {
         try {
           if (typeof method === "function") {
             method();
@@ -540,13 +542,13 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           return false;
         }
       };
-      
+
       // Hide and then show again to refresh
-      const hideSuccessful = safelyExecuteUIMethod('hideDebugUI', PurchasesDebugUI.hideDebugUI);
-      
+      const hideSuccessful = safelyExecuteUIMethod("hideDebugUI", PurchasesDebugUI.hideDebugUI);
+
       if (hideSuccessful) {
         setTimeout(() => {
-          const showSuccessful = safelyExecuteUIMethod('showDebugUI', PurchasesDebugUI.showDebugUI);
+          const showSuccessful = safelyExecuteUIMethod("showDebugUI", PurchasesDebugUI.showDebugUI);
           if (showSuccessful) {
             console.log("📱 [SubscriptionContext] Debug: Debug UI refreshed");
           }
