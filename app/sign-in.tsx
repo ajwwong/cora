@@ -38,38 +38,13 @@ export default function SignIn() {
     router.replace("/");
   }, [router]);
 
-  // Helper function to log authentication issues to Medplum
+  // Helper function to log authentication issues to console only
   const logAuthError = useCallback(
-    async (title: string, details: Record<string, unknown>) => {
-      try {
-        // Create a Communication resource for logging
-        await medplum.createResource({
-          resourceType: "Communication",
-          status: "completed",
-          sent: new Date().toISOString(),
-          payload: [
-            {
-              contentString: `Authentication Error: ${title}\n\n${JSON.stringify(details, null, 2)}`,
-            },
-          ],
-          category: [
-            {
-              coding: [
-                {
-                  system: "https://progressnotes.app/fhir/CodeSystem/communication-category",
-                  code: "auth-error",
-                  display: "Authentication Error",
-                },
-              ],
-            },
-          ],
-        });
-      } catch (logError) {
-        // Fallback to console if logging fails
-        console.error("Failed to log auth error to Communication:", logError);
-      }
+    (title: string, details: Record<string, unknown>) => {
+      // Log to console instead of creating Communication resources
+      console.log(`Auth Log: ${title}`, details);
     },
-    [medplum],
+    [],
   );
 
   const processTokenResponse = useCallback(
@@ -85,12 +60,12 @@ export default function SignIn() {
           timestamp: new Date().toISOString(),
         };
 
-        await logAuthError("Token Response Info", tokenInfo);
+        logAuthError("Token Response Info", tokenInfo);
 
         // Check token validity before attempting login
         if (!tokenResponse.accessToken) {
           const error = "Missing access token in response";
-          await logAuthError("Token Validation Failed", { error });
+          logAuthError("Token Validation Failed", { error });
           throw new Error(error);
         }
 
@@ -99,7 +74,7 @@ export default function SignIn() {
           console.log(
             "No refresh token provided - session will need re-authentication when it expires",
           );
-          await logAuthError("Missing Refresh Token", {
+          logAuthError("Missing Refresh Token", {
             warning:
               "No refresh token provided - session will need re-authentication when it expires",
             timestamp: new Date().toISOString(),
@@ -107,7 +82,7 @@ export default function SignIn() {
           // Continue with authentication - don't throw an error
         }
 
-        await logAuthError("Setting Active Login", {
+        logAuthError("Setting Active Login", {
           timestamp: new Date().toISOString(),
           status: "attempting",
         });
@@ -118,7 +93,7 @@ export default function SignIn() {
           refreshToken: tokenResponse.refreshToken,
         } as LoginState);
 
-        await logAuthError("Verifying Login", {
+        logAuthError("Verifying Login", {
           timestamp: new Date().toISOString(),
           status: "checking",
         });
@@ -126,7 +101,7 @@ export default function SignIn() {
         // Verify login was successful
         const loginState = await medplum.getActiveLogin();
 
-        await logAuthError("Login State Retrieved", {
+        logAuthError("Login State Retrieved", {
           hasLoginState: !!loginState,
           hasProfile: !!loginState?.profile,
           timestamp: new Date().toISOString(),
@@ -136,7 +111,7 @@ export default function SignIn() {
         const profile = medplum.getProfile();
 
         // Add detailed logging about the profile
-        await logAuthError("Profile Information", {
+        logAuthError("Profile Information", {
           hasProfile: !!profile,
           profileType: profile?.resourceType || "undefined",
           profileId: profile?.id || "undefined",
@@ -150,7 +125,7 @@ export default function SignIn() {
             // Try to explicitly request the profile
             const userDetails = await medplum.getProfileResource();
 
-            await logAuthError("Explicit Profile Fetch Result", {
+            logAuthError("Explicit Profile Fetch Result", {
               success: !!userDetails,
               resourceType: userDetails?.resourceType || "undefined",
               id: userDetails?.id || "undefined",
@@ -158,7 +133,7 @@ export default function SignIn() {
             });
           } catch (fetchErr) {
             console.error("Error fetching profile:", fetchErr);
-            await logAuthError("Profile Fetch Error", {
+            logAuthError("Profile Fetch Error", {
               error: fetchErr instanceof Error ? fetchErr.message : String(fetchErr),
               timestamp: new Date().toISOString(),
             });
@@ -201,21 +176,21 @@ export default function SignIn() {
             if (isRevenueCatAvailable()) {
               // Log in to RevenueCat with the user's Medplum ID
               await Purchases.logIn(profile.id);
-              await logAuthError("RevenueCat Login", {
+              logAuthError("RevenueCat Login", {
                 success: true,
                 profileId: profile.id,
                 timestamp: new Date().toISOString(),
               });
             } else {
               console.log("RevenueCat not configured, skipping login");
-              await logAuthError("RevenueCat Skipped", {
+              logAuthError("RevenueCat Skipped", {
                 reason: "Not configured or initialized",
                 profileId: profile.id,
                 timestamp: new Date().toISOString(),
               });
             }
           } catch (error) {
-            await logAuthError("RevenueCat Login Failed", {
+            logAuthError("RevenueCat Login Failed", {
               error: error instanceof Error ? error.message : String(error),
               profileId: profile.id,
               timestamp: new Date().toISOString(),
@@ -223,7 +198,7 @@ export default function SignIn() {
             // Don't block the login process if RevenueCat fails
           }
         } else {
-          await logAuthError("RevenueCat Login Skipped", {
+          logAuthError("RevenueCat Login Skipped", {
             reason: "No profile ID available",
             timestamp: new Date().toISOString(),
           });
@@ -239,7 +214,7 @@ export default function SignIn() {
           timestamp: new Date().toISOString(),
         };
 
-        await logAuthError("Token Processing Failed", errorDetails);
+        logAuthError("Token Processing Failed", errorDetails);
         console.error("Error processing token response:", error);
         Alert.alert(
           "Authentication Error",
@@ -283,14 +258,14 @@ export default function SignIn() {
 
     let loginResponse;
     try {
-      await logAuthError("Prompt Auth Request", {
+      logAuthError("Prompt Auth Request", {
         status: "starting",
         timestamp: new Date().toISOString(),
       });
 
       loginResponse = await loginRequest.promptAsync(oAuth2Discovery);
 
-      await logAuthError("Auth Prompt Response", {
+      logAuthError("Auth Prompt Response", {
         type: loginResponse.type,
         hasCode: loginResponse.type === "success" && !!loginResponse.params.code,
         hasError: !!loginResponse.params.error,
@@ -304,7 +279,7 @@ export default function SignIn() {
         timestamp: new Date().toISOString(),
       };
 
-      await logAuthError("Auth Prompt Error", errorDetails);
+      logAuthError("Auth Prompt Error", errorDetails);
 
       if (error instanceof Error) {
         console.error("Auth prompt error:", error.message);
@@ -323,7 +298,7 @@ export default function SignIn() {
         timestamp: new Date().toISOString(),
       };
 
-      await logAuthError("Auth Response Error", errorDetails);
+      logAuthError("Auth Response Error", errorDetails);
 
       console.error(
         "Auth response error:",
@@ -341,7 +316,7 @@ export default function SignIn() {
 
     if (loginResponse.type === "success") {
       try {
-        await logAuthError("Token Exchange Request", {
+        logAuthError("Token Exchange Request", {
           status: "starting",
           hasCode: !!loginResponse.params.code,
           hasCodeVerifier: !!loginRequest.codeVerifier,
@@ -376,7 +351,7 @@ export default function SignIn() {
 
         console.log("TOKEN RESPONSE:", JSON.stringify(logSafeResponse, null, 2));
 
-        await logAuthError("Token Exchange Success", {
+        logAuthError("Token Exchange Success", {
           status: "success",
           responseDetails: logSafeResponse,
           timestamp: new Date().toISOString(),
@@ -393,7 +368,7 @@ export default function SignIn() {
           timestamp: new Date().toISOString(),
         };
 
-        await logAuthError("Token Exchange Error", errorDetails);
+        logAuthError("Token Exchange Error", errorDetails);
 
         console.error("Token exchange error:", error);
 
@@ -405,7 +380,7 @@ export default function SignIn() {
             // If the user tries to login right after unsuccessfully logging out,
             // the server returns an invalid_request error.
             // We can ignore and try again:
-            await logAuthError("Invalid Code Verifier", {
+            logAuthError("Invalid Code Verifier", {
               status: "retrying",
               timestamp: new Date().toISOString(),
             });

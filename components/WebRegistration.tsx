@@ -1,6 +1,6 @@
 import * as WebBrowser from "expo-web-browser";
 import React from "react";
-import { Alert, Linking, Platform, StyleSheet, View } from "react-native";
+import { Alert, Linking, Platform, View } from "react-native";
 
 import { Button, ButtonText } from "./ui/button";
 import { Text } from "./ui/text";
@@ -68,49 +68,21 @@ export function WebRegistration({ _onSuccess, onCancel }: WebRegistrationProps) 
   };
 
   return (
-    <View style={styles.container}>
-      <VStack space="md" style={styles.content}>
-        <Text style={styles.title}>Create Your Account</Text>
-        <Text style={styles.description}>
+    <View className="flex-1 items-center justify-center">
+      <VStack space="md" className="w-[90%] max-w-[350px]">
+        <Text className="mb-4 text-center text-2xl font-bold">Create Your Account</Text>
+        <Text className="mb-6 text-center text-base">
           {Platform.OS === "web"
             ? "You'll be redirected to our secure registration page to create your FeelHeard account."
             : "You'll be redirected to our secure registration page to create your FeelHeard account. After you finish registration, return to this app and sign in."}
         </Text>
-        <Button action="primary" size="lg" onPress={launchWebRegistration} style={styles.button}>
+        <Button action="primary" size="lg" onPress={launchWebRegistration} className="w-full">
           <ButtonText>Continue to Registration</ButtonText>
         </Button>
-        <Button variant="outline" size="lg" onPress={onCancel} style={styles.button}>
+        <Button variant="outline" size="lg" onPress={onCancel} className="w-full">
           <ButtonText>Cancel</ButtonText>
         </Button>
       </VStack>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  content: {
-    width: "100%",
-    maxWidth: 350,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  description: {
-    textAlign: "center",
-    marginBottom: 20,
-    color: "#666",
-    fontSize: 16, // Ensure text is not too small
-  },
-  button: {
-    width: "100%",
-  },
-});

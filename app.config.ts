@@ -96,6 +96,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         color: "#ffffff",
       },
     ],
+    // Add build properties plugin for RevenueCat compatibility
+    [
+      "expo-build-properties",
+      {
+        android: {
+          minSdkVersion: 24, // Required by RevenueCat
+        }
+      },
+    ],
     // RevenueCat is initialized in code rather than as a plugin
     // Plugin doesn't seem to be compatible with this version of Expo
     "expo-web-browser",
