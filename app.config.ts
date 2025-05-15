@@ -37,6 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "android.permission.SCHEDULE_EXACT_ALARM",
       "android.permission.POST_NOTIFICATIONS",
       "android.permission.USE_FULL_SCREEN_INTENT",
+      "com.android.vending.BILLING", // Required for RevenueCat in-app purchases
     ],
     package: "me.feelheard",
     googleServicesFile: "./google-services.json",
@@ -102,11 +103,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         android: {
           minSdkVersion: 24, // Required by RevenueCat
-        }
+        },
       },
     ],
     // RevenueCat is initialized in code rather than as a plugin
-    // Plugin doesn't seem to be compatible with this version of Expo
+    // because react-native-purchases doesn't support being used as a config plugin
     "expo-web-browser",
   ],
   experiments: {

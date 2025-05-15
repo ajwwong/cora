@@ -174,7 +174,7 @@ export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps)
                 </Text>
                 <View className="mb-2 flex-row items-center">
                   <ZapIcon size={16} color="#4B5563" />
-                  <Text className="ml-2 text-sm">Unlimited voice messaging</Text>
+                  <Text className="ml-2 text-sm">Voice messaging</Text>
                 </View>
                 <View className="mb-2 flex-row items-center">
                   <BoltIcon size={16} color="#4B5563" />

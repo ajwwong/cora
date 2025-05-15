@@ -104,7 +104,7 @@ const SubscriptionScreen = () => {
           </Heading>
 
           <Text fontSize="md" textAlign="center" mb={2}>
-            You have an active Voice Connect subscription with unlimited voice messaging.
+            You have an active Voice Connect subscription with voice messaging.
           </Text>
 
           <Box
@@ -119,7 +119,7 @@ const SubscriptionScreen = () => {
             <Text fontWeight="bold" fontSize="lg" mb={2}>
               Voice Connect
             </Text>
-            <Text mb={4}>Unlimited voice messaging</Text>
+            <Text mb={4}>Voice messaging</Text>
             <HStack alignItems="center">
               <Box w="14px" h="14px" borderRadius="full" bg="success-500" mr={2} />
               <Text color="success-700">Active subscription</Text>
@@ -146,7 +146,7 @@ const SubscriptionScreen = () => {
         </Heading>
 
         <Text fontSize="md" textAlign="center" mb={4}>
-          Upgrade to unlock unlimited voice messaging
+          Upgrade to unlock voice messaging
         </Text>
 
         {/* Free tier info */}
@@ -186,8 +186,7 @@ const SubscriptionScreen = () => {
                   {pkg.product.title || "Voice Connect"}
                 </Text>
                 <Text>
-                  {pkg.product.description ||
-                    "Unlimited voice messaging with your reflection guide"}
+                  {pkg.product.description || "Voice messaging with your reflection guide"}
                 </Text>
                 <HStack alignItems="baseline">
                   <Text fontSize="xl" fontWeight="bold">
