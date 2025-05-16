@@ -24,10 +24,15 @@ export const PRODUCT_IDS = {
 
 /**
  * RevenueCat API keys
+ *
+ * IMPORTANT: These keys should match your RevenueCat project's production keys
+ * - iOS keys start with "appl_"
+ * - Android keys start with "goog_"
+ * - For development and testing use the same keys, for production use only production keys
  */
 export const REVENUE_CAT_API_KEYS = {
-  ios: "goog_ocxwCYOseIPqHeYRlHAuuaIAWBo", // Using Google key for iOS as well while in development
-  android: "goog_ocxwCYOseIPqHeYRlHAuuaIAWBo", // Actual Google API key
+  ios: "appl_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // Production Apple App Store key
+  android: "goog_ocxwCYOseIPqHeYRlHAuuaIAWBo", // Production Google Play key
 };
 
 /**
