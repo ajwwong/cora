@@ -205,7 +205,7 @@ export function ChatMessageBubble({
       className={`relative w-full ${wrapperAlignment}`}
       onLongPress={handleLongPress}
       onPress={handlePress}
-      delayLongPress={800}
+      delayLongPress={60000}
     >
       {/* Selection background */}
       {selected && <View className="absolute inset-0 bg-background-100" />}
