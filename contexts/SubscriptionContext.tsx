@@ -74,6 +74,54 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [isPremium, setIsPremium] = useState(false);
   const medplum = useMedplum();
 
+  // Helper function to check if the user has premium entitlement
+  const checkPremiumEntitlement = React.useCallback((info: CustomerInfo) => {
+    const hasPremium = info.entitlements.active[ENTITLEMENT_IDS.PREMIUM] !== undefined;
+    setIsPremium(hasPremium);
+    return hasPremium;
+  }, []);
+
+  // Save subscription status to Medplum as a FHIR extension
+  const storeSubscriptionStatusToMedplum = React.useCallback(
+    async (info: CustomerInfo) => {
+      // This function stores the subscription status in the Medplum FHIR record
+      try {
+        const profile = medplum.getProfile();
+        if (!profile?.id) return;
+
+        // Get the patient resource
+        const patient = await medplum.readResource("Patient", profile.id);
+        if (!patient) return;
+
+        // Prepare updated patient with subscription info
+        const updatedPatient: Patient = {
+          ...patient,
+          extension: [
+            ...(patient.extension || []).filter(
+              (ext) => ext.url !== SUBSCRIPTION_STATUS_EXTENSION_URL,
+            ),
+            {
+              url: SUBSCRIPTION_STATUS_EXTENSION_URL,
+              valueString: JSON.stringify({
+                customerId: info.originalAppUserId,
+                isPremium: checkPremiumEntitlement(info),
+                expirationDate: info.entitlements.active[ENTITLEMENT_IDS.PREMIUM]?.expiresDate,
+                productIdentifier:
+                  info.entitlements.active[ENTITLEMENT_IDS.PREMIUM]?.productIdentifier,
+              }),
+            },
+          ],
+        };
+
+        // Update the patient resource
+        await medplum.updateResource(updatedPatient);
+      } catch (error) {
+        console.error("Error storing subscription status to Medplum:", error);
+      }
+    },
+    [medplum, checkPremiumEntitlement],
+  );
+
   // Safe execution helper for RevenueCat methods
   const safelyExecuteRevenueCatMethod = async <T,>(
     methodName: string,
@@ -289,55 +337,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
       }
     };
-  }, [medplum, storeSubscriptionStatusToMedplum]);
-
-  // Helper function to check if the user has premium entitlement
-  const checkPremiumEntitlement = (info: CustomerInfo) => {
-    const hasPremium = info.entitlements.active[ENTITLEMENT_IDS.PREMIUM] !== undefined;
-    setIsPremium(hasPremium);
-    return hasPremium;
-  };
-
-  // Save subscription status to Medplum as a FHIR extension
-  const storeSubscriptionStatusToMedplum = React.useCallback(
-    async (info: CustomerInfo) => {
-      // This function stores the subscription status in the Medplum FHIR record
-      try {
-        const profile = medplum.getProfile();
-        if (!profile?.id) return;
-
-        // Get the patient resource
-        const patient = await medplum.readResource("Patient", profile.id);
-        if (!patient) return;
-
-        // Prepare updated patient with subscription info
-        const updatedPatient: Patient = {
-          ...patient,
-          extension: [
-            ...(patient.extension || []).filter(
-              (ext) => ext.url !== SUBSCRIPTION_STATUS_EXTENSION_URL,
-            ),
-            {
-              url: SUBSCRIPTION_STATUS_EXTENSION_URL,
-              valueString: JSON.stringify({
-                customerId: info.originalAppUserId,
-                isPremium: checkPremiumEntitlement(info),
-                expirationDate: info.entitlements.active[ENTITLEMENT_IDS.PREMIUM]?.expiresDate,
-                productIdentifier:
-                  info.entitlements.active[ENTITLEMENT_IDS.PREMIUM]?.productIdentifier,
-              }),
-            },
-          ],
-        };
-
-        // Update the patient resource
-        await medplum.updateResource(updatedPatient);
-      } catch (error) {
-        console.error("Error storing subscription status to Medplum:", error);
-      }
-    },
-    [medplum, checkPremiumEntitlement],
-  );
+  }, [medplum, storeSubscriptionStatusToMedplum, checkPremiumEntitlement]);
 
   // Function to handle purchasing a package
   const purchasePackage = async (pkg: PurchasesPackage): Promise<boolean> => {
