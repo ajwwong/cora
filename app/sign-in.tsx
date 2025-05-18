@@ -14,6 +14,7 @@ import { Alert, Platform, View } from "react-native";
 import Purchases from "react-native-purchases";
 
 import { Button, ButtonText } from "@/components/ui/button";
+import { GradientBackground } from "@/components/ui/gradient-background";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -413,24 +414,40 @@ export default function SignIn() {
   }, []);
 
   return (
-    <View className="flex-1 items-center justify-center bg-background-50">
-      {isLoading && <Spinner size="large" />}
-      {!isLoading && !showRegister && (
-        <VStack space="md" className="w-[90%] max-w-[350px]">
-          <Text className="mb-6 text-center text-2xl font-bold">Welcome to FeelHeard</Text>
-          <Button action="primary" size="lg" onPress={handleLogin}>
-            <ButtonText>Sign In</ButtonText>
-          </Button>
-          <Button action="secondary" variant="outline" size="lg" onPress={toggleRegistration}>
-            <ButtonText>Create Account</ButtonText>
-          </Button>
-        </VStack>
-      )}
-      {!isLoading && showRegister && (
-        <View className="w-[90%] max-w-[350px]">
-          <WebRegistration onSuccess={handleRegisterSuccess} onCancel={toggleRegistration} />
-        </View>
-      )}
-    </View>
+    <GradientBackground variant="primary">
+      <View className="flex-1 items-center justify-center">
+        {isLoading && <Spinner size="large" color="white" />}
+        {!isLoading && !showRegister && (
+          <VStack space="lg" className="w-[90%] max-w-[350px] items-center">
+            <View className="w-full items-center rounded-xl bg-white/10 backdrop-blur-md p-8 shadow-md">
+              <Text className="text-center text-3xl font-bold text-white mb-1">Welcome to FeelHeard.me</Text>
+              <Text className="mb-8 text-center text-lg font-medium text-white/90">Your AI-powered emotional support companion</Text>
+              <Button 
+                action="primary" 
+                size="lg" 
+                onPress={handleLogin}
+                className="w-full bg-white/90 mb-4 rounded-full h-14 shadow-lg"
+              >
+                <ButtonText className="text-primary-700 font-bold text-lg">Sign In</ButtonText>
+              </Button>
+              <Button 
+                action="secondary" 
+                variant="outline" 
+                size="lg" 
+                onPress={toggleRegistration}
+                className="w-full border-white/50 rounded-full h-14"
+              >
+                <ButtonText className="text-white font-semibold text-lg">Create Account</ButtonText>
+              </Button>
+            </View>
+          </VStack>
+        )}
+        {!isLoading && showRegister && (
+          <View className="w-[90%] max-w-[350px]">
+            <WebRegistration onSuccess={handleRegisterSuccess} onCancel={toggleRegistration} />
+          </View>
+        )}
+      </View>
+    </GradientBackground>
   );
 }

@@ -69,20 +69,32 @@ export function WebRegistration({ onSuccess, onCancel }: WebRegistrationProps) {
 
   return (
     <View className="flex-1 items-center justify-center">
-      <VStack space="md" className="w-[90%] max-w-[350px]">
-        <Text className="mb-4 text-center text-2xl font-bold">Create Your Account</Text>
-        <Text className="mb-6 text-center text-base">
-          {Platform.OS === "web"
-            ? "You'll be redirected to our secure registration page to create your FeelHeard account."
-            : "You'll be redirected to our secure registration page to create your FeelHeard account. After you finish registration, return to this app and sign in."}
-        </Text>
-        <Button action="primary" size="lg" onPress={launchWebRegistration} className="w-full">
-          <ButtonText>Continue to Registration</ButtonText>
-        </Button>
-        <Button variant="outline" size="lg" onPress={onCancel} className="w-full">
-          <ButtonText>Cancel</ButtonText>
-        </Button>
-      </VStack>
+      <View className="w-full items-center rounded-xl bg-white/10 backdrop-blur-md p-8 shadow-md">
+        <VStack space="md" className="w-full">
+          <Text className="mb-2 text-center text-2xl font-bold text-white">Create Your Account</Text>
+          <Text className="mb-6 text-center text-base text-white/90">
+            {Platform.OS === "web"
+              ? "You'll be redirected to our secure registration page to create your FeelHeard account."
+              : "You'll be redirected to our secure registration page to create your FeelHeard account. After you finish registration, return to this app and sign in."}
+          </Text>
+          <Button 
+            action="primary" 
+            size="lg" 
+            onPress={launchWebRegistration} 
+            className="w-full bg-white/90 mb-4 rounded-full h-14 shadow-lg"
+          >
+            <ButtonText className="text-primary-700 font-bold text-lg">Continue to Registration</ButtonText>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="lg" 
+            onPress={onCancel} 
+            className="w-full border-white/50 rounded-full h-14"
+          >
+            <ButtonText className="text-white font-semibold text-lg">Cancel</ButtonText>
+          </Button>
+        </VStack>
+      </View>
     </View>
   );
 }

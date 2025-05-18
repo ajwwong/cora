@@ -1,15 +1,25 @@
 #!/bin/bash
 
-# Script to build a production APK directly without going through AAB
-echo "Starting production APK build..."
+# Script to clean and build a production APK with optimized memory settings
+echo "Starting clean and build process for production APK..."
 
-# First run prebuild to ensure native projects are updated
+# First clean up any previous builds
+echo "Cleaning previous builds..."
+rm -rf ./android/app/build
+rm -rf ./android/build
+
+# Run prebuild to ensure native projects are updated
+echo "Running prebuild..."
 npx expo prebuild --clean
 
 # Navigate to the android directory
 cd ./android
 
-# Run gradle release task directly with APK output with optimized settings
+# Clean and then build with optimized settings
+echo "Cleaning Gradle project..."
+./gradlew clean --max-workers=2
+
+echo "Building release APK with optimized settings..."
 ./gradlew assembleRelease --max-workers=4 --no-daemon --stacktrace
 
 if [ $? -eq 0 ]; then

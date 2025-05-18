@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import { CreditCard, Loader, Moon, Sun } from "lucide-react-native";
-import { useCallback } from "react";
+import { CreditCard, Loader, Mail, Moon, Sun, User } from "lucide-react-native";
+import { useCallback, useEffect, useState } from "react";
 
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Divider } from "@/components/ui/divider";
@@ -18,6 +18,8 @@ import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
+import { useMedplum } from "@medplum/react-hooks";
+import { Patient } from "@medplum/fhirtypes";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -27,6 +29,31 @@ interface SettingsModalProps {
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { isAutoplayEnabled, isLoadingPreference, toggleAutoplay } = useUserPreferences();
   const { isPremium } = useSubscription();
+  const medplum = useMedplum();
+  const [patientInfo, setPatientInfo] = useState<Patient | null>(null);
+  const [isLoadingPatient, setIsLoadingPatient] = useState(false);
+  
+  // Fetch patient information when modal opens
+  useEffect(() => {
+    const fetchPatientInfo = async () => {
+      if (isOpen) {
+        try {
+          setIsLoadingPatient(true);
+          const profile = medplum.getProfile();
+          if (profile?.id) {
+            const patient = await medplum.readResource('Patient', profile.id);
+            setPatientInfo(patient);
+          }
+        } catch (error) {
+          console.error('Error fetching patient info:', error);
+        } finally {
+          setIsLoadingPatient(false);
+        }
+      }
+    };
+    
+    fetchPatientInfo();
+  }, [isOpen, medplum]);
 
   const handleToggleAutoplay = useCallback(() => {
     toggleAutoplay();
@@ -94,6 +121,35 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 {isPremium ? "Manage Subscription" : "Upgrade to Voice Connect"}
               </ButtonText>
             </Button>
+
+            <Divider my={4} />
+
+            {/* User Information Section */}
+            <View className="flex-col gap-2 py-2">
+              <Text className="text-typography-900 font-medium">Account Information</Text>
+              
+              {isLoadingPatient ? (
+                <View className="h-12 items-center justify-center">
+                  <Icon as={Loader} size="sm" className="text-primary-500" />
+                </View>
+              ) : (
+                <>
+                  <View className="flex-row items-center gap-2 py-1">
+                    <Icon as={User} size="sm" className="text-typography-700" />
+                    <Text className="text-typography-900">
+                      {patientInfo?.name?.[0]?.given?.join(" ")} {patientInfo?.name?.[0]?.family || "N/A"}
+                    </Text>
+                  </View>
+                  
+                  <View className="flex-row items-center gap-2 py-1">
+                    <Icon as={Mail} size="sm" className="text-typography-700" />
+                    <Text className="text-typography-900">
+                      {patientInfo?.telecom?.find(t => t.system === 'email')?.value || "N/A"}
+                    </Text>
+                  </View>
+                </>
+              )}
+            </View>
 
             <View className="items-center pt-4">
               <Button onPress={onClose} action="primary" variant="solid">
