@@ -64,3 +64,7 @@ ios/
 *.log
 *.tmp
 .cache/
+
+# Google Services
+google-services.json
+**/google-services.json
