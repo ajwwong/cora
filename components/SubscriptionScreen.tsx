@@ -1,5 +1,7 @@
+import { useMedplum } from "@medplum/react-hooks";
 import { useRouter } from "expo-router";
 import * as React from "react";
+import { useEffect } from "react";
 import { Platform } from "react-native";
 
 import { useSubscription } from "../contexts/SubscriptionContext";
@@ -20,6 +22,7 @@ const useState =
  */
 const SubscriptionScreen = () => {
   const router = useRouter();
+  const medplum = useMedplum();
 
   let purchaseInProgress = false;
   let setPurchaseInProgress = (value: boolean) => {
@@ -34,23 +37,111 @@ const SubscriptionScreen = () => {
   } catch (error) {
     console.warn("Error initializing state in SubscriptionScreen:", error);
   }
-  const { isLoading, availablePackages, isPremium, purchasePackage, restorePurchases } =
-    useSubscription();
+  const {
+    isLoading,
+    availablePackages,
+    isPremium,
+    purchasePackage,
+    restorePurchases,
+    customerInfo,
+  } = useSubscription();
+
+  // Create a helper function for logging to Communication resources
+  const logToMedplum = async (title: string, data: Record<string, unknown>) => {
+    try {
+      const profile = medplum.getProfile();
+      if (!profile?.id) return;
+
+      await medplum.createResource({
+        resourceType: "Communication",
+        status: "completed",
+        subject: { reference: `Patient/${profile.id}` },
+        about: [{ reference: `Patient/${profile.id}` }],
+        sent: new Date().toISOString(),
+        payload: [
+          {
+            contentString: title,
+          },
+          {
+            contentString: JSON.stringify({
+              timestamp: new Date().toISOString(),
+              component: "SubscriptionScreen",
+              ...data,
+            }),
+          },
+        ],
+      });
+    } catch (error) {
+      console.error(`Failed to log "${title}":`, error);
+    }
+  };
+
+  // Log subscription status when component mounts
+  useEffect(() => {
+    const logSubscriptionInfo = async () => {
+      await logToMedplum("SubscriptionScreen Initial Status", {
+        isPremium,
+        hasCustomerInfo: !!customerInfo,
+        activeEntitlements: customerInfo?.entitlements?.active
+          ? Object.keys(customerInfo.entitlements.active)
+          : [],
+        customerInfoId: customerInfo?.originalAppUserId || null,
+        hasPackages: !!availablePackages?.length,
+        packageCount: availablePackages?.length || 0,
+        status: isPremium ? "Voice Connect" : "Text Companion",
+      });
+    };
+
+    logSubscriptionInfo();
+  }, [isPremium, customerInfo, availablePackages, logToMedplum]);
 
   // Handle package purchase
   const handlePurchase = async (packageIndex: number) => {
     if (!availablePackages || availablePackages.length <= packageIndex) return;
 
+    const selectedPackage = availablePackages[packageIndex];
+
+    // Log purchase attempt
+    await logToMedplum("SubscriptionScreen Purchase Attempt", {
+      packageIdentifier: selectedPackage.identifier,
+      packageType: selectedPackage.packageType,
+      productIdentifier: selectedPackage.product.identifier,
+      price: selectedPackage.product.price,
+      priceString: selectedPackage.product.priceString,
+      currentStatus: isPremium ? "premium" : "free",
+    });
+
     try {
       setPurchaseInProgress(true);
-      const success = await purchasePackage(availablePackages[packageIndex]);
+      const success = await purchasePackage(selectedPackage);
 
       if (success) {
+        // Log purchase success
+        await logToMedplum("SubscriptionScreen Purchase Success", {
+          packageIdentifier: selectedPackage.identifier,
+          result: "success",
+          premium: true,
+        });
+
         // Show success message or navigate back
         router.back();
+      } else {
+        // Log purchase failure
+        await logToMedplum("SubscriptionScreen Purchase Failure", {
+          packageIdentifier: selectedPackage.identifier,
+          result: "failed",
+          reason: "purchase operation returned false",
+        });
       }
     } catch (error) {
       console.error("Purchase failed:", error);
+
+      // Log purchase error
+      await logToMedplum("SubscriptionScreen Purchase Error", {
+        packageIdentifier: selectedPackage.identifier,
+        result: "error",
+        error: error instanceof Error ? error.message : String(error),
+      });
     } finally {
       setPurchaseInProgress(false);
     }
@@ -58,19 +149,42 @@ const SubscriptionScreen = () => {
 
   // Handle restore purchases
   const handleRestore = async () => {
+    // Log restore attempt
+    await logToMedplum("SubscriptionScreen Restore Attempt", {
+      currentStatus: isPremium ? "premium" : "free",
+    });
+
     try {
       setPurchaseInProgress(true);
       const success = await restorePurchases();
 
       if (success) {
+        // Log restore success
+        await logToMedplum("SubscriptionScreen Restore Success", {
+          result: "success",
+          premium: true,
+        });
+
         // Show success message or navigate back
         router.back();
       } else {
+        // Log no purchases found
+        await logToMedplum("SubscriptionScreen Restore No Purchases", {
+          result: "no_purchases",
+          premium: isPremium,
+        });
+
         // No purchases found to restore
         alert("No previous purchases were found.");
       }
     } catch (error) {
       console.error("Restore failed:", error);
+
+      // Log restore error
+      await logToMedplum("SubscriptionScreen Restore Error", {
+        result: "error",
+        error: error instanceof Error ? error.message : String(error),
+      });
     } finally {
       setPurchaseInProgress(false);
     }

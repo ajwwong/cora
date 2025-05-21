@@ -140,53 +140,360 @@ export default function SignIn() {
 
         if (profile?.id) {
           try {
-            // Safely check if RevenueCat is available and properly initialized
-            const isRevenueCatAvailable = () => {
+            // Attempt RevenueCat login with more robust retry mechanism
+            const attemptRevenueCatLogin = async (retryCount = 0) => {
               try {
                 // Check if we're on web (where RevenueCat isn't supported)
                 if (Platform.OS === "web") {
-                  return false;
+                  return logAuthError("RevenueCat Skipped", {
+                    reason: "Web platform not supported",
+                    profileId: profile.id,
+                    timestamp: new Date().toISOString(),
+                  });
                 }
 
-                // Check if the Purchases object exists and has necessary methods
-                if (!Purchases || typeof Purchases.logIn !== "function") {
-                  return false;
+                // Basic check for Purchases object
+                if (!Purchases) {
+                  throw new Error("Purchases object not available");
                 }
 
-                // Try to call a method that would fail if not configured
-                if (typeof Purchases.getAppUserID === "function") {
+                // Show visible information about what we're doing
+                Alert.alert(
+                  "RevenueCat Login",
+                  `Attempting login for profile ID: ${profile.id.substring(0, 6)}...`,
+                );
+
+                // Check if RevenueCat is configured
+                if (typeof Purchases.isConfigured !== "function") {
+                  Alert.alert("RevenueCat Issue", "isConfigured method not available");
+                }
+
+                if (typeof Purchases.isConfigured === "function" && !Purchases.isConfigured()) {
+                  // Show a visible alert about initialization
+                  Alert.alert(
+                    "RevenueCat Status",
+                    "Not configured. Attempting on-demand initialization...",
+                  );
+
+                  // Try to initialize RevenueCat on-demand if not already configured
                   try {
-                    Purchases.getAppUserID();
-                    return true;
-                  } catch {
-                    // If this throws, it's not properly configured
-                    return false;
+                    const { ensureRevenueCatInitialized } = await import(
+                      "@/utils/subscription/initialize-revenue-cat"
+                    );
+
+                    // Get debug info first
+                    const { getRevenueCatDebugInfo } = await import(
+                      "@/utils/subscription/initialize-revenue-cat"
+                    );
+                    const debugInfo = getRevenueCatDebugInfo();
+
+                    // Log debug info
+                    try {
+                      await medplum.createResource({
+                        resourceType: "Communication",
+                        status: "completed",
+                        subject: { reference: `Patient/${profile.id}` },
+                        about: [{ reference: `Patient/${profile.id}` }],
+                        sent: new Date().toISOString(),
+                        payload: [
+                          {
+                            contentString: "RevenueCat debug info before on-demand initialization",
+                          },
+                          {
+                            contentString: JSON.stringify({
+                              timestamp: new Date().toISOString(),
+                              debugInfo,
+                              profileId: profile.id,
+                              retryCount: retryCount,
+                            }),
+                          },
+                        ],
+                      });
+                    } catch (logError) {
+                      console.error("Failed to create debug info log:", logError);
+                    }
+
+                    // Try initialization - will show alerts internally
+                    const initialized = await ensureRevenueCatInitialized(medplum, true);
+
+                    // Create Communication resource log for initialization attempt
+                    try {
+                      await medplum.createResource({
+                        resourceType: "Communication",
+                        status: "completed",
+                        subject: { reference: `Patient/${profile.id}` },
+                        about: [{ reference: `Patient/${profile.id}` }],
+                        sent: new Date().toISOString(),
+                        payload: [
+                          {
+                            contentString: "RevenueCat on-demand initialization attempt",
+                          },
+                          {
+                            contentString: JSON.stringify({
+                              timestamp: new Date().toISOString(),
+                              success: initialized,
+                              profileId: profile.id,
+                              retryCount: retryCount,
+                            }),
+                          },
+                        ],
+                      });
+                    } catch (logError) {
+                      console.error("Failed to create on-demand initialization log:", logError);
+                    }
+
+                    if (!initialized) {
+                      const error = "Failed to initialize RevenueCat on-demand";
+                      Alert.alert("RevenueCat Error", error);
+                      throw new Error(error);
+                    }
+                  } catch (initError) {
+                    const error = `RevenueCat not configured and on-demand initialization failed: ${initError}`;
+                    Alert.alert("RevenueCat Error", error);
+                    throw new Error(error);
+                  }
+                } else if (
+                  typeof Purchases.isConfigured === "function" &&
+                  Purchases.isConfigured()
+                ) {
+                  Alert.alert("RevenueCat Status", "Already configured! Proceeding with login...");
+                }
+
+                // Create Communication resource log before login attempt
+                try {
+                  await medplum.createResource({
+                    resourceType: "Communication",
+                    status: "completed",
+                    subject: { reference: `Patient/${profile.id}` },
+                    about: [{ reference: `Patient/${profile.id}` }],
+                    sent: new Date().toISOString(),
+                    payload: [
+                      {
+                        contentString: "RevenueCat login attempt",
+                      },
+                      {
+                        contentString: JSON.stringify({
+                          timestamp: new Date().toISOString(),
+                          method: "Purchases.logIn",
+                          profileId: profile.id,
+                          retryCount: retryCount,
+                          status: "attempting",
+                        }),
+                      },
+                    ],
+                  });
+                } catch (logError) {
+                  console.error("Failed to create pre-login log:", logError);
+                }
+
+                // Show a pre-login message
+                Alert.alert("RevenueCat", "Executing Purchases.logIn() now...");
+
+                // Try the login - this will fail if not properly initialized
+                try {
+                  await Purchases.logIn(profile.id);
+                  Alert.alert("RevenueCat", "Login successful!");
+                } catch (loginErr) {
+                  Alert.alert("RevenueCat Login Error", String(loginErr));
+                  throw loginErr; // Re-throw to be caught by the outer try/catch
+                }
+
+                // Create Communication resource log for successful login
+                try {
+                  await medplum.createResource({
+                    resourceType: "Communication",
+                    status: "completed",
+                    subject: { reference: `Patient/${profile.id}` },
+                    about: [{ reference: `Patient/${profile.id}` }],
+                    sent: new Date().toISOString(),
+                    payload: [
+                      {
+                        contentString: "RevenueCat login successful",
+                      },
+                      {
+                        contentString: JSON.stringify({
+                          timestamp: new Date().toISOString(),
+                          method: "Purchases.logIn",
+                          profileId: profile.id,
+                          retryCount: retryCount,
+                          status: "success",
+                        }),
+                      },
+                    ],
+                  });
+                } catch (logError) {
+                  console.error("Failed to create post-login log:", logError);
+                }
+
+                logAuthError("RevenueCat Login", {
+                  success: true,
+                  profileId: profile.id,
+                  retryCount,
+                  timestamp: new Date().toISOString(),
+                });
+
+                // Force refresh customer info to ensure everything is synced
+                if (typeof Purchases.getCustomerInfo === "function") {
+                  try {
+                    // Create Communication resource log before customer info fetch
+                    try {
+                      await medplum.createResource({
+                        resourceType: "Communication",
+                        status: "completed",
+                        subject: { reference: `Patient/${profile.id}` },
+                        about: [{ reference: `Patient/${profile.id}` }],
+                        sent: new Date().toISOString(),
+                        payload: [
+                          {
+                            contentString: "RevenueCat customer info fetch attempt",
+                          },
+                          {
+                            contentString: JSON.stringify({
+                              timestamp: new Date().toISOString(),
+                              method: "Purchases.getCustomerInfo",
+                              profileId: profile.id,
+                              status: "attempting",
+                            }),
+                          },
+                        ],
+                      });
+                    } catch (logError) {
+                      console.error("Failed to create pre-customer-info log:", logError);
+                    }
+
+                    const customerInfo = await Purchases.getCustomerInfo();
+
+                    // Create Communication resource log for successful customer info fetch
+                    try {
+                      await medplum.createResource({
+                        resourceType: "Communication",
+                        status: "completed",
+                        subject: { reference: `Patient/${profile.id}` },
+                        about: [{ reference: `Patient/${profile.id}` }],
+                        sent: new Date().toISOString(),
+                        payload: [
+                          {
+                            contentString: "RevenueCat customer info fetch successful",
+                          },
+                          {
+                            contentString: JSON.stringify({
+                              timestamp: new Date().toISOString(),
+                              method: "Purchases.getCustomerInfo",
+                              profileId: profile.id,
+                              status: "success",
+                              hasEntitlements: !!customerInfo?.entitlements?.active,
+                              entitlementCount: customerInfo?.entitlements?.active
+                                ? Object.keys(customerInfo.entitlements.active).length
+                                : 0,
+                              entitlements: customerInfo?.entitlements?.active
+                                ? Object.keys(customerInfo.entitlements.active)
+                                : [],
+                            }),
+                          },
+                        ],
+                      });
+                    } catch (logError) {
+                      console.error("Failed to create post-customer-info log:", logError);
+                    }
+
+                    logAuthError("RevenueCat CustomerInfo", {
+                      success: true,
+                      hasCustomerInfo: !!customerInfo,
+                      entitlements: customerInfo?.entitlements?.active
+                        ? Object.keys(customerInfo.entitlements.active)
+                        : [],
+                      timestamp: new Date().toISOString(),
+                    });
+                  } catch (infoError) {
+                    console.warn("Failed to refresh customer info:", infoError);
+
+                    // Create Communication resource log for failed customer info fetch
+                    try {
+                      await medplum.createResource({
+                        resourceType: "Communication",
+                        status: "completed",
+                        subject: { reference: `Patient/${profile.id}` },
+                        about: [{ reference: `Patient/${profile.id}` }],
+                        sent: new Date().toISOString(),
+                        payload: [
+                          {
+                            contentString: "RevenueCat customer info fetch failed",
+                          },
+                          {
+                            contentString: JSON.stringify({
+                              timestamp: new Date().toISOString(),
+                              method: "Purchases.getCustomerInfo",
+                              profileId: profile.id,
+                              status: "error",
+                              error:
+                                infoError instanceof Error ? infoError.message : String(infoError),
+                            }),
+                          },
+                        ],
+                      });
+                    } catch (logError) {
+                      console.error("Failed to create error-customer-info log:", logError);
+                    }
                   }
                 }
+              } catch (error) {
+                console.warn(`RevenueCat login attempt ${retryCount} failed:`, error);
 
-                return false;
-              } catch {
-                // Any error means RevenueCat isn't properly available
-                return false;
+                // Create Communication resource log for failed login
+                try {
+                  await medplum.createResource({
+                    resourceType: "Communication",
+                    status: "completed",
+                    subject: { reference: `Patient/${profile.id}` },
+                    about: [{ reference: `Patient/${profile.id}` }],
+                    sent: new Date().toISOString(),
+                    payload: [
+                      {
+                        contentString: "RevenueCat login failed",
+                      },
+                      {
+                        contentString: JSON.stringify({
+                          timestamp: new Date().toISOString(),
+                          method: "Purchases.logIn",
+                          profileId: profile.id,
+                          retryCount: retryCount,
+                          status: "error",
+                          error: error instanceof Error ? error.message : String(error),
+                        }),
+                      },
+                    ],
+                  });
+                } catch (logError) {
+                  console.error("Failed to create login-error log:", logError);
+                }
+
+                // Retry logic - increase delay with each retry
+                if (retryCount < 2) {
+                  const delay = (retryCount + 1) * 2000; // 2s, 4s
+                  console.log(`Retrying RevenueCat login in ${delay}ms...`);
+
+                  logAuthError("RevenueCat Login Retry", {
+                    error: error instanceof Error ? error.message : String(error),
+                    profileId: profile.id,
+                    retryCount,
+                    nextRetryDelay: delay,
+                    timestamp: new Date().toISOString(),
+                  });
+
+                  setTimeout(() => attemptRevenueCatLogin(retryCount + 1), delay);
+                } else {
+                  logAuthError("RevenueCat Login Failed", {
+                    error: error instanceof Error ? error.message : String(error),
+                    profileId: profile.id,
+                    retriesExhausted: true,
+                    timestamp: new Date().toISOString(),
+                  });
+                }
               }
             };
 
-            if (isRevenueCatAvailable()) {
-              // Log in to RevenueCat with the user's Medplum ID
-              await Purchases.logIn(profile.id);
-              logAuthError("RevenueCat Login", {
-                success: true,
-                profileId: profile.id,
-                timestamp: new Date().toISOString(),
-              });
-            } else {
-              console.log("RevenueCat not configured, skipping login");
-              logAuthError("RevenueCat Skipped", {
-                reason: "Not configured or initialized",
-                profileId: profile.id,
-                timestamp: new Date().toISOString(),
-              });
-            }
+            // Start the login attempt process
+            attemptRevenueCatLogin();
           } catch (error) {
             logAuthError("RevenueCat Login Failed", {
               error: error instanceof Error ? error.message : String(error),
@@ -200,6 +507,37 @@ export default function SignIn() {
             reason: "No profile ID available",
             timestamp: new Date().toISOString(),
           });
+        }
+
+        // Add a diagnostic log entry to test Communication resource creation
+        try {
+          const profile = medplum.getProfile();
+          if (profile?.id) {
+            await medplum.createResource({
+              resourceType: "Communication",
+              status: "completed",
+              subject: { reference: `Patient/${profile.id}` },
+              about: [{ reference: `Patient/${profile.id}` }],
+              sent: new Date().toISOString(),
+              payload: [
+                {
+                  contentString: "DIAGNOSTIC LOG: Testing Communication Resource Creation",
+                },
+                {
+                  contentString: JSON.stringify({
+                    timestamp: new Date().toISOString(),
+                    test: "This is a test entry to verify Communication resource creation",
+                    platform: Platform.OS,
+                  }),
+                },
+              ],
+            });
+            console.log("Created diagnostic communication resource!");
+          } else {
+            console.log("Cannot create diagnostic log - no profile ID available");
+          }
+        } catch (diagError) {
+          console.error("Failed to create diagnostic log:", diagError);
         }
 
         redirectAfterLogin();
@@ -419,25 +757,29 @@ export default function SignIn() {
         {isLoading && <Spinner size="large" color="white" />}
         {!isLoading && !showRegister && (
           <VStack space="lg" className="w-[90%] max-w-[350px] items-center">
-            <View className="w-full items-center rounded-xl bg-white/10 backdrop-blur-md p-8 shadow-md">
-              <Text className="text-center text-3xl font-bold text-white mb-1">Welcome to FeelHeard.me</Text>
-              <Text className="mb-8 text-center text-lg font-medium text-white/90">Your AI-powered emotional support companion</Text>
-              <Button 
-                action="primary" 
-                size="lg" 
+            <View className="w-full items-center rounded-xl bg-white/10 p-8 shadow-md backdrop-blur-md">
+              <Text className="mb-1 text-center text-3xl font-bold text-white">
+                Welcome to FeelHeard.me
+              </Text>
+              <Text className="mb-8 text-center text-lg font-medium text-white/90">
+                Your AI-powered emotional support companion
+              </Text>
+              <Button
+                action="primary"
+                size="lg"
                 onPress={handleLogin}
-                className="w-full bg-white/90 mb-4 rounded-full h-14 shadow-lg"
+                className="mb-4 h-14 w-full rounded-full bg-white/90 shadow-lg"
               >
-                <ButtonText className="text-primary-700 font-bold text-lg">Sign In</ButtonText>
+                <ButtonText className="text-lg font-bold text-primary-700">Sign In</ButtonText>
               </Button>
-              <Button 
-                action="secondary" 
-                variant="outline" 
-                size="lg" 
+              <Button
+                action="secondary"
+                variant="outline"
+                size="lg"
                 onPress={toggleRegistration}
-                className="w-full border-white/50 rounded-full h-14"
+                className="h-14 w-full rounded-full border-white/50"
               >
-                <ButtonText className="text-white font-semibold text-lg">Create Account</ButtonText>
+                <ButtonText className="text-lg font-semibold text-white">Create Account</ButtonText>
               </Button>
             </View>
           </VStack>

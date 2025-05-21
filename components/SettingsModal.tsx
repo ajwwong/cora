@@ -1,5 +1,7 @@
+import { Patient } from "@medplum/fhirtypes";
+import { useMedplum } from "@medplum/react-hooks";
 import { router } from "expo-router";
-import { CreditCard, Loader, Mail, Moon, Sun, User } from "lucide-react-native";
+import { Bug, CreditCard, Loader, Mail, Moon, Sun, User } from "lucide-react-native";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
@@ -18,8 +20,8 @@ import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
-import { useMedplum } from "@medplum/react-hooks";
-import { Patient } from "@medplum/fhirtypes";
+
+import SubscriptionDebugPanel from "./SubscriptionDebugPanel";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -28,11 +30,41 @@ interface SettingsModalProps {
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { isAutoplayEnabled, isLoadingPreference, toggleAutoplay } = useUserPreferences();
-  const { isPremium } = useSubscription();
+  const { isPremium, customerInfo } = useSubscription();
   const medplum = useMedplum();
   const [patientInfo, setPatientInfo] = useState<Patient | null>(null);
   const [isLoadingPatient, setIsLoadingPatient] = useState(false);
-  
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+
+  // Create a helper function for logging to Communication resources
+  const logToMedplum = async (title: string, data: Record<string, unknown>) => {
+    try {
+      if (!patientInfo?.id) return;
+
+      await medplum.createResource({
+        resourceType: "Communication",
+        status: "completed",
+        subject: { reference: `Patient/${patientInfo.id}` },
+        about: [{ reference: `Patient/${patientInfo.id}` }],
+        sent: new Date().toISOString(),
+        payload: [
+          {
+            contentString: title,
+          },
+          {
+            contentString: JSON.stringify({
+              timestamp: new Date().toISOString(),
+              component: "SettingsModal",
+              ...data,
+            }),
+          },
+        ],
+      });
+    } catch (error) {
+      console.error(`Failed to log "${title}":`, error);
+    }
+  };
+
   // Fetch patient information when modal opens
   useEffect(() => {
     const fetchPatientInfo = async () => {
@@ -41,19 +73,50 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           setIsLoadingPatient(true);
           const profile = medplum.getProfile();
           if (profile?.id) {
-            const patient = await medplum.readResource('Patient', profile.id);
+            const patient = await medplum.readResource("Patient", profile.id);
             setPatientInfo(patient);
+
+            // Log RevenueCat status when modal opens
+            try {
+              await medplum.createResource({
+                resourceType: "Communication",
+                status: "completed",
+                subject: { reference: `Patient/${patient.id}` },
+                about: [{ reference: `Patient/${patient.id}` }],
+                sent: new Date().toISOString(),
+                payload: [
+                  {
+                    contentString: "SettingsModal RevenueCat Status",
+                  },
+                  {
+                    contentString: JSON.stringify({
+                      timestamp: new Date().toISOString(),
+                      component: "SettingsModal",
+                      isPremium: isPremium,
+                      hasCustomerInfo: !!customerInfo,
+                      activeEntitlements: customerInfo?.entitlements?.active
+                        ? Object.keys(customerInfo.entitlements.active)
+                        : [],
+                      customerInfoId: customerInfo?.originalAppUserId || null,
+                      status: isPremium ? "Voice Connect" : "Text Companion",
+                    }),
+                  },
+                ],
+              });
+            } catch (logError) {
+              console.error("Failed to log RevenueCat status in SettingsModal:", logError);
+            }
           }
         } catch (error) {
-          console.error('Error fetching patient info:', error);
+          console.error("Error fetching patient info:", error);
         } finally {
           setIsLoadingPatient(false);
         }
       }
     };
-    
+
     fetchPatientInfo();
-  }, [isOpen, medplum]);
+  }, [isOpen, medplum, isPremium, customerInfo]);
 
   const handleToggleAutoplay = useCallback(() => {
     toggleAutoplay();
@@ -126,8 +189,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
             {/* User Information Section */}
             <View className="flex-col gap-2 py-2">
-              <Text className="text-typography-900 font-medium">Account Information</Text>
-              
+              <Text className="font-medium text-typography-900">Account Information</Text>
+
               {isLoadingPatient ? (
                 <View className="h-12 items-center justify-center">
                   <Icon as={Loader} size="sm" className="text-primary-500" />
@@ -137,19 +200,43 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <View className="flex-row items-center gap-2 py-1">
                     <Icon as={User} size="sm" className="text-typography-700" />
                     <Text className="text-typography-900">
-                      {patientInfo?.name?.[0]?.given?.join(" ")} {patientInfo?.name?.[0]?.family || "N/A"}
+                      {patientInfo?.name?.[0]?.given?.join(" ")}{" "}
+                      {patientInfo?.name?.[0]?.family || "N/A"}
                     </Text>
                   </View>
-                  
+
                   <View className="flex-row items-center gap-2 py-1">
                     <Icon as={Mail} size="sm" className="text-typography-700" />
                     <Text className="text-typography-900">
-                      {patientInfo?.telecom?.find(t => t.system === 'email')?.value || "N/A"}
+                      {patientInfo?.telecom?.find((t) => t.system === "email")?.value || "N/A"}
                     </Text>
                   </View>
                 </>
               )}
             </View>
+
+            {/* Debug Tools Section - only in development or with special flag */}
+            {(__DEV__ || patientInfo?.id === "961" || patientInfo?.id === "1") && (
+              <>
+                <Divider my={4} />
+
+                <View className="flex-row items-center justify-between py-2">
+                  <View className="flex-row items-center gap-2">
+                    <Icon as={Bug} size="sm" className="text-typography-700" />
+                    <Text className="text-typography-900">Developer Tools</Text>
+                  </View>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onPress={() => setShowDebugPanel(!showDebugPanel)}
+                  >
+                    <ButtonText>{showDebugPanel ? "Hide" : "Show"} Debug</ButtonText>
+                  </Button>
+                </View>
+
+                {showDebugPanel && <SubscriptionDebugPanel />}
+              </>
+            )}
 
             <View className="items-center pt-4">
               <Button onPress={onClose} action="primary" variant="solid">

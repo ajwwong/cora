@@ -1,101 +1,142 @@
-# RevenueCat Support Request - Android Native Module Not Available in Development
+# RevenueCat Support Request - Native Module Not Fully Initializing
 
 ## Environment Details
 
 - React Native: 0.79.2
-- react-native-purchases: 8.9.7
-- react-native-purchases-ui: 8.4.0
-- Platform: Android
-- Development Mode: Yes (Expo)
-- Build Type: Debug
+- Expo: 53.0.9
+- react-native-purchases: 8.10.0
+- react-native-purchases-ui: 8.10.0
+- Platform: Android (Pixel 6, Android 15)
+- Hermes JavaScript Engine: Enabled
+- Build Type: Production/Release
+- New Architecture: Enabled
 
 ## Issue
 
-I'm experiencing an issue with the RevenueCat SDK in my React Native app on Android. During development, the native module is not being properly detected, resulting in the error:
+We're experiencing an issue with the RevenueCat SDK in our React Native Expo application. The SDK is detected but not properly initialized - showing only two methods (`addListener` and `removeListeners`) available on the native module, leading to "RevenueCat SDK not available" errors.
 
-```
-LOG  📱 [RevenueCat] RevenueCat module check: RNPurchases=false, RCTPurchases=false
-LOG  📱 [RevenueCat] Purchases object is not available
-LOG  📱 [RevenueCat] RevenueCat native modules not found in NativeModules
-```
-
-When attempting to initialize the SDK, I get the following error:
-
-```
-WARN  📱 [RevenueCat] Configure failed but continuing with simulation: [TypeError: Cannot read property 'setupPurchases' of null]
+When examining the native module, we see:
+```javascript
+hasRNPurchasesModule: true,
+rnPurchasesDetails: "addListener,removeListeners",
+availableNativeModules: []
 ```
 
-And when trying to use the SDK's methods:
+The JavaScript `Purchases` object exists (`purchasesType: "function"`), but attempts to configure it fail because the underlying native functionality is not fully initialized.
 
+## Detailed Logs
+
+```json
+// Initial detection of RevenueCat module
+{
+  "timestamp":"2025-05-18T21:33:26.629Z",
+  "platform":"android",
+  "environment":"production",
+  "hasRNPurchasesModule":true,
+  "rnPurchasesDetails":"addListener,removeListeners",
+  "availableNativeModules":[],
+  "platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}",
+  "isHermes":true,
+  "purchasesType":"function",
+  "purchasesVersion":"unknown"
+}
+
+// After attempting to force initialization
+{
+  "timestamp":"2025-05-18T21:33:29.408Z",
+  "platform":"android",
+  "environment":"production",
+  "purchasesType":"function",
+  "purchasesValue":"function Purchases() { [bytecode] }",
+  "hasRNPurchasesModule":true,
+  "rnPurchasesDetails":"addListener,removeListeners",
+  "availableNativeModules":[],
+  "platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}",
+  "isHermes":true,
+  "purchasesVersion":"unknown"
+}
 ```
-ERROR  📱 [SubscriptionContext] Error executing getOfferings: [TypeError: Cannot read property 'isConfigured' of null]
-ERROR  📱 [SubscriptionContext] Error executing getCustomerInfo: [TypeError: Cannot read property 'isConfigured' of null]
+
+## Initialization Code
+
+The RevenueCat SDK is initialized in our SubscriptionContext.tsx:
+
+```typescript
+// From SubscriptionContext.tsx
+Purchases.configure({ apiKey });
+console.log("📱 [SubscriptionContext] RevenueCat configured successfully");
+
+// Now set log level AFTER configuration
+if (typeof Purchases.setLogLevel === "function") {
+  Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+} else {
+  console.warn("📱 [SubscriptionContext] RevenueCat setLogLevel method not available");
+}
 ```
 
 ## What I've Done So Far
 
-I've implemented the following to try and address this:
-
-1. **Package Installation**:
-   - Added `react-native-purchases` and `react-native-purchases-ui` in package.json
-   - Confirmed the packages are properly installed in node_modules
+1. **Verified Package Versions**:
+   - Updated both `react-native-purchases` and `react-native-purchases-ui` to 8.10.0
+   - Confirmed all dependencies are installed and up to date
 
 2. **Android Configuration**:
-   - Added RevenueCat dependencies to `android/app/build.gradle`:
+   - Added Firebase dependencies to `android/app/build.gradle`:
      ```gradle
-     implementation 'com.revenuecat.purchases:purchases-android:6.+'
-     implementation 'com.revenuecat.purchases:purchases:6.+'
-     implementation 'com.revenuecat.purchases-ui:purchases-ui:8.+'
-     implementation 'com.android.billingclient:billing:6.+'
+     implementation platform('com.google.firebase:firebase-bom:32.7.4')
+     implementation 'com.google.firebase:firebase-analytics'
+     implementation 'com.google.firebase:firebase-messaging'
+     ```
+   - Confirmed Google Services plugin is properly applied
+   - Added ProGuard rules for RevenueCat:
+     ```
+     -keep class com.revenuecat.purchases.** { *; }
+     -keep class com.android.billingclient.** { *; }
+     -keepattributes *Annotation*
      ```
 
-   - Added Maven repository to `android/build.gradle`:
-     ```gradle
-     maven { url "https://sdk.revenuecat.com/android" }
+3. **Permissions & Configuration**:
+   - Added billing permission in app.config.ts:
+     ```typescript
+     permissions: [
+       // ... other permissions
+       "com.android.vending.BILLING", // Required for RevenueCat in-app purchases
+     ]
      ```
+   - Set minSdkVersion to 24 as required by RevenueCat
+   - Added Firebase configuration with google-services.json
 
-   - Created a `MainApplication.java` with proper RevenueCat imports
-   
-3. **SDK Initialization**:
-   - Created a dedicated initialization module
-   - Added extensive error handling and fallback simulation for development
-   - Implemented NativeEventEmitter handling for error cases
-   - Created fallback mock data for testing purposes
+4. **Debugging Attempts**:
+   - Added delays before initialization
+   - Implemented forced reload attempts for the native module
+   - Added detailed logging via Medplum Communication resources
+   - Created in-app debugging panel to view logs
+   - Completely cleaned and rebuilt the application
 
-4. **Debug Utilities**:
-   - Added debug panel and visual indicators for simulated mode
-   - Implemented robust error handling throughout the codebase
+## Observations
 
-## Current Workaround
-
-I've implemented a simulation mode for development that allows testing of subscription features without a working RevenueCat SDK. This includes:
-
-- Simulated products and customer info
-- Visual indicators for simulated mode
-- Debug panel with error handling
-
-While this allows development to continue, I need to properly integrate RevenueCat for production builds.
+- The native `RNPurchases` module is detected but only has two event-related methods
+- These methods (addListener, removeListeners) are typically part of the NativeEventEmitter base functionality
+- The inconsistency of `hasRNPurchasesModule: true` but `availableNativeModules: []` suggests the module is only partially initialized
+- Debug attempts to force-load the module have not resolved the issue
+- The same configuration works on iOS devices
 
 ## Questions
 
-1. Why is the native module not being detected despite being properly installed? 
-   - Is there a specific initialization order requirement I'm missing?
-   - Are there additional steps needed beyond `autolinkLibrariesWithApp()`?
+1. Why is the native module partially initialized with only event methods available?
+2. Could this be related to React Native's new architecture mode?
+3. Are there specific Expo configuration requirements we're missing?
+4. Is there a way to force the complete native module to load properly?
+5. Are there additional native dependencies needed beyond Firebase?
+6. Could this be related to Hermes JavaScript engine compatibility?
 
-2. Is there a way to debug the native module loading process more deeply?
-   - How can I verify if the native module is being properly linked?
-
-3. Are there specific configuration requirements for Expo-based projects?
-   - My project uses Expo but with a custom native code setup
-
-4. Is there any way to test with RevenueCat in development mode on Android emulators?
-   - Can I create a sandbox testing environment?
+We're using a physical device for testing, not an emulator. Any assistance in resolving this issue would be greatly appreciated.
 
 ## Additional Context
 
-- I'm using Expo (with native code capabilities)
-- The app has a hybrid build process using both Expo and custom native modifications
-- I'm targeting Android 7.0+ devices
-- The app already has Google Play Services integrated for other features
+- We're using Expo with native code capabilities (not bare workflow)
+- The app.config.ts note specifies: "RevenueCat is initialized in code rather than as a plugin because react-native-purchases doesn't support being used as a config plugin"
+- The app successfully builds and runs, just without RevenueCat functionality
+- We've implemented fallback handling for premium features when RevenueCat is unavailable
 
-Thank you for your help! I appreciate any insights into properly integrating RevenueCat in my development environment.
+Thank you for your help!

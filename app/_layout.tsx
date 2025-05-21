@@ -16,7 +16,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "nativewind";
 import { useEffect } from "react";
-import { Alert, Linking } from "react-native";
+import { Alert, Linking, Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Purchases from "react-native-purchases";
 import {
@@ -31,6 +31,7 @@ import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 import { oauth2ClientId } from "@/utils/medplum-oauth2";
+import { initializeRevenueCat } from "@/utils/subscription/initialize-revenue-cat";
 
 if (typeof window !== "undefined") {
   import("../stackblitz-env.js").catch((err) =>
@@ -66,6 +67,106 @@ try {
   console.log("WebSocket manager initialized successfully");
 } catch (error) {
   console.error("Error initializing WebSocket manager:", error);
+}
+
+// Initialize RevenueCat as early as possible in the app lifecycle
+// EMERGENCY DEBUG CODE - Let's display SDK status immediately on app startup
+// Helper to log alerts to Communication resources
+const logAlertToCommunication = async (title: string, message: string) => {
+  try {
+    // Wait for Medplum to be ready
+    if (!medplum || !medplum.getProfile()?.id) {
+      setTimeout(() => logAlertToCommunication(title, message), 5000);
+      return;
+    }
+
+    const profile = medplum.getProfile();
+    if (profile?.id) {
+      await medplum.createResource({
+        resourceType: "Communication",
+        status: "completed",
+        subject: { reference: `Patient/${profile.id}` },
+        about: [{ reference: `Patient/${profile.id}` }],
+        sent: new Date().toISOString(),
+        payload: [
+          {
+            contentString: `ALERT: ${title}`,
+          },
+          {
+            contentString: JSON.stringify({
+              timestamp: new Date().toISOString(),
+              message,
+              platform: Platform.OS,
+              environment: __DEV__ ? "development" : "production",
+            }),
+          },
+        ],
+      });
+    }
+  } catch (error) {
+    console.error(`Failed to log alert "${title}" to Communication:`, error);
+  }
+};
+
+try {
+  // SDK info message
+  const sdkInfoMessage =
+    `SDK Type: ${typeof Purchases}\n` +
+    `Methods: ${typeof Purchases === "object" ? Object.keys(Purchases).slice(0, 3).join(",") + "..." : "none"}\n` +
+    `Configure available: ${typeof Purchases === "object" && typeof Purchases.configure === "function"}\n` +
+    `isConfigured available: ${typeof Purchases === "object" && typeof Purchases.isConfigured === "function"}`;
+
+  // Show SDK info immediately
+  Alert.alert("RevenueCat SDK Status", sdkInfoMessage);
+
+  // Log the alert to Communication resources after a delay to ensure Medplum is ready
+  setTimeout(() => {
+    logAlertToCommunication("RevenueCat SDK Status", sdkInfoMessage);
+  }, 10000);
+
+  // Now try to initialize
+  setTimeout(() => {
+    const initMessage = "Attempting initialization...";
+    Alert.alert("RevenueCat", initMessage);
+    logAlertToCommunication("RevenueCat", initMessage);
+
+    initializeRevenueCat(medplum).then((success) => {
+      const resultMessage = success
+        ? "Initialization reported success!"
+        : "Initialization reported failure.";
+      Alert.alert("RevenueCat", resultMessage);
+      logAlertToCommunication("RevenueCat", resultMessage);
+
+      // Show SDK status again after initialization attempt
+      if (typeof Purchases === "object") {
+        try {
+          const isConfigured =
+            typeof Purchases.isConfigured === "function"
+              ? Purchases.isConfigured()
+              : "method not available";
+
+          const postInitMessage =
+            `isConfigured: ${isConfigured}\n` +
+            `getAppUserID: ${typeof Purchases.getAppUserID === "function" ? "available" : "not available"}`;
+
+          Alert.alert("RevenueCat Post-Init", postInitMessage);
+          logAlertToCommunication("RevenueCat Post-Init", postInitMessage);
+        } catch (statusError) {
+          const errorMessage = String(statusError);
+          Alert.alert("RevenueCat Status Error", errorMessage);
+          logAlertToCommunication("RevenueCat Status Error", errorMessage);
+        }
+      }
+    });
+  }, 2000);
+} catch (error) {
+  const errorMessage = String(error);
+  Alert.alert("RevenueCat Init Error", errorMessage);
+
+  // Log error to Communication resources after a delay
+  setTimeout(() => {
+    logAlertToCommunication("RevenueCat Init Error", errorMessage);
+  }, 10000);
 }
 
 export default function RootLayout() {

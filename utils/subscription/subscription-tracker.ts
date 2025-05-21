@@ -14,7 +14,7 @@ export interface SubscriptionEvent {
   eventType: "initialization" | "error" | "status_change" | "purchase" | "restore";
   timestamp: string;
   success: boolean;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   errorMessage?: string;
 }
 
@@ -25,7 +25,7 @@ export interface SubscriptionEvent {
 export async function trackSubscriptionEvent(
   medplum: MedplumClient,
   event: SubscriptionEvent,
-  patientId?: string
+  patientId?: string,
 ): Promise<void> {
   try {
     // Add additional context to the event
@@ -43,10 +43,10 @@ export async function trackSubscriptionEvent(
       // Exit early in development to avoid creating too many resources
       return;
     }
-    
+
     // Generate a concise subject for the Communication
     const subject = `RevenueCat ${event.eventType} - ${event.success ? "Success" : "Failed"}`;
-    
+
     // Determine who the communication is about
     let about = undefined;
     if (patientId) {
@@ -65,7 +65,7 @@ export async function trackSubscriptionEvent(
         // Patient reference not available, will create without 'about'
       }
     }
-    
+
     // Convert event details to a string, handling circular references
     let eventDetails: string;
     try {
@@ -79,7 +79,7 @@ export async function trackSubscriptionEvent(
         }
         return value;
       });
-      
+
       // Truncate if too large
       if (eventDetails.length > MAX_LOG_LENGTH) {
         eventDetails = eventDetails.substring(0, MAX_LOG_LENGTH) + "... [truncated]";
@@ -87,7 +87,7 @@ export async function trackSubscriptionEvent(
     } catch (error) {
       eventDetails = `Error serializing event: ${String(error)}`;
     }
-    
+
     // Create the Communication resource
     const communication: Communication = {
       resourceType: "Communication",
@@ -115,7 +115,7 @@ export async function trackSubscriptionEvent(
         },
       ],
     };
-    
+
     // Send to Medplum
     await medplum.createResource(communication);
   } catch (error) {
@@ -132,19 +132,16 @@ export async function trackSubscriptionEvent(
 export async function trackInitialization(
   medplum: MedplumClient,
   success: boolean,
-  details: Record<string, any> = {},
-  error?: any
+  details: Record<string, unknown> = {},
+  error?: unknown,
 ): Promise<void> {
-  await trackSubscriptionEvent(
-    medplum,
-    {
-      eventType: "initialization",
-      timestamp: new Date().toISOString(),
-      success,
-      details,
-      errorMessage: error ? String(error) : undefined,
-    }
-  );
+  await trackSubscriptionEvent(medplum, {
+    eventType: "initialization",
+    timestamp: new Date().toISOString(),
+    success,
+    details,
+    errorMessage: error ? String(error) : undefined,
+  });
 }
 
 /**
@@ -153,20 +150,17 @@ export async function trackInitialization(
 export async function trackSubscriptionStatusChange(
   medplum: MedplumClient,
   isPremium: boolean,
-  details: Record<string, any> = {}
+  details: Record<string, unknown> = {},
 ): Promise<void> {
-  await trackSubscriptionEvent(
-    medplum,
-    {
-      eventType: "status_change",
-      timestamp: new Date().toISOString(),
-      success: true,
-      details: {
-        isPremium,
-        ...details,
-      },
-    }
-  );
+  await trackSubscriptionEvent(medplum, {
+    eventType: "status_change",
+    timestamp: new Date().toISOString(),
+    success: true,
+    details: {
+      isPremium,
+      ...details,
+    },
+  });
 }
 
 /**
@@ -175,16 +169,13 @@ export async function trackSubscriptionStatusChange(
 export async function trackError(
   medplum: MedplumClient,
   errorMessage: string,
-  details: Record<string, any> = {}
+  details: Record<string, unknown> = {},
 ): Promise<void> {
-  await trackSubscriptionEvent(
-    medplum,
-    {
-      eventType: "error",
-      timestamp: new Date().toISOString(),
-      success: false,
-      details,
-      errorMessage,
-    }
-  );
+  await trackSubscriptionEvent(medplum, {
+    eventType: "error",
+    timestamp: new Date().toISOString(),
+    success: false,
+    details,
+    errorMessage,
+  });
 }

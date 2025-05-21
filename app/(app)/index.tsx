@@ -2,11 +2,12 @@ import { useMedplumContext } from "@medplum/react-hooks";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import Purchases from "react-native-purchases";
 
 import { CreateThreadModal } from "@/components/CreateThreadModal";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { RevenueCatStatusPanel } from "@/components/RevenueCatStatusPanel";
 import { ThreadList } from "@/components/ThreadList";
 import { ThreadListHeader } from "@/components/ThreadListHeader";
 import { WelcomeWalkthrough } from "@/components/WelcomeWalkthrough";
@@ -28,6 +29,8 @@ export default function Index() {
   const { getAvatarURL, isLoading: isAvatarsLoading } = useAvatars(avatarReferences);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
+  const [tapCount, setTapCount] = useState(0);
   const notificationManager = useMemo(() => new PushNotificationTokenManager(medplum), [medplum]);
 
   // Check if we need to show the welcome walkthrough
@@ -100,6 +103,36 @@ export default function Index() {
         onCreateThread={createThread}
       />
       <WelcomeWalkthrough opened={showWelcome} onClose={handleWelcomeClose} />
+
+      {/* Show RevenueCat status panel:
+          - In development (__DEV__) it's always shown
+          - In production, it's shown if showDebugPanel is true
+      */}
+      {(__DEV__ || showDebugPanel) && (
+        <View style={{ position: "absolute", bottom: 70, left: 0, right: 0, alignItems: "center" }}>
+          <RevenueCatStatusPanel />
+        </View>
+      )}
+
+      {/* Debug button - visible for easier access */}
+      <Pressable
+        style={{
+          position: "absolute",
+          bottom: 10,
+          right: 10,
+          backgroundColor: "#2196f3",
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          borderRadius: 20,
+          opacity: 0.7,
+        }}
+        onPress={() => {
+          setShowDebugPanel((show) => !show);
+          Alert.alert("Debug Panel", showDebugPanel ? "Debug panel hidden" : "Debug panel shown");
+        }}
+      >
+        <Text style={{ color: "white", fontWeight: "bold", fontSize: 12 }}>DEBUG</Text>
+      </Pressable>
     </View>
   );
 }

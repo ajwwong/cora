@@ -1,200 +1,172 @@
-C/C++: /root/mts/v1/cora/node_modules/react-native-svg/android/build/generated/source/codegen/jni/react/renderer/components/rnsvg/EventEmitters.cpp:39:3: warning: '$' in identifier [-Wdollar-in-identifier-extension]
-C/C++:    39 |   $payload.setProperty(runtime, "source", source);
-C/C++:       |   ^
-C/C++: /root/mts/v1/cora/node_modules/react-native-svg/android/build/generated/source/codegen/jni/react/renderer/components/rnsvg/EventEmitters.cpp:41:12: warning: '$' in identifier [-Wdollar-in-identifier-extension]
-C/C++:    41 |     return $payload;
-C/C++:       |            ^
-C/C++: 9 warnings generated.
 
-> IDLE
-> IDLE
-> Task :app:validateSigningRelease FAILED
-> IDLE
-[Incubating] Problems report is available at: file:///root/mts/v1/cora/android/build/reports/problems/problems-report.html
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':app:validateSigningRelease'.
-> Keystore file '/root/mts/v1/cora/android/app/app/keystore/release-key.keystore' not found for signing config 'release'.
-
-* Try:
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
-
-* Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:validateSigningRelease'.
-        at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:130)
-        at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:293)
-        at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:128)
-        at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
-        at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:40)
-        at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-        at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-        at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
-        at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
-        at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-        at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
-        at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
-        at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-        at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
-        at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
-        at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
-        at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
-        at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
-        at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
-        at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
-        at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
-        at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
-        at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
-        at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
-        at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
-Caused by: org.gradle.api.InvalidUserDataException: Keystore file '/root/mts/v1/cora/android/app/app/keystore/release-key.keystore' not found for signing config 'release'.
-        at com.android.build.gradle.internal.tasks.ValidateSigningTask.doTaskAction(ValidateSigningTask.kt:94)
-        at com.android.build.gradle.internal.tasks.NonIncrementalTask$taskAction$$inlined$recordTaskAction$1.invoke(BaseTask.kt:60)
-        at com.android.build.gradle.internal.tasks.Blocks.recordSpan(Blocks.java:51)
-        at com.android.build.gradle.internal.tasks.NonIncrementalTask.taskAction(NonIncrementalTask.kt:78)
-        at jdk.internal.reflect.GeneratedMethodAccessor370.invoke(Unknown Source)
-        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-        at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
-        at org.gradle.api.internal.project.taskfactory.StandardTaskAction.doExecute(StandardTaskAction.java:58)
-        at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:51)
-        at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:29)
-        at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:244)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
-        at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:229)
-        at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:212)
-        at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:195)
-        at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:162)
-        at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:105)
-        at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:44)
-        at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:59)
-        at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:56)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-        at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:56)
-        at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:44)
-        at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
-        at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
-        at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
-        at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:50)
-        at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:28)
-        at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:67)
-        at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:37)
-        at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:61)
-        at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:26)
-        at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
-        at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
-        at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:40)
-        at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:29)
-        at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:189)
-        at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$1(BuildCacheStep.java:75)
-        at org.gradle.internal.Either$Right.fold(Either.java:175)
-        at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
-        at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:73)
-        at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:48)
-        at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:46)
-        at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:35)
-        at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
-        at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
-        at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
-        at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
-        at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
-        at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
-        at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:49)
-        at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:27)
-        at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:71)
-        at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:39)
-        at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:65)
-        at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:36)
-        at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:107)
-        at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:56)
-        at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:64)
-        at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:43)
-        at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.executeWithNonEmptySources(AbstractSkipEmptyWorkStep.java:125)
-        at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:56)
-        at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
-        at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
-        at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:36)
-        at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:23)
-        at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:75)
-        at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:41)
-        at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$execute$0(AssignMutableWorkspaceStep.java:35)
-        at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:289)
-        at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:31)
-        at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:22)
-        at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
-        at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
-        at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
-        at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
-        at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
-        at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
-        at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
-        at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:48)
-        at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:35)
-        at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:61)
-        at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:127)
-        at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
-        at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:40)
-        at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-        at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-        at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
-        at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
-        at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-        at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
-        at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
-        at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-        at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-        at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
-        at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
-        at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
-        at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
-        at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
-        at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
-        at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
-        at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
-        at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
-        at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
-        at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
-        at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+	
+Last Updated
 
 
-Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+Payload
 
-You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+no filters	
+	5/20/2025, 12:50:42 PM	
+Content
+SubscriptionScreen Restore Attempt
+Content
+{"timestamp":"2025-05-20T19:50:42.613Z","component":"SubscriptionScreen","currentStatus":"free"}
+	5/20/2025, 12:50:32 PM	
+Content
+SubscriptionScreen Initial Status
+Content
+{"timestamp":"2025-05-20T19:50:33.206Z","component":"SubscriptionScreen","isPremium":false,"hasCustomerInfo":false,"activeEntitlements":[],"customerInfoId":null,"hasPackages":false,"packageCount":0,"status":"Text Companion"}
+	5/20/2025, 12:50:32 PM	
+Content
+SubscriptionScreen Initial Status
+Content
+{"timestamp":"2025-05-20T19:50:33.267Z","component":"SubscriptionScreen","isPremium":false,"hasCustomerInfo":false,"activeEntitlements":[],"customerInfoId":null,"hasPackages":false,"packageCount":0,"status":"Text Companion"}
+	5/20/2025, 12:50:30 PM	
+Content
+SettingsModal RevenueCat Status
+Content
+{"timestamp":"2025-05-20T19:50:31.278Z","component":"SettingsModal","isPremium":false,"hasCustomerInfo":false,"activeEntitlements":[],"customerInfoId":null,"status":"Text Companion"}
+	5/20/2025, 12:50:24 PM	
+Content
+PANEL: Detailed Status Button Pressed
+Content
+{"timestamp":"2025-05-20T19:50:24.802Z","isInitialized":false,"initializationAttempted":true,"lastError":null,"lastAttemptTime":"2025-05-20T19:49:40.713Z","platform":"android","purchasesType":"function","purchasesAvailable":false,"nativeModuleCheck":{"hasRNPurchases":true,"methods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"],"allModules":[]}}
+	5/20/2025, 12:50:22 PM	
+Content
+PANEL: Native Module Call Attempt
+Content
+{"timestamp":"2025-05-20T19:50:23.127Z","hasRNPurchases":true,"methods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"],"platform":"android"}
+	5/20/2025, 12:50:22 PM	
+Content
+PANEL: Native Method Error
+Content
+{"timestamp":"2025-05-20T19:50:23.129Z","error":"setup method not available on RNPurchases","availableMethods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"]}
+	5/20/2025, 12:50:15 PM	
+Content
+RevenueCat login failed
+Content
+{"timestamp":"2025-05-20T19:50:16.327Z","method":"Purchases.logIn","profileId":"01969ccc-37e7-761a-a31e-405b20337a1d","retryCount":2,"status":"error","error":"There is no singleton instance. Make sure you configure Purchases before trying to get the default instance. More info here: https://errors.rev.cat/configuring-sdk"}
+	5/20/2025, 12:50:15 PM	
+Content
+RevenueCat login attempt
+Content
+{"timestamp":"2025-05-20T19:50:15.940Z","method":"Purchases.logIn","profileId":"01969ccc-37e7-761a-a31e-405b20337a1d","retryCount":2,"status":"attempting"}
+	5/20/2025, 12:50:11 PM	
+Content
+RevenueCat login failed
+Content
+{"timestamp":"2025-05-20T19:50:11.609Z","method":"Purchases.logIn","profileId":"01969ccc-37e7-761a-a31e-405b20337a1d","retryCount":1,"status":"error","error":"There is no singleton instance. Make sure you configure Purchases before trying to get the default instance. More info here: https://errors.rev.cat/configuring-sdk"}
+	5/20/2025, 12:50:10 PM	
+Content
+RevenueCat login attempt
+Content
+{"timestamp":"2025-05-20T19:50:11.279Z","method":"Purchases.logIn","profileId":"01969ccc-37e7-761a-a31e-405b20337a1d","retryCount":1,"status":"attempting"}
+	5/20/2025, 12:50:08 PM	
+Content
+RevenueCat login failed
+Content
+{"timestamp":"2025-05-20T19:50:09.007Z","method":"Purchases.logIn","profileId":"01969ccc-37e7-761a-a31e-405b20337a1d","retryCount":0,"status":"error","error":"There is no singleton instance. Make sure you configure Purchases before trying to get the default instance. More info here: https://errors.rev.cat/configuring-sdk"}
+	5/20/2025, 12:50:08 PM	
+Content
+RevenueCat login attempt
+Content
+{"timestamp":"2025-05-20T19:50:08.666Z","method":"Purchases.logIn","profileId":"01969ccc-37e7-761a-a31e-405b20337a1d","retryCount":0,"status":"attempting"}
+	5/20/2025, 12:50:08 PM	
+Content
+DIAGNOSTIC LOG: Testing Communication Resource Creation
+Content
+{"timestamp":"2025-05-20T19:50:08.669Z","test":"This is a test entry to verify Communication resource creation","platform":"android"}
+	5/20/2025, 12:49:48 PM	
+Content
+RevenueCat SDK not available - DEBUG INFO
+Content
+{"timestamp":"2025-05-20T19:49:48.985Z","platform":"android","environment":"production","purchasesType":"function","purchasesValue":"function Purchases() { [bytecode] }","hasRNPurchasesModule":true,"rnPurchasesDetails":"addListener,canMakePayments,checkTrialOrIntroductoryPriceEligibility,collectDeviceIdentifiers,getAppUserID,getCurrentOfferingForPlacement,getCustomerInfo,getOfferings,getProductInfo,getStorefront,invalidateCustomerInfoCache,isAnonymous,isConfigured,isWebPurchaseRedemptionURL,logIn,logOut,purchasePackage,purchaseProduct,purchaseSubscriptionOption,redeemWebPurchase,removeListeners,restorePurchases,setAd,setAdGroup,setAdjustID,setAirshipChannelID,setAllowSharingStoreAccount,setAppsflyerID,setAttributes,setCampaign,setCleverTapID,setCreative,setDebugLogsEnabled,setDisplayName,setEmail,setFBAnonymousID,setFirebaseAppInstanceID,setKeyword,setKochavaDeviceID,setLogHandler,setLogLevel,setMediaSource,setMixpanelDistinctID,setMparticleID,setOnesignalID,setPhoneNumber,setProxyURLString,setPushToken,setTenjinAnalyticsInstallationID,setupPurchases,showInAppMessages,syncAmazonPurchase,syncAttributesAndOfferingsIfNeeded,syncObserverModeAmazonPurchase,syncPurchases,getConstants","availableNativeModules":[],"platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}","isHermes":true,"purchasesVersion":"unknown"}
+	5/20/2025, 12:49:48 PM	
+Content
+RevenueCat initialization starting
+Content
+{"timestamp":"2025-05-20T19:49:48.517Z","platform":"android","environment":"production","hasRNPurchasesModule":true,"rnPurchasesDetails":"addListener,canMakePayments,checkTrialOrIntroductoryPriceEligibility,collectDeviceIdentifiers,getAppUserID,getCurrentOfferingForPlacement,getCustomerInfo,getOfferings,getProductInfo,getStorefront,invalidateCustomerInfoCache,isAnonymous,isConfigured,isWebPurchaseRedemptionURL,logIn,logOut,purchasePackage,purchaseProduct,purchaseSubscriptionOption,redeemWebPurchase,removeListeners,restorePurchases,setAd,setAdGroup,setAdjustID,setAirshipChannelID,setAllowSharingStoreAccount,setAppsflyerID,setAttributes,setCampaign,setCleverTapID,setCreative,setDebugLogsEnabled,setDisplayName,setEmail,setFBAnonymousID,setFirebaseAppInstanceID,setKeyword,setKochavaDeviceID,setLogHandler,setLogLevel,setMediaSource,setMixpanelDistinctID,setMparticleID,setOnesignalID,setPhoneNumber,setProxyURLString,setPushToken,setTenjinAnalyticsInstallationID,setupPurchases,showInAppMessages,syncAmazonPurchase,syncAttributesAndOfferingsIfNeeded,syncObserverModeAmazonPurchase,syncPurchases,getConstants","availableNativeModules":[],"platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}","isHermes":true,"purchasesType":"function","purchasesVersion":"unknown"}
+	5/20/2025, 12:49:47 PM	
+Content
+ALERT: RevenueCat SDK Status
+Content
+{"timestamp":"2025-05-20T19:49:48.484Z","message":"SDK Type: function\nMethods: none\nConfigure available: false\nisConfigured available: false","platform":"android","environment":"production"}
+	5/20/2025, 12:49:40 PM	
+Content
+ALERT: RevenueCat
+Content
+{"timestamp":"2025-05-20T19:49:40.934Z","message":"Initialization reported failure.","platform":"android","environment":"production"}
+	5/20/2025, 12:49:40 PM	
+Content
+RevenueCat SDK not available
+Content
+{"timestamp":"2025-05-20T19:49:40.713Z","platform":"android","environment":"production","purchasesType":"function"}
+	5/20/2025, 12:49:39 PM	
+Content
+ALERT: RevenueCat
+Content
+{"timestamp":"2025-05-20T19:49:40.484Z","message":"Attempting initialization...","platform":"android","environment":"production"}
 
-For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 32m 13s
-607 actionable tasks: 553 executed, 54 up-to-date
-Build completed with version code 29. Check the output in:
-./android/app/build/outputs/bundle/release/app-release.aab
-root@LAPTOP-GN07M523:~/mts/v1/cora# 
-root@LAPTOP-GN07M523:~/mts/v1/cora# 
-root@LAPTOP-GN07M523:~/mts/v1/cora# 
+	
+Last Updated
 
+
+Payload
+
+no filters	
+	5/20/2025, 12:49:39 PM	
+Content
+RevenueCat initialization starting
+Content
+{"timestamp":"2025-05-20T19:49:40.490Z","platform":"android","environment":"production","purchasesType":"function","purchasesVersion":"unknown"}
+	5/20/2025, 12:48:22 PM	
+Content
+PANEL: Detailed Status Button Pressed
+Content
+{"timestamp":"2025-05-20T19:48:21.752Z","isInitialized":false,"initializationAttempted":true,"lastError":null,"lastAttemptTime":"2025-05-20T19:47:45.804Z","platform":"android","purchasesType":"function","purchasesAvailable":false,"nativeModuleCheck":{"hasRNPurchases":true,"methods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"],"allModules":[]}}
+	5/20/2025, 12:48:17 PM	
+Content
+PANEL: Native Module Call Attempt
+Content
+{"timestamp":"2025-05-20T19:48:18.237Z","hasRNPurchases":true,"methods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"],"platform":"android"}
+	5/20/2025, 12:48:17 PM	
+Content
+PANEL: Native Method Error
+Content
+{"timestamp":"2025-05-20T19:48:18.243Z","error":"setup method not available on RNPurchases","availableMethods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"]}
+	5/20/2025, 12:47:53 PM	
+Content
+RevenueCat SDK not available - DEBUG INFO
+Content
+{"timestamp":"2025-05-20T19:47:53.682Z","platform":"android","environment":"production","purchasesType":"function","purchasesValue":"function Purchases() { [bytecode] }","hasRNPurchasesModule":true,"rnPurchasesDetails":"addListener,canMakePayments,checkTrialOrIntroductoryPriceEligibility,collectDeviceIdentifiers,getAppUserID,getCurrentOfferingForPlacement,getCustomerInfo,getOfferings,getProductInfo,getStorefront,invalidateCustomerInfoCache,isAnonymous,isConfigured,isWebPurchaseRedemptionURL,logIn,logOut,purchasePackage,purchaseProduct,purchaseSubscriptionOption,redeemWebPurchase,removeListeners,restorePurchases,setAd,setAdGroup,setAdjustID,setAirshipChannelID,setAllowSharingStoreAccount,setAppsflyerID,setAttributes,setCampaign,setCleverTapID,setCreative,setDebugLogsEnabled,setDisplayName,setEmail,setFBAnonymousID,setFirebaseAppInstanceID,setKeyword,setKochavaDeviceID,setLogHandler,setLogLevel,setMediaSource,setMixpanelDistinctID,setMparticleID,setOnesignalID,setPhoneNumber,setProxyURLString,setPushToken,setTenjinAnalyticsInstallationID,setupPurchases,showInAppMessages,syncAmazonPurchase,syncAttributesAndOfferingsIfNeeded,syncObserverModeAmazonPurchase,syncPurchases,getConstants","availableNativeModules":[],"platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}","isHermes":true,"purchasesVersion":"unknown"}
+	5/20/2025, 12:47:52 PM	
+Content
+RevenueCat initialization starting
+Content
+{"timestamp":"2025-05-20T19:47:53.298Z","platform":"android","environment":"production","hasRNPurchasesModule":true,"rnPurchasesDetails":"addListener,canMakePayments,checkTrialOrIntroductoryPriceEligibility,collectDeviceIdentifiers,getAppUserID,getCurrentOfferingForPlacement,getCustomerInfo,getOfferings,getProductInfo,getStorefront,invalidateCustomerInfoCache,isAnonymous,isConfigured,isWebPurchaseRedemptionURL,logIn,logOut,purchasePackage,purchaseProduct,purchaseSubscriptionOption,redeemWebPurchase,removeListeners,restorePurchases,setAd,setAdGroup,setAdjustID,setAirshipChannelID,setAllowSharingStoreAccount,setAppsflyerID,setAttributes,setCampaign,setCleverTapID,setCreative,setDebugLogsEnabled,setDisplayName,setEmail,setFBAnonymousID,setFirebaseAppInstanceID,setKeyword,setKochavaDeviceID,setLogHandler,setLogLevel,setMediaSource,setMixpanelDistinctID,setMparticleID,setOnesignalID,setPhoneNumber,setProxyURLString,setPushToken,setTenjinAnalyticsInstallationID,setupPurchases,showInAppMessages,syncAmazonPurchase,syncAttributesAndOfferingsIfNeeded,syncObserverModeAmazonPurchase,syncPurchases,getConstants","availableNativeModules":[],"platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}","isHermes":true,"purchasesType":"function","purchasesVersion":"unknown"}
+	5/20/2025, 12:47:52 PM	
+Content
+ALERT: RevenueCat SDK Status
+Content
+{"timestamp":"2025-05-20T19:47:53.266Z","message":"SDK Type: function\nMethods: none\nConfigure available: false\nisConfigured available: false","platform":"android","environment":"production"}
+	5/20/2025, 12:47:45 PM	
+Content
+ALERT: RevenueCat
+Content
+{"timestamp":"2025-05-20T19:47:46.214Z","message":"Initialization reported failure.","platform":"android","environment":"production"}
+	5/20/2025, 12:47:45 PM	
+Content
+RevenueCat SDK not available
+Content
+{"timestamp":"2025-05-20T19:47:45.805Z","platform":"android","environment":"production","purchasesType":"function"}
+	5/20/2025, 12:47:44 PM	
+Content
+ALERT: RevenueCat
+Content
+{"timestamp":"2025-05-20T19:47:45.262Z","message":"Attempting initialization...","platform":"android","environment":"production"}
+	5/20/2025, 12:47:44 PM	
+Content
+RevenueCat initialization starting
+Content
+{"timestamp":"2025-05-20T19:47:45.281Z","platform":"android","environment":"production","purchasesType":"function","purchasesVersion":"unknown"}

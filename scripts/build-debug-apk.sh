@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Script to clean and build a production APK with optimized memory settings
-echo "Starting clean and build process for production APK..."
+# Script to clean and build a debug APK with detailed RevenueCat logging
+echo "Starting clean and build process for debug APK..."
 
 # Create a log file with timestamp
-LOG_FILE="../build-log-$(date +%Y%m%d%H%M%S).log"
+LOG_FILE="../debug-build-log-$(date +%Y%m%d%H%M%S).log"
 echo "Build log will be saved to: $LOG_FILE"
 
 # Log function to write to both console and log file
@@ -12,7 +12,7 @@ log() {
   echo "$1" | tee -a "$LOG_FILE"
 }
 
-log "Build started at $(date)"
+log "Debug build started at $(date)"
 log "============================================="
 
 # First clean up any previous builds
@@ -31,19 +31,19 @@ cd ./android
 log "Cleaning Gradle project..."
 ./gradlew clean --max-workers=2 2>&1 | tee -a "$LOG_FILE"
 
-log "Building release APK with optimized settings and RevenueCat debugging..."
+log "Building debug APK with RevenueCat debugging enabled..."
 log "============================================="
-# Add --info for more detailed logs
-./gradlew assembleRelease --max-workers=4 --no-daemon --stacktrace --info -PrevenueCatDebug=true 2>&1 | tee -a "$LOG_FILE"
+# Add --info for more detailed logs, especially about RevenueCat integration
+./gradlew assembleDebug --max-workers=4 --no-daemon --stacktrace --info -PrevenueCatDebug=true 2>&1 | tee -a "$LOG_FILE"
 log "============================================="
 
 if [ $? -eq 0 ]; then
-  log "Production build completed successfully. APK location:"
-  log "./android/app/build/outputs/apk/release/app-release.apk"
+  log "Debug build completed successfully. APK location:"
+  log "./android/app/build/outputs/apk/debug/app-debug.apk"
   
   # Copy the APK to the project root for easier access
-  cp ./app/build/outputs/apk/release/app-release.apk ../feelheard-production.apk
-  log "APK copied to: ../feelheard-production.apk"
+  cp ./app/build/outputs/apk/debug/app-debug.apk ../feelheard-debug.apk
+  log "APK copied to: ../feelheard-debug.apk"
   log "Build log saved to: $LOG_FILE"
   
   # If adb is available, offer to install
@@ -54,7 +54,7 @@ if [ $? -eq 0 ]; then
     
     if [ "$INSTALL_CHOICE" = "y" ] || [ "$INSTALL_CHOICE" = "Y" ]; then
       log "Installing on device/emulator..."
-      adb install -r ../feelheard-production.apk 2>&1 | tee -a "$LOG_FILE"
+      adb install -r ../feelheard-debug.apk 2>&1 | tee -a "$LOG_FILE"
       
       if [ $? -eq 0 ]; then
         log "APK installed successfully!"
@@ -63,7 +63,7 @@ if [ $? -eq 0 ]; then
         log "APK installation failed. You may need to install it manually."
       fi
     else
-      log "Skipping installation. You can manually install the APK from: ../feelheard-production.apk"
+      log "Skipping installation. You can manually install the APK from: ../feelheard-debug.apk"
     fi
   else
     log "ADB not found. You'll need to install the APK manually."
@@ -79,9 +79,10 @@ fi
 
 log ""
 log "==============================================================="
-log "NOTE: This is a production build. It will:"
-log "- Not connect to development servers"
-log "- Use real RevenueCat instead of simulation mode"
-log "- Process real subscriptions (use test accounts!)"
+log "NOTE: This is a debug build. It will:"
+log "- Be debuggable with Chrome DevTools"
+log "- Include debug symbols for troubleshooting"
+log "- Have enhanced RevenueCat logging enabled"
+log "- May show RevenueCat debugging UI overlay"
 log "==============================================================="
 log "Build completed at $(date)"

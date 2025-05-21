@@ -75,55 +75,65 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const medplum = useMedplum();
 
   // Helper function to check if the user has premium entitlement
-  const checkPremiumEntitlement = React.useCallback((info: CustomerInfo) => {
-    const hasPremium = info.entitlements.active[ENTITLEMENT_IDS.PREMIUM] !== undefined;
-    setIsPremium(hasPremium);
-    
-    // Log detailed entitlement info in production builds to help diagnose issues
-    if (!__DEV__) {
-      console.log(`📱 [SubscriptionContext] Premium entitlement check - Status: ${hasPremium ? "PREMIUM" : "FREE"}`);
-      console.log(`📱 [SubscriptionContext] Active entitlements:`, Object.keys(info.entitlements.active));
-      console.log(`📱 [SubscriptionContext] User ID:`, info.originalAppUserId);
-      
-      // Try to log this to Medplum for later analysis
-      try {
-        const profile = medplum.getProfile();
-        if (profile?.id) {
-          medplum.createResource({
-            resourceType: "Communication",
-            status: "completed",
-            subject: { reference: `Patient/${profile.id}` },
-            about: [{ reference: `Patient/${profile.id}` }],
-            sent: new Date().toISOString(),
-            payload: [
-              {
-                contentString: `Subscription status check: ${hasPremium ? "PREMIUM" : "FREE"}`,
-              },
-              {
-                contentString: JSON.stringify({
-                  timestamp: new Date().toISOString(),
-                  platform: Platform.OS,
-                  environment: "production",
-                  entitlements: Object.keys(info.entitlements.active),
-                  originalAppUserId: info.originalAppUserId,
-                  customerInfo: {
-                    activeSubscriptions: info.activeSubscriptions,
-                    allPurchasedProductIdentifiers: info.allPurchasedProductIdentifiers
-                  }
-                }),
-              },
-            ],
-          }).catch(error => {
-            console.error("📱 [SubscriptionContext] Failed to log entitlement check:", error);
-          });
+  const checkPremiumEntitlement = React.useCallback(
+    (info: CustomerInfo) => {
+      const hasPremium = info.entitlements.active[ENTITLEMENT_IDS.PREMIUM] !== undefined;
+      setIsPremium(hasPremium);
+
+      // Log detailed entitlement info in production builds to help diagnose issues
+      if (!__DEV__) {
+        console.log(
+          `📱 [SubscriptionContext] Premium entitlement check - Status: ${hasPremium ? "PREMIUM" : "FREE"}`,
+        );
+        console.log(
+          `📱 [SubscriptionContext] Active entitlements:`,
+          Object.keys(info.entitlements.active),
+        );
+        console.log(`📱 [SubscriptionContext] User ID:`, info.originalAppUserId);
+
+        // Try to log this to Medplum for later analysis
+        try {
+          const profile = medplum.getProfile();
+          if (profile?.id) {
+            medplum
+              .createResource({
+                resourceType: "Communication",
+                status: "completed",
+                subject: { reference: `Patient/${profile.id}` },
+                about: [{ reference: `Patient/${profile.id}` }],
+                sent: new Date().toISOString(),
+                payload: [
+                  {
+                    contentString: `Subscription status check: ${hasPremium ? "PREMIUM" : "FREE"}`,
+                  },
+                  {
+                    contentString: JSON.stringify({
+                      timestamp: new Date().toISOString(),
+                      platform: Platform.OS,
+                      environment: "production",
+                      entitlements: Object.keys(info.entitlements.active),
+                      originalAppUserId: info.originalAppUserId,
+                      customerInfo: {
+                        activeSubscriptions: info.activeSubscriptions,
+                        allPurchasedProductIdentifiers: info.allPurchasedProductIdentifiers,
+                      },
+                    }),
+                  },
+                ],
+              })
+              .catch((error) => {
+                console.error("📱 [SubscriptionContext] Failed to log entitlement check:", error);
+              });
+          }
+        } catch (error) {
+          // Silently handle errors in production
         }
-      } catch (error) {
-        // Silently handle errors in production
       }
-    }
-    
-    return hasPremium;
-  }, [medplum]);
+
+      return hasPremium;
+    },
+    [medplum],
+  );
 
   // Save subscription status to Medplum as a FHIR extension
   const storeSubscriptionStatusToMedplum = React.useCallback(
@@ -194,19 +204,23 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Initialize RevenueCat when component mounts
   useEffect(() => {
-    const initializePurchases = async () => {
-      // We'll need to collect some details for logging
-      let platformDetails: Record<string, unknown> = {};
-      
-      // Before doing anything else, log the native modules availability
+    // Import the RevenueCat initialization utility
+    import("@/utils/subscription/initialize-revenue-cat")
+      .then(({ ensureRevenueCatInitialized }) => {
+        // Ensure RevenueCat is initialized before proceeding
+        ensureRevenueCatInitialized(medplum).catch((error) => {
+          console.error("Error ensuring RevenueCat is initialized:", error);
+        });
+      })
+      .catch((error) => {
+        console.error("Error importing RevenueCat initialization utility:", error);
+      });
+
+    // Helper function to log to Communication resources
+    const logToCommunication = async (title: string, data: Record<string, unknown>) => {
       try {
         const profile = medplum.getProfile();
         if (profile?.id) {
-          const availableNativeModules = Object.keys(NativeModules);
-          const hasRNPurchasesModule = !!NativeModules.RNPurchases;
-          const platformConstants = Platform.constants ? JSON.stringify(Platform.constants) : "Not available";
-          const isHermes = !!global.HermesInternal;
-          
           await medplum.createResource({
             resourceType: "Communication",
             status: "completed",
@@ -215,57 +229,80 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             sent: new Date().toISOString(),
             payload: [
               {
-                contentString: "RevenueCat initialization starting - Native modules check",
+                contentString: title,
               },
               {
                 contentString: JSON.stringify({
                   timestamp: new Date().toISOString(),
-                  platform: Platform.OS,
-                  environment: __DEV__ ? "development" : "production",
-                  hasRNPurchasesModule: hasRNPurchasesModule,
-                  availableNativeModules: availableNativeModules,
-                  platformDetails: platformConstants,
-                  isHermes: isHermes,
-                  purchasesType: typeof Purchases
+                  ...data,
                 }),
               },
             ],
           });
         }
-      } catch (logError) {
-        console.error("📱 [SubscriptionContext] Failed to log native modules check:", logError);
+      } catch (error) {
+        console.error(`Failed to log "${title}":`, error);
       }
-      
+    };
+
+    const initializePurchases = async () => {
+      // Log native modules availability
+      try {
+        const profile = medplum.getProfile();
+        if (profile?.id) {
+          // Get a more detailed view of available modules
+          const availableNativeModules = Object.keys(NativeModules);
+          const hasRNPurchasesModule = !!NativeModules.RNPurchases;
+          // Check for specific properties on the RNPurchases module
+          const rnPurchasesDetails = hasRNPurchasesModule
+            ? Object.getOwnPropertyNames(NativeModules.RNPurchases).join(",")
+            : "Module exists but has no properties";
+          const platformConstants = Platform.constants
+            ? JSON.stringify(Platform.constants)
+            : "Not available";
+          const isHermes = !!global.HermesInternal;
+
+          await logToCommunication("RevenueCat initialization starting", {
+            platform: Platform.OS,
+            environment: __DEV__ ? "development" : "production",
+            hasRNPurchasesModule: hasRNPurchasesModule,
+            rnPurchasesDetails: rnPurchasesDetails,
+            availableNativeModules: availableNativeModules,
+            platformDetails: platformConstants,
+            isHermes: isHermes,
+            purchasesType: typeof Purchases,
+            purchasesVersion: Purchases?.VERSION || "unknown",
+          });
+        }
+      } catch (logError) {
+        console.error("📱 [SubscriptionContext] Failed to log initialization start:", logError);
+      }
+
       try {
         setIsLoading(true);
 
-        // For web platform, skip RevenueCat initialization completely
+        // Skip for web platform
         if (Platform.OS === "web") {
           console.log(
             "📱 [SubscriptionContext] Web platform detected, skipping RevenueCat initialization",
           );
-          platformDetails.platform = "web";
-          platformDetails.skipped = true;
-          
-          // We need to log skipping initialization
-          
-          setIsPremium(true); // Enable premium features on web for better testing
+          await logToCommunication("RevenueCat initialization skipped for web", {
+            platform: "web",
+            environment: __DEV__ ? "development" : "production",
+          });
+          setIsPremium(true); // Enable premium features on web for testing
           setIsLoading(false);
           return;
         }
 
-        // CRUCIAL: Add a delay to ensure native modules are properly initialized
-        // This helps prevent the "setLogHandler of null" error
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
         // Get the appropriate API key for the platform
         const apiKey =
           Platform.OS === "ios" ? REVENUE_CAT_API_KEYS.ios : REVENUE_CAT_API_KEYS.android;
-        
+
         // Add details for logging
-        let platformDetails = {
+        const platformDetails = {
           platform: Platform.OS,
-          apiKeyPrefix: apiKey.substring(0, 6) + "..." // Only log prefix for security
+          apiKeyPrefix: apiKey.substring(0, 6) + "...", // Only log prefix for security
         };
 
         console.log(
@@ -274,15 +311,23 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         try {
           // Handle case where RevenueCat is not available at all
-          if (typeof Purchases !== "object" || Purchases === null) {
-            console.warn("📱 [SubscriptionContext] RevenueCat SDK is not available");
-            
+          if (
+            typeof Purchases !== "object" ||
+            Purchases === null ||
+            typeof Purchases.configure !== "function"
+          ) {
+            console.warn(
+              "📱 [SubscriptionContext] RevenueCat SDK is not available or not fully initialized",
+            );
+
             // Check for native modules to help with debugging
             const availableNativeModules = Object.keys(NativeModules);
             const hasRNPurchasesModule = !!NativeModules.RNPurchases;
-            const platformConstants = Platform.constants ? JSON.stringify(Platform.constants) : "Not available";
+            const platformConstants = Platform.constants
+              ? JSON.stringify(Platform.constants)
+              : "Not available";
             const isHermes = !!global.HermesInternal;
-            
+
             // Log this issue as a Communication resource with enhanced debugging info
             try {
               const profile = medplum.getProfile();
@@ -305,9 +350,13 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                         purchasesType: typeof Purchases,
                         purchasesValue: String(Purchases),
                         hasRNPurchasesModule: hasRNPurchasesModule,
+                        rnPurchasesDetails: hasRNPurchasesModule
+                          ? Object.getOwnPropertyNames(NativeModules.RNPurchases).join(",")
+                          : "Module exists but has no properties",
                         availableNativeModules: availableNativeModules,
                         platformDetails: platformConstants,
-                        isHermes: isHermes
+                        isHermes: isHermes,
+                        purchasesVersion: Purchases?.VERSION || "unknown",
                       }),
                     },
                   ],
@@ -316,25 +365,199 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             } catch (logError) {
               console.error("📱 [SubscriptionContext] Failed to log SDK unavailable:", logError);
             }
-            
+
             // Only default to premium in development
             if (__DEV__) {
               setIsPremium(true); // Default to premium in development
-              console.log("📱 [SubscriptionContext] DEV MODE: Defaulting to premium (SDK unavailable)");
+              console.log(
+                "📱 [SubscriptionContext] DEV MODE: Defaulting to premium (SDK unavailable)",
+              );
             } else {
               setIsPremium(false); // Default to free tier in production
-              console.log("📱 [SubscriptionContext] PRODUCTION: Defaulting to free tier (SDK unavailable)");
+              console.log(
+                "📱 [SubscriptionContext] PRODUCTION: Defaulting to free tier (SDK unavailable)",
+              );
             }
-            
+
             setIsLoading(false);
             return;
           }
 
-          // IMPORTANT: Configure first, then set log handlers
-          // This is the reverse of the previous implementation
-          if (typeof Purchases.configure === "function") {
+          // Ensure the RNPurchases native module is fully initialized
+          if (
+            NativeModules.RNPurchases &&
+            Object.getOwnPropertyNames(NativeModules.RNPurchases).length > 0
+          ) {
+            // Log successful initialization to Communication resources
+            try {
+              const profile = medplum.getProfile();
+              if (profile?.id) {
+                await medplum.createResource({
+                  resourceType: "Communication",
+                  status: "completed",
+                  subject: { reference: `Patient/${profile.id}` },
+                  about: [{ reference: `Patient/${profile.id}` }],
+                  sent: new Date().toISOString(),
+                  payload: [
+                    {
+                      contentString: "RevenueCat native module properly initialized",
+                    },
+                    {
+                      contentString: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        platform: Platform.OS,
+                        environment: __DEV__ ? "development" : "production",
+                        rnPurchasesModuleProps: Object.getOwnPropertyNames(
+                          NativeModules.RNPurchases,
+                        ).join(","),
+                        availableModules: Object.keys(NativeModules),
+                      }),
+                    },
+                  ],
+                });
+              }
+            } catch (logError) {
+              console.error(
+                "📱 [SubscriptionContext] Failed to log successful module init:",
+                logError,
+              );
+            }
+          } else if (
+            !NativeModules.RNPurchases ||
+            Object.getOwnPropertyNames(NativeModules.RNPurchases).length === 0
+          ) {
+            console.warn(
+              "📱 [SubscriptionContext] RNPurchases native module not fully initialized, retrying...",
+            );
+
+            // Log this to Communication resources
+            try {
+              const profile = medplum.getProfile();
+              if (profile?.id) {
+                await medplum.createResource({
+                  resourceType: "Communication",
+                  status: "completed",
+                  subject: { reference: `Patient/${profile.id}` },
+                  about: [{ reference: `Patient/${profile.id}` }],
+                  sent: new Date().toISOString(),
+                  payload: [
+                    {
+                      contentString: "RevenueCat native module not fully initialized, retrying...",
+                    },
+                    {
+                      contentString: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        platform: Platform.OS,
+                        environment: __DEV__ ? "development" : "production",
+                        hasRNPurchasesModule: !!NativeModules.RNPurchases,
+                        rnPurchasesModuleProps: NativeModules.RNPurchases
+                          ? Object.getOwnPropertyNames(NativeModules.RNPurchases).join(",")
+                          : "null",
+                      }),
+                    },
+                  ],
+                });
+              }
+            } catch (logError) {
+              console.error("📱 [SubscriptionContext] Failed to log module retry:", logError);
+            }
+
+            // Try an additional delay to see if module becomes available
+            await delayWithProgress(3000, "native module retry");
+
+            // Check again after the delay
+            if (
+              !NativeModules.RNPurchases ||
+              Object.getOwnPropertyNames(NativeModules.RNPurchases).length === 0
+            ) {
+              console.error(
+                "📱 [SubscriptionContext] RNPurchases native module still not initialized after retry",
+              );
+
+              // Log this to Communication resources
+              try {
+                const profile = medplum.getProfile();
+                if (profile?.id) {
+                  await medplum.createResource({
+                    resourceType: "Communication",
+                    status: "completed",
+                    subject: { reference: `Patient/${profile.id}` },
+                    about: [{ reference: `Patient/${profile.id}` }],
+                    sent: new Date().toISOString(),
+                    payload: [
+                      {
+                        contentString:
+                          "RevenueCat native module still not fully initialized after retry",
+                      },
+                      {
+                        contentString: JSON.stringify({
+                          timestamp: new Date().toISOString(),
+                          platform: Platform.OS,
+                          environment: __DEV__ ? "development" : "production",
+                          hasRNPurchasesModule: !!NativeModules.RNPurchases,
+                          rnPurchasesModuleProps: NativeModules.RNPurchases
+                            ? Object.getOwnPropertyNames(NativeModules.RNPurchases).join(",")
+                            : "null",
+                          availableModules: Object.keys(NativeModules),
+                        }),
+                      },
+                    ],
+                  });
+                }
+              } catch (logError) {
+                console.error(
+                  "📱 [SubscriptionContext] Failed to log module retry failure:",
+                  logError,
+                );
+              }
+
+              // Let's proceed anyway and see if the Purchases object works
+            }
+          }
+
+          // We should use the initialization utility instead of configuring here
+          // but we'll keep this as a fallback
+          if (typeof Purchases.isConfigured === "function" && Purchases.isConfigured()) {
+            console.log(
+              "📱 [SubscriptionContext] RevenueCat already configured, skipping configuration",
+            );
+          } else if (typeof Purchases.configure === "function") {
+            console.log("📱 [SubscriptionContext] Configuring RevenueCat as fallback");
             Purchases.configure({ apiKey });
             console.log("📱 [SubscriptionContext] RevenueCat configured successfully");
+
+            // Log successful configuration to Communication resources
+            try {
+              const profile = medplum.getProfile();
+              if (profile?.id) {
+                await medplum.createResource({
+                  resourceType: "Communication",
+                  status: "completed",
+                  subject: { reference: `Patient/${profile.id}` },
+                  about: [{ reference: `Patient/${profile.id}` }],
+                  sent: new Date().toISOString(),
+                  payload: [
+                    {
+                      contentString: "RevenueCat configured successfully",
+                    },
+                    {
+                      contentString: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        platform: Platform.OS,
+                        environment: __DEV__ ? "development" : "production",
+                        apiKeyPrefix: apiKey.substring(0, 6) + "...", // Only log prefix for security
+                        purchasesProperties: Object.getOwnPropertyNames(Purchases).join(","),
+                      }),
+                    },
+                  ],
+                });
+              }
+            } catch (logError) {
+              console.error(
+                "📱 [SubscriptionContext] Failed to log successful configuration:",
+                logError,
+              );
+            }
 
             // Now set log level AFTER configuration
             if (typeof Purchases.setLogLevel === "function") {
@@ -380,7 +603,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             }
           } else {
             console.warn("📱 [SubscriptionContext] RevenueCat configure method not available");
-            
+
             // Log this issue as a Communication resource
             try {
               const profile = medplum.getProfile();
@@ -399,23 +622,30 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                       contentString: JSON.stringify({
                         timestamp: new Date().toISOString(),
                         platform: Platform.OS,
-                        environment: __DEV__ ? "development" : "production"
+                        environment: __DEV__ ? "development" : "production",
                       }),
                     },
                   ],
                 });
               }
             } catch (logError) {
-              console.error("📱 [SubscriptionContext] Failed to log configure unavailable:", logError);
+              console.error(
+                "📱 [SubscriptionContext] Failed to log configure unavailable:",
+                logError,
+              );
             }
-            
+
             // Only default to premium in development
             if (__DEV__) {
               setIsPremium(true); // Default to premium in development
-              console.log("📱 [SubscriptionContext] DEV MODE: Defaulting to premium (configure unavailable)");
+              console.log(
+                "📱 [SubscriptionContext] DEV MODE: Defaulting to premium (configure unavailable)",
+              );
             } else {
               setIsPremium(false); // Default to free tier in production
-              console.log("📱 [SubscriptionContext] PRODUCTION: Defaulting to free tier (configure unavailable)");
+              console.log(
+                "📱 [SubscriptionContext] PRODUCTION: Defaulting to free tier (configure unavailable)",
+              );
             }
           }
 
@@ -464,7 +694,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             setCustomerInfo(info);
             const hasPremium = checkPremiumEntitlement(info);
             console.log(`📱 [SubscriptionContext] Premium status: ${hasPremium}`);
-            
+
             // We'll log subscription info using Communication resources instead
             try {
               // Log successful subscription check
@@ -478,7 +708,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                   sent: new Date().toISOString(),
                   payload: [
                     {
-                      contentString: `RevenueCat initialization successful: ${hasPremium ? 'PREMIUM' : 'FREE'}`,
+                      contentString: `RevenueCat initialization successful: ${hasPremium ? "PREMIUM" : "FREE"}`,
                     },
                     {
                       contentString: JSON.stringify({
@@ -487,8 +717,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                         environment: __DEV__ ? "development" : "production",
                         customerInfo: {
                           entitlements: Object.keys(info.entitlements.active),
-                          activeSubscriptions: info.activeSubscriptions || []
-                        }
+                          activeSubscriptions: info.activeSubscriptions || [],
+                        },
                       }),
                     },
                   ],
@@ -499,7 +729,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             }
           } else {
             console.warn("📱 [SubscriptionContext] Customer info returned null");
-            
+
             // Log this failure case with a Communication resource
             try {
               const profile = medplum.getProfile();
@@ -519,7 +749,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                         timestamp: new Date().toISOString(),
                         platform: Platform.OS,
                         environment: __DEV__ ? "development" : "production",
-                        phase: "getCustomerInfo"
+                        phase: "getCustomerInfo",
                       }),
                     },
                   ],
@@ -528,11 +758,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             } catch (logError) {
               console.error("Failed to log customer info null:", logError);
             }
-            
+
             // IMPORTANT: This is likely why Patient 961 shows as premium
-            // Here we default to premium during development, but we're 
+            // Here we default to premium during development, but we're
             // not checking if this is a production build
-            
+
             // MODIFIED: Only default to premium in development builds
             if (__DEV__) {
               setIsPremium(true); // Default to premium during development
@@ -544,7 +774,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           }
         } catch (error) {
           console.error("📱 [SubscriptionContext] RevenueCat initialization error:", error);
-          
+
           // Log RevenueCat initialization error
           try {
             const profile = medplum.getProfile();
@@ -565,7 +795,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                       platform: Platform.OS,
                       environment: __DEV__ ? "development" : "production",
                       phase: "revenueCatInitialization",
-                      error: String(error)
+                      error: String(error),
                     }),
                   },
                 ],
@@ -574,7 +804,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           } catch (logError) {
             console.error("Failed to log RevenueCat initialization error:", logError);
           }
-          
+
           // MODIFIED: Only default to premium in development builds
           if (__DEV__) {
             setIsPremium(true); // Default to premium if error in development
@@ -586,7 +816,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
       } catch (error) {
         console.error("📱 [SubscriptionContext] Error initializing subscription:", error);
-        
+
         // Log top-level initialization error
         try {
           const profile = medplum.getProfile();
@@ -607,7 +837,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     platform: Platform.OS,
                     environment: __DEV__ ? "development" : "production",
                     phase: "outerTry",
-                    error: String(error)
+                    error: String(error),
                   }),
                 },
               ],
@@ -616,7 +846,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         } catch (logError) {
           console.error("Failed to log top-level error:", logError);
         }
-        
+
         // MODIFIED: Only default to premium in development builds
         if (__DEV__) {
           setIsPremium(true); // Default to premium if error in development
@@ -633,7 +863,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Increase the delay to ensure native modules are properly loaded
     const timer = setTimeout(() => {
       initializePurchases();
-    }, 5000); // Increased from 2000ms to 5000ms for better native module initialization
+    }, 10000); // Increased to 10000ms for better native module initialization
 
     // Set up a listener for purchases on native platforms
     let purchaseListener: unknown = null;
@@ -680,7 +910,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // For web platform, simulate successful purchase
       if (Platform.OS === "web") {
         console.log("📱 [SubscriptionContext] Web platform detected, simulating purchase");
-        
+
         // Log this simulation as a Communication resource
         try {
           const profile = medplum.getProfile();
@@ -700,7 +930,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     timestamp: new Date().toISOString(),
                     packageIdentifier: pkg?.identifier,
                     simulation: true,
-                    platform: "web"
+                    platform: "web",
                   }),
                 },
               ],
@@ -709,7 +939,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         } catch (logError) {
           console.error("📱 [SubscriptionContext] Failed to log web purchase:", logError);
         }
-        
+
         // On web, we always simulate successful purchase
         setIsPremium(true);
         return true;
@@ -718,7 +948,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Check if RevenueCat SDK is available
       if (typeof Purchases !== "object" || Purchases === null) {
         console.warn("📱 [SubscriptionContext] RevenueCat SDK is not available");
-        
+
         // Log this issue as a Communication resource
         try {
           const profile = medplum.getProfile();
@@ -738,16 +968,19 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     timestamp: new Date().toISOString(),
                     packageIdentifier: pkg?.identifier,
                     platform: Platform.OS,
-                    environment: __DEV__ ? "development" : "production"
+                    environment: __DEV__ ? "development" : "production",
                   }),
                 },
               ],
             });
           }
         } catch (logError) {
-          console.error("📱 [SubscriptionContext] Failed to log purchase SDK unavailable:", logError);
+          console.error(
+            "📱 [SubscriptionContext] Failed to log purchase SDK unavailable:",
+            logError,
+          );
         }
-        
+
         // Only simulate successful purchase in development
         if (__DEV__) {
           setIsPremium(true);
@@ -796,7 +1029,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // For web platform, simulate successful restore
       if (Platform.OS === "web") {
         console.log("📱 [SubscriptionContext] Web platform detected, simulating restore");
-        
+
         // Log this simulation as a Communication resource
         try {
           const profile = medplum.getProfile();
@@ -815,7 +1048,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                   contentString: JSON.stringify({
                     timestamp: new Date().toISOString(),
                     simulation: true,
-                    platform: "web"
+                    platform: "web",
                   }),
                 },
               ],
@@ -824,7 +1057,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         } catch (logError) {
           console.error("📱 [SubscriptionContext] Failed to log web restore:", logError);
         }
-        
+
         // On web, we always simulate successful restore
         setIsPremium(true);
         return true;
@@ -833,7 +1066,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Check if RevenueCat SDK is available
       if (typeof Purchases !== "object" || Purchases === null) {
         console.warn("📱 [SubscriptionContext] RevenueCat SDK is not available");
-        
+
         // Log this issue as a Communication resource
         try {
           const profile = medplum.getProfile();
@@ -852,16 +1085,19 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                   contentString: JSON.stringify({
                     timestamp: new Date().toISOString(),
                     platform: Platform.OS,
-                    environment: __DEV__ ? "development" : "production"
+                    environment: __DEV__ ? "development" : "production",
                   }),
                 },
               ],
             });
           }
         } catch (logError) {
-          console.error("📱 [SubscriptionContext] Failed to log restore SDK unavailable:", logError);
+          console.error(
+            "📱 [SubscriptionContext] Failed to log restore SDK unavailable:",
+            logError,
+          );
         }
-        
+
         // Only simulate successful restore in development
         if (__DEV__) {
           setIsPremium(true);

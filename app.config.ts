@@ -9,7 +9,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: "./assets/images/icon.png",
   scheme: "feelheard",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
+  newArchEnabled: false, // Temporarily disabled to test RevenueCat compatibility
   jsEngine: "hermes",
   platforms: ["android", "ios", "web"],
   notification: {
