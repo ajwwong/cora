@@ -6,18 +6,20 @@ import { useCallback, useEffect, useState } from "react";
 const avatarMap = new Map<string, string | null>();
 
 // Add a special case for the reflection guide bot
-const REFLECTION_GUIDE_BOT_ID = 'reflection-guide-bot';
+const REFLECTION_GUIDE_BOT_ID = "reflection-guide-bot";
 const REFLECTION_GUIDE_BOT_REFERENCE = `Practitioner/${REFLECTION_GUIDE_BOT_ID}`;
 
 // Create a mock practitioner for the reflection guide bot
 const mockReflectionGuideBot: Practitioner = {
-  resourceType: 'Practitioner',
+  resourceType: "Practitioner",
   id: REFLECTION_GUIDE_BOT_ID,
-  name: [{ 
-    family: 'Guide',
-    given: ['Reflection'],
-    text: 'Reflection Guide'
-  }],
+  name: [
+    {
+      family: "Guide",
+      given: ["Reflection"],
+      text: "Reflection Guide",
+    },
+  ],
   active: true,
 };
 
@@ -48,13 +50,13 @@ async function fetchAvatars({
         return avatarURL;
       } catch (error) {
         console.log(`Failed to fetch avatar for ${key}:`, error);
-        
+
         // Handle special case for reflection guide bot if using a different reference format
-        if (key.includes('reflection-guide')) {
+        if (key.includes("reflection-guide")) {
           avatarMap.set(key, null);
           return null;
         }
-        
+
         // Cache the failure to avoid repeated failed requests
         avatarMap.set(key, null);
         return null;
@@ -67,14 +69,14 @@ function getAvatarURL(reference: Reference<Patient | Practitioner> | undefined) 
   if (!reference) {
     return undefined;
   }
-  
+
   const key = getReferenceString(reference);
-  
+
   // Special case for reflection guide bot
-  if (key === REFLECTION_GUIDE_BOT_REFERENCE || key.includes('reflection-guide')) {
+  if (key === REFLECTION_GUIDE_BOT_REFERENCE || key.includes("reflection-guide")) {
     return null;
   }
-  
+
   return avatarMap.get(key);
 }
 
@@ -88,28 +90,28 @@ export function useAvatars(references: (Reference<Patient | Practitioner> | unde
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchMissingAvatars = useCallback(async () => {
-    const refsToFetch = references.filter(ref => {
+    const refsToFetch = references.filter((ref) => {
       if (!ref) return false;
-      
+
       const key = getReferenceString(ref);
       // Skip reflection guide bot references - handle them with the special case
-      if (key === REFLECTION_GUIDE_BOT_REFERENCE || key.includes('reflection-guide')) {
+      if (key === REFLECTION_GUIDE_BOT_REFERENCE || key.includes("reflection-guide")) {
         avatarMap.set(key, null);
         return false;
       }
-      
+
       return !avatarMap.has(key);
     });
-    
+
     if (refsToFetch.length === 0) {
       return;
     }
-    
+
     setIsLoading(true);
     try {
       await fetchAvatars({ references: refsToFetch, medplum });
     } catch (error) {
-      console.error('Error fetching avatars:', error);
+      console.error("Error fetching avatars:", error);
     } finally {
       setIsLoading(false);
     }
