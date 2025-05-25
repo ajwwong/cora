@@ -1,596 +1,479 @@
-# RevenueCat Implementation Plan for Cora
-
-This document outlines the implementation plan for integrating RevenueCat's subscription management system into the Cora application.
+# RevenueCat Android Integration Implementation Plan
 
 ## Overview
 
-RevenueCat provides a unified API for handling in-app purchases and subscriptions across iOS and Android platforms. It simplifies receipt validation, subscription status tracking, and offers cross-platform purchase restoration.
+This document outlines the implementation plan to resolve the RevenueCat initialization issues in the FeelHeard Android app. The core issue identified is that the React Native bridge isn't properly initializing the RevenueCat native module before JavaScript code attempts to use it, resulting in "There is no singleton instance" errors.
 
-> **IMPORTANT UPDATE**: The Text Companion tier will be offered completely free to all users. The free tier will include up to 10 voice messages per day. Premium subscription (Voice Connect) will provide unlimited voice messaging and enhanced features.
+## Problem Diagnosis
 
-## Implementation Timeline
+Based on our analysis, we're encountering the following issues:
 
-Estimated implementation time: 2-3 days
+1. **Bridge Initialization Timing**: The JavaScript context loads and attempts to use RevenueCat before the native module is fully initialized.
+2. **Native Module Registration**: While the RNPurchases native module appears to be registered, its methods aren't properly accessible from JavaScript.
+3. **Configuration Failure**: Calls to `Purchases.configure()` from JavaScript fail because the native module isn't properly initialized.
 
-| Task | Time Estimate | Complexity |
-|------|---------------|------------|
-| Setup & Configuration | 2-3 hours | Low |
-| Core Integration | 4-6 hours | Medium |
-| UI Implementation | 4-6 hours | Medium |
-| Testing | 4-8 hours | High |
+## Proposed Solution
 
-## Prerequisites
+Our solution will implement a dual-approach strategy to ensure RevenueCat is initialized properly:
 
-1. RevenueCat account with API keys
-2. Product configuration in App Store Connect and Google Play Console
-3. Defined subscription tiers and offerings
+### 1. Native-side Initialization (Primary Solution)
+
+We'll add explicit RevenueCat initialization in the Android `MainApplication.kt` file to ensure it's initialized before the React Native bridge loads.
+
+### 2. JavaScript-side Resilience (Fallback Support)
+
+We'll enhance our JavaScript initialization code to be more resilient, with better error handling and verification of initialization status.
 
 ## Implementation Steps
 
-### 1. SDK Installation and Configuration
+### Phase 1: Native Android Implementation
 
-```bash
-npm install react-native-purchases --save
-```
+1. **Update MainApplication.kt**
 
-For iOS, add the following to your Podfile:
-```ruby
-pod 'PurchasesHybridCommon', '4.x.x'
-```
+```kotlin
+package me.feelheard
 
-Run pod install:
-```bash
-cd ios && pod install
-```
+import android.app.Application
+import android.content.res.Configuration
+import android.util.Log
 
-### 2. Platform-Specific Permissions
+import com.facebook.react.PackageList
+import com.facebook.react.ReactApplication
+import com.facebook.react.ReactNativeHost
+import com.facebook.react.ReactPackage
+import com.facebook.react.ReactHost
+import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.load
+import com.facebook.react.defaults.DefaultReactNativeHost
+import com.facebook.react.soloader.OpenSourceMergedSoMapping
+import com.facebook.soloader.SoLoader
 
-#### Android
+import expo.modules.ApplicationLifecycleDispatcher
+import expo.modules.ReactNativeHostWrapper
 
-Add the billing permission to AndroidManifest.xml:
-```xml
-<uses-permission android:name="com.android.vending.BILLING" />
-```
+// RevenueCat imports
+import com.revenuecat.purchases.Purchases
+import com.revenuecat.purchases.PurchasesConfiguration
+import com.revenuecat.purchases.LogLevel
 
-### 3. Initialize RevenueCat SDK
+class MainApplication : Application(), ReactApplication {
 
-Add initialization code to app startup (in app/_layout.tsx):
+  override val reactNativeHost: ReactNativeHost = ReactNativeHostWrapper(
+        this,
+        object : DefaultReactNativeHost(this) {
+          override fun getPackages(): List<ReactPackage> {
+            val packages = PackageList(this).packages
+            // Packages that cannot be autolinked yet can be added manually here, for example:
+            // packages.add(MyReactNativePackage())
+            return packages
+          }
 
-```typescript
-import Purchases from 'react-native-purchases';
-import { Platform } from 'react-native';
+          override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"
 
-// Initialize during app startup
-const REVENUE_CAT_API_KEYS = {
-  android: 'your_android_api_key',
-  ios: 'your_ios_api_key'
-};
+          override fun getUseDeveloperSupport(): Boolean = BuildConfig.DEBUG
 
-// In your initialization function
-const apiKey = Platform.OS === 'ios' 
-  ? REVENUE_CAT_API_KEYS.ios 
-  : REVENUE_CAT_API_KEYS.android;
-
-Purchases.configure({
-  apiKey,
-  appUserID: null, // Will use anonymous ID by default
-  observerMode: false, // Set to true if using third-party payment processing
-  userDefaultsSuiteName: null // iOS only, defaults to standard user defaults
-});
-```
-
-### 4. Create Subscription Context
-
-Create a new context file at `contexts/SubscriptionContext.tsx`:
-
-```typescript
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import Purchases, { PurchasesPackage, CustomerInfo } from 'react-native-purchases';
-
-type SubscriptionContextType = {
-  isLoading: boolean;
-  customerInfo: CustomerInfo | null;
-  packages: PurchasesPackage[] | null;
-  currentSubscription: string | null;
-  purchasePackage: (pkg: PurchasesPackage) => Promise<void>;
-  restorePurchases: () => Promise<void>;
-  checkEntitlementStatus: (entitlementId: string) => boolean;
-};
-
-export const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
-
-export const SubscriptionProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
-  const [packages, setPackages] = useState<PurchasesPackage[] | null>(null);
-  const [currentSubscription, setCurrentSubscription] = useState<string | null>(null);
-
-  useEffect(() => {
-    const initPurchases = async () => {
-      // Fetch available packages
-      try {
-        const offerings = await Purchases.getOfferings();
-        if (offerings.current !== null) {
-          setPackages(offerings.current.availablePackages);
-        }
-      } catch (e) {
-        console.error('Error fetching packages:', e);
+          override val isNewArchEnabled: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
+          override val isHermesEnabled: Boolean = BuildConfig.IS_HERMES_ENABLED
       }
+  )
 
-      // Get customer info
-      try {
-        const info = await Purchases.getCustomerInfo();
-        setCustomerInfo(info);
-        
-        // Check subscription status
-        const entitlements = info.entitlements.active;
-        if (Object.keys(entitlements).length > 0) {
-          // User has active subscription
-          setCurrentSubscription(Object.keys(entitlements)[0]);
-        }
-      } catch (e) {
-        console.error('Error fetching customer info:', e);
-      }
-      
-      setIsLoading(false);
-    };
+  override val reactHost: ReactHost
+    get() = ReactNativeHostWrapper.createReactHost(applicationContext, reactNativeHost)
 
-    initPurchases();
+  override fun onCreate() {
+    super.onCreate()
     
-    // Set up a listener for purchases
-    const purchaseListener = Purchases.addCustomerInfoUpdateListener((info) => {
-      setCustomerInfo(info);
+    // Initialize RevenueCat before React initialization
+    try {
+      Log.d("RevenueCat", "Initializing RevenueCat from MainApplication.kt")
       
-      // Update subscription status
-      const entitlements = info.entitlements.active;
-      if (Object.keys(entitlements).length > 0) {
-        setCurrentSubscription(Object.keys(entitlements)[0]);
-      } else {
-        setCurrentSubscription(null);
+      // Set log level to VERBOSE for debugging
+      Purchases.logLevel = LogLevel.VERBOSE
+      
+      // Use the API key from our config
+      val revenueCatApiKey = "goog_ocxwCYOseIPqHeYRlHAuuaIAWBo" // Google Play key
+      
+      // Create the configuration
+      val configuration = PurchasesConfiguration.Builder(this, revenueCatApiKey)
+        .build()
+      
+      // Configure RevenueCat
+      Purchases.configure(configuration)
+      
+      Log.d("RevenueCat", "Successfully initialized RevenueCat in native code")
+    } catch (e: Exception) {
+      Log.e("RevenueCat", "Failed to initialize RevenueCat in native code", e)
+    }
+    
+    // Continue with normal React Native initialization
+    SoLoader.init(this, OpenSourceMergedSoMapping)
+    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
+      // If you opted-in for the New Architecture, we load the native entry point for this app.
+      load()
+    }
+    ApplicationLifecycleDispatcher.onApplicationCreate(this)
+  }
+
+  override fun onConfigurationChanged(newConfig: Configuration) {
+    super.onConfigurationChanged(newConfig)
+    ApplicationLifecycleDispatcher.onConfigurationChanged(this, newConfig)
+  }
+}
+```
+
+2. **Update build.gradle Dependencies**
+
+Ensure the build.gradle file has the necessary RevenueCat dependencies:
+
+```gradle
+// In android/app/build.gradle
+dependencies {
+  // ... other dependencies
+  
+  // RevenueCat dependencies
+  implementation 'com.revenuecat.purchases:purchases:6.9.0'
+}
+```
+
+### Phase 2: JavaScript Implementation Improvements
+
+1. **Update initialize-revenue-cat.ts**
+
+```typescript
+/**
+ * Initialize RevenueCat with retries and resilient approach
+ */
+export const initializeRevenueCat = async (
+  medplum: MedplumClient  < /dev/null |  null = null,
+): Promise<boolean> => {
+  // Update status
+  initializationAttempted = true;
+  revenueCatStatus.initializationAttempted = true;
+
+  // Skip for web platform
+  if (Platform.OS === "web") {
+    const message = "Web platform detected, skipping RevenueCat initialization";
+    await showVisibleMessage("RevenueCat Info", message, false, medplum);
+    return false;
+  }
+
+  // Wait a short moment to ensure native module is registered
+  await new Promise(resolve => setTimeout(resolve, 100));
+    
+  try {
+    // Check if Purchases is a proper object with methods
+    const purchasesType = typeof Purchases;
+    const hasConfigureMethod = typeof Purchases.configure === 'function';
+    const hasIsConfiguredMethod = typeof Purchases.isConfigured === 'function';
+    
+    await logToCommunication(medplum, 'RevenueCat Initialization Check', {
+      purchasesType,
+      hasConfigureMethod,
+      hasIsConfiguredMethod,
+      platform: Platform.OS
+    });
+
+    // First check if already configured by native side
+    if (hasIsConfiguredMethod) {
+      try {
+        const alreadyConfigured = Purchases.isConfigured();
+        
+        if (alreadyConfigured) {
+          showVisibleMessage("RevenueCat", "Already configured by native module");
+          
+          // Verify with a method call
+          try {
+            if (typeof Purchases.getAppUserID === 'function') {
+              const appUserId = await Purchases.getAppUserID();
+              showVisibleMessage("RevenueCat", `Verified with getAppUserID: ${appUserId}`);
+              
+              // Everything is working - mark as initialized
+              isInitialized = true;
+              revenueCatStatus.isInitialized = true;
+              
+              await logToCommunication(medplum, "RevenueCat already configured by native module", {
+                platform: Platform.OS,
+                environment: __DEV__ ? "development" : "production",
+                appUserId
+              });
+              
+              return true;
+            }
+          } catch (verifyError) {
+            showVisibleMessage("RevenueCat Warning", 
+              `isConfigured() returns true but verification failed: ${verifyError}`, 
+              true);
+            
+            // Continue with JS configuration as fallback
+          }
+        }
+      } catch (configError) {
+        // Continue with JS configuration if checking fails
+        showVisibleMessage("RevenueCat", 
+          `Error checking configuration status: ${configError}, will attempt JS configuration`);
       }
+    }
+    
+    // If we reach here, we need to configure with JS
+    // Get the appropriate API key for the platform
+    const apiKey = Platform.OS === "ios" ? REVENUE_CAT_API_KEYS.ios : REVENUE_CAT_API_KEYS.android;
+      
+    // Set verbose logging in development
+    if (__DEV__ && typeof Purchases.setLogLevel === "function") {
+      Purchases.setLogLevel(Purchases.LOG_LEVEL.VERBOSE);
+    }
+      
+    // Try to configure (will succeed if native module is properly registered)
+    if (hasConfigureMethod) {
+      try {
+        Purchases.configure({ apiKey });
+        showVisibleMessage("RevenueCat", "Configured from JavaScript");
+          
+        // Verify configuration worked with a method call
+        if (typeof Purchases.getAppUserID === 'function') {
+          try {
+            const appUserId = await Purchases.getAppUserID();
+            showVisibleMessage("RevenueCat", `Verified with getAppUserID: ${appUserId}`);
+            
+            isInitialized = true;
+            revenueCatStatus.isInitialized = true;
+            
+            await logToCommunication(medplum, "RevenueCat JS configuration successful", {
+              platform: Platform.OS,
+              environment: __DEV__ ? "development" : "production",
+              appUserId
+            });
+            
+            return true;
+          } catch (verifyError) {
+            showVisibleMessage("RevenueCat Error", 
+              `Verification failed after JS configuration: ${verifyError}`, 
+              true);
+            
+            await logToCommunication(medplum, "RevenueCat verification failed after JS configure", {
+              platform: Platform.OS,
+              environment: __DEV__ ? "development" : "production",
+              error: String(verifyError)
+            });
+            
+            return false;
+          }
+        }
+      } catch (configError) {
+        showVisibleMessage("RevenueCat Error", `JS configuration failed: ${configError}`, true);
+        
+        await logToCommunication(medplum, "RevenueCat JS configuration failed", {
+          platform: Platform.OS,
+          environment: __DEV__ ? "development" : "production",
+          error: String(configError)
+        });
+        
+        return false;
+      }
+    } else {
+      showVisibleMessage("RevenueCat Error", "Configure method not available", true);
+      
+      await logToCommunication(medplum, "RevenueCat configure method not available", {
+        platform: Platform.OS,
+        environment: __DEV__ ? "development" : "production"
+      });
+      
+      return false;
+    }
+    
+    // If we get here but initialization is still not detected, return false
+    if (\!isInitialized) {
+      showVisibleMessage("RevenueCat Error", "Initialization process completed but status checks failed", true);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    showVisibleMessage("RevenueCat Error", `Initialization failed: ${errorMessage}`, true);
+    
+    await logToCommunication(medplum, "RevenueCat initialization failed", {
+      platform: Platform.OS,
+      environment: __DEV__ ? "development" : "production",
+      error: errorMessage,
     });
     
-    return () => {
-      purchaseListener.remove();
-    };
-  }, []);
-
-  const purchasePackage = async (pkg: PurchasesPackage) => {
-    try {
-      setIsLoading(true);
-      const { customerInfo } = await Purchases.purchasePackage(pkg);
-      setCustomerInfo(customerInfo);
-      
-      const entitlements = customerInfo.entitlements.active;
-      if (Object.keys(entitlements).length > 0) {
-        setCurrentSubscription(Object.keys(entitlements)[0]);
-      }
-      return true;
-    } catch (e: any) {
-      if (e.userCancelled) {
-        console.log('User cancelled purchase');
-      } else {
-        console.error('Purchase error:', e);
-      }
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const restorePurchases = async () => {
-    try {
-      setIsLoading(true);
-      const info = await Purchases.restorePurchases();
-      setCustomerInfo(info);
-      
-      const entitlements = info.entitlements.active;
-      if (Object.keys(entitlements).length > 0) {
-        setCurrentSubscription(Object.keys(entitlements)[0]);
-      }
-      return true;
-    } catch (e) {
-      console.error('Restore error:', e);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const checkEntitlementStatus = (entitlementId: string): boolean => {
-    if (!customerInfo) return false;
-    return !!customerInfo.entitlements.active[entitlementId];
-  };
-
-  return (
-    <SubscriptionContext.Provider
-      value={{
-        isLoading,
-        customerInfo,
-        packages,
-        currentSubscription,
-        purchasePackage,
-        restorePurchases,
-        checkEntitlementStatus,
-      }}
-    >
-      {children}
-    </SubscriptionContext.Provider>
-  );
-};
-
-export const useSubscription = () => {
-  const context = useContext(SubscriptionContext);
-  if (context === undefined) {
-    throw new Error('useSubscription must be used within a SubscriptionProvider');
+    return false;
   }
-  return context;
 };
 ```
 
-### 5. Integration with User Authentication
+### Phase 3: Android Manifest Updates
 
-To link subscriptions with user accounts, update the user authentication flow:
+Ensure the AndroidManifest.xml contains the proper permissions:
 
-```typescript
-// After user signs in
-const userId = 'user_id_from_your_auth_system';
-await Purchases.logIn(userId);
-
-// When user signs out
-await Purchases.logOut();
+```xml
+<manifest>
+    <\!-- ... other entries -->
+    <uses-permission android:name="com.android.vending.BILLING" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <\!-- ... -->
+</manifest>
 ```
 
-### 6. Create Subscription Screen UI
+## Testing Plan
 
-Create a new component at `components/SubscriptionScreen.tsx`:
+1. **Build Process Verification**:
+   - Run `npx expo prebuild --clean` to regenerate native projects
+   - Build debug APK with `./scripts/build-debug-apk.sh`
+   - Build release APK with `./scripts/clean-and-build-apk.sh`
 
-```tsx
-import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
-import { useSubscription } from '../contexts/SubscriptionContext';
-import { Box, Button, Text, VStack, HStack } from './ui';
+2. **Runtime Verification**:
+   - Check Android logcat for "Successfully initialized RevenueCat in native code" message
+   - Verify the RevenueCat SDK initialization in the app with debug panel
+   - Test the purchase flow for a premium subscription
 
-const SubscriptionScreen = () => {
-  const {
-    isLoading,
-    packages,
-    currentSubscription,
-    purchasePackage,
-    restorePurchases
-  } = useSubscription();
+3. **Error State Testing**:
+   - Test with invalid API key to verify error handling
+   - Test with network disabled to verify offline behavior
 
-  if (isLoading) {
-    return (
-      <Box flex={1} justifyContent="center" alignItems="center">
-        <ActivityIndicator size="large" />
-      </Box>
-    );
-  }
+## Deployment Strategy
 
-  if (currentSubscription) {
-    return (
-      <Box flex={1} p={4}>
-        <VStack space={4} alignItems="center">
-          <Text fontSize="xl" fontWeight="bold">
-            You're subscribed!
-          </Text>
-          <Text>
-            You have an active subscription to Voice Connect with unlimited voice messaging.
-          </Text>
-        </VStack>
-      </Box>
-    );
-  }
+1. **Internal Testing**:
+   - Deploy to internal testers with debug logging enabled
+   - Collect logs from test devices
+   - Verify subscription status sync with backend
 
-  return (
-    <Box flex={1} p={4}>
-      <VStack space={6}>
-        <Text fontSize="2xl" fontWeight="bold" textAlign="center">
-          Upgrade to Voice Connect
-        </Text>
+2. **Production Deployment**:
+   - Remove excessive debug logging and alerts
+   - Build final production APK/AAB
+   - Deploy to Google Play
 
-        {/* Free tier info */}
-        <Box
-          borderWidth={1}
-          borderColor="gray.200"
-          borderRadius="md"
-          p={4}
-          bg="gray.50"
-        >
-          <VStack space={2}>
-            <Text fontSize="lg" fontWeight="bold">
-              Text Companion
-            </Text>
-            <Text>Text-based conversations with your reflection guide</Text>
-            <Text>Up to 10 voice messages per day</Text>
-            <Text fontSize="xl" fontWeight="bold">
-              Free
-            </Text>
-            <Text fontSize="sm" fontWeight="medium" color="green.600">
-              Your current plan
-            </Text>
-          </VStack>
-        </Box>
+## Fallback Strategy
 
-        {/* Premium packages */}
-        <VStack space={4}>
-          {packages?.map((pkg) => (
-            <Box
-              key={pkg.identifier}
-              borderWidth={1}
-              borderColor="gray.200"
-              borderRadius="md"
-              p={4}
-            >
-              <VStack space={2}>
-                <Text fontSize="lg" fontWeight="bold">
-                  {pkg.product.title}
-                </Text>
-                <Text>{pkg.product.description}</Text>
-                <Text fontSize="xl" fontWeight="bold">
-                  {pkg.product.priceString}
-                </Text>
-                <Button
-                  onPress={() => purchasePackage(pkg)}
-                  mt={2}
-                >
-                  Subscribe
-                </Button>
-              </VStack>
-            </Box>
-          ))}
-        </VStack>
+If the native initialization approach doesn't resolve the issue:
 
-        <Button
-          variant="outline"
-          onPress={restorePurchases}
-          mt={4}
-        >
-          Restore Purchases
-        </Button>
-      </VStack>
-    </Box>
-  );
-};
+1. Explore using a custom NativeModule to bridge initialization
+2. Consider downgrading to an earlier version of react-native-purchases (e.g., v8.8.0)
+3. Contact RevenueCat support with detailed logs from this implementation
 
-export default SubscriptionScreen;
-```
+## Monitoring and Validation
 
-### 7. Create Voice Message Counter Hook
+After deployment, monitor:
 
-Create a hook to count today's voice messages directly from the database:
+1. RevenueCat dashboard for successful purchases
+2. Error logs in production for any initialization failures
+3. User reports of subscription issues
 
-```tsx
-// hooks/useVoiceMessageCount.tsx
-import { useState, useEffect } from 'react';
-import { useMedplum } from '@medplum/react';
-import { Communication } from '@medplum/fhirtypes';
-import { startOfDay, endOfDay } from 'date-fns';
+## Timeline
 
-export function useVoiceMessageCount(threadId?: string) {
-  const [todayVoiceCount, setTodayVoiceCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const medplum = useMedplum();
+| Phase | Task | Estimated Time |
+|-------|------|----------------|
+| 1 | Native Android Implementation | 1 day |
+| 2 | JavaScript Implementation | 1 day |
+| 3 | Testing and Verification | 2 days |
+| 4 | Production Deployment | 1 day |
 
-  useEffect(() => {
-    const fetchTodayVoiceMessages = async () => {
-      try {
-        setIsLoading(true);
+## Implementation Details
 
-        // Get today's date range in ISO format
-        const today = new Date();
-        const todayStart = startOfDay(today).toISOString();
-        const todayEnd = endOfDay(today).toISOString();
+### 1. Changes Made
 
-        // Build search query for messages with voice attachments
-        let query: Record<string, string> = {
-          'content-attachment-exists': 'true', // Only get messages with attachments
-          'sent:ge': todayStart,               // Only from today
-          'sent:le': todayEnd,
-          '_count': '50',                      // Reasonable limit for daily messages
-          '_sort': '-sent'                     // Newest first
-        };
+We've implemented the following changes to fix the RevenueCat Android integration:
 
-        // If a specific thread ID is provided, filter by that thread
-        if (threadId) {
-          query['part-of'] = threadId;
-        }
+1. **MainApplication.kt Updates**:
+   - Added RevenueCat imports
+   - Added native initialization in the `onCreate()` method
+   - Added extensive error handling and logging
 
-        // Include only messages from the patient (not the reflection guide)
-        query['sender'] = medplum.getProfile().id as string;
+2. **build.gradle Updates**:
+   - Added explicit RevenueCat dependency: `implementation 'com.revenuecat.purchases:purchases:6.9.0'`
 
-        // Execute the search
-        const messages = await medplum.search('Communication', query);
+3. **initialize-revenue-cat.ts Improvements**:
+   - Added delay to ensure native module registration is complete
+   - Improved error handling with more detailed logging
+   - Added better verification checks for native initialization
+   - Streamlined the initialization flow with clear fallback paths
 
-        // Count only voice messages (checking for audio content type in attachments)
-        const voiceMessageCount = messages.entry?.reduce((count, entry) => {
-          const message = entry.resource as Communication;
-          const hasVoiceAttachment = message.payload?.some(payload =>
-            payload.contentAttachment?.contentType?.startsWith('audio/')
-          );
-          return hasVoiceAttachment ? count + 1 : count;
-        }, 0) || 0;
+4. **AndroidManifest.xml Check**:
+   - Verified that required permissions are already present:
+     - `<uses-permission android:name="com.android.vending.BILLING"/>`
+     - `<uses-permission android:name="android.permission.INTERNET"/>`
 
-        setTodayVoiceCount(voiceMessageCount);
-      } catch (error) {
-        console.error('Error counting voice messages:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+### 2. Build and Test Instructions
 
-    fetchTodayVoiceMessages();
+#### Rebuilding the Android App
 
-    // Set up a refresh interval (every 2 minutes)
-    const refreshInterval = setInterval(fetchTodayVoiceMessages, 2 * 60 * 1000);
+After making these changes, follow these steps to build and test the Android app:
 
-    return () => clearInterval(refreshInterval);
-  }, [medplum, threadId]);
+1. **Clean and Rebuild Native Modules**:
+   ```bash
+   # Clear Expo cache and rebuild native code
+   npx expo prebuild --clean
+   ```
 
-  // Function to force a refresh of the count
-  const refreshCount = async () => {
-    setIsLoading(true);
-    try {
-      // Get today's date range in ISO format
-      const today = new Date();
-      const todayStart = startOfDay(today).toISOString();
-      const todayEnd = endOfDay(today).toISOString();
+2. **Build Debug APK**:
+   ```bash
+   # Build debug APK for testing
+   ./scripts/build-debug-apk.sh
+   ```
 
-      let query: Record<string, string> = {
-        'content-attachment-exists': 'true',
-        'sent:ge': todayStart,
-        'sent:le': todayEnd,
-        '_count': '50',
-        '_sort': '-sent'
-      };
+3. **Install on Device**:
+   ```bash
+   # Install APK on connected device
+   adb install -r ./android/app/build/outputs/apk/debug/app-debug.apk
+   ```
 
-      if (threadId) {
-        query['part-of'] = threadId;
-      }
+#### Testing the Implementation
 
-      query['sender'] = medplum.getProfile().id as string;
+1. **Enable Logging**:
+   ```bash
+   # Clear existing logs
+   adb logcat -c
+   
+   # Monitor RevenueCat logs
+   adb logcat | grep RevenueCat
+   ```
 
-      const messages = await medplum.search('Communication', query);
+2. **Key Log Messages to Look For**:
+   - `"Initializing RevenueCat from MainApplication.kt"` - Indicates native initialization started
+   - `"Successfully initialized RevenueCat in native code"` - Indicates native initialization succeeded
+   - `"Already configured by native module"` - JS code detected native initialization
+   - `"Verified with getAppUserID"` - Successful verification of module functionality
 
-      const voiceMessageCount = messages.entry?.reduce((count, entry) => {
-        const message = entry.resource as Communication;
-        const hasVoiceAttachment = message.payload?.some(payload =>
-          payload.contentAttachment?.contentType?.startsWith('audio/')
-        );
-        return hasVoiceAttachment ? count + 1 : count;
-      }, 0) || 0;
+3. **Testing Feature Functionality**:
+   - Try opening the subscription screen to verify offerings can be fetched
+   - If set up for sandbox testing, attempt a test subscription purchase
+   - Test restoring purchases if already subscribed
 
-      setTodayVoiceCount(voiceMessageCount);
-      return voiceMessageCount;
-    } catch (error) {
-      console.error('Error refreshing voice message count:', error);
-      return todayVoiceCount;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+4. **Building for Production**:
+   ```bash
+   # Clean build for production
+   ./scripts/clean-and-build-apk.sh
+   ```
 
-  return {
-    voiceCount: todayVoiceCount,
-    isLoading,
-    refreshCount,
-    remainingFreeMessages: Math.max(0, 10 - todayVoiceCount),
-    hasReachedDailyLimit: todayVoiceCount >= 10
-  };
-}
-```
+### 3. Error Handling
 
-## 8. Update Root Layout with Provider
+If you encounter issues during testing:
 
-Modify `app/_layout.tsx` to include the SubscriptionProvider:
+1. **Native Initialization Errors**:
+   - Check the Android logcat for exceptions during initialization
+   - Common causes: API key format issues, network connectivity problems
 
-```tsx
-import { SubscriptionProvider } from '../contexts/SubscriptionContext';
+2. **JS Integration Issues**:
+   - Ensure the debug panel shows `"isInitialized": true` in the RevenueCat status
+   - If you see errors like `"isConfigured() returns true but verification failed"`, investigate:
+     - React Native bridge issues
+     - API key mismatch between native and JS
+     - Network connectivity issues
 
-// In your root component
-export default function RootLayout() {
-  return (
-    <SubscriptionProvider>
-      {/* Your existing providers and components */}
-    </SubscriptionProvider>
-  );
-}
-```
+3. **Fallback Options**:
+   - If native initialization consistently fails, update the JS initialization to retry multiple times
+   - Consider adding a user-initiated "retry connection" button for recovery
 
-### 8. Feature-Gate Protected Content
+## Additional Considerations
 
-For voice messaging, we'll implement a counter for free users and premium access for subscribers:
+- This approach should work with Hermes enabled
+- The solution is designed to be compatible with future React Native upgrades
+- We maintain the ability to initialize from JS as a fallback
+- The strategy doesn't interfere with iOS implementation
 
-```tsx
-import { useSubscription } from '../contexts/SubscriptionContext';
-import { useVoiceMessageCount } from '../hooks/useVoiceMessageCount';
+## References
 
-const VoiceFeatureComponent = () => {
-  const { checkEntitlementStatus } = useSubscription();
-  const { voiceCount, hasReachedDailyLimit, remainingFreeMessages, refreshCount } = useVoiceMessageCount();
-
-  // Check for premium subscription status
-  const isPremium = checkEntitlementStatus('premium');
-
-  if (hasReachedDailyLimit && !isPremium) {
-    return (
-      <Box p={4}>
-        <Text>You've used all 10 daily voice messages</Text>
-        <Text mt={2} mb={3}>Upgrade to Voice Connect for unlimited voice messaging</Text>
-        <Button onPress={() => navigate('SubscriptionScreen')}>
-          Upgrade Now
-        </Button>
-      </Box>
-    );
-  }
-
-  return (
-    <Box>
-      {!isPremium && (
-        <Text fontSize="xs" color="gray.600" mb={2}>
-          {remainingFreeMessages} voice messages remaining today
-        </Text>
-      )}
-      {/* Voice feature content */}
-      <Button
-        onPress={() => {
-          // Record voice message
-          // No need to manually increment - our hook will refresh automatically
-          // After recording, we can call refreshCount() to update immediately
-        }}
-      >
-        Record Voice Message
-      </Button>
-    </Box>
-  );
-};
-```
-
-## Testing
-
-RevenueCat provides sandbox testing capabilities:
-
-1. Use test accounts in App Store Connect and Google Play Console
-2. To test iOS sandbox, use a sandbox Apple ID
-3. For Android, use test track in Google Play Console
-
-RevenueCat dashboard allows you to:
-- View subscription status in real-time
-- Test purchases without actual charges
-- Verify entitlements are correctly configured
-
-## Production Considerations
-
-Before releasing:
-
-1. Verify API keys are set correctly for production
-2. Test full purchase flow in staging/testflight
-3. Verify receipt validation works properly
-4. Test subscription renewal logic
-5. Test restore purchases functionality
-6. Verify cancellation handling
-
-## Best Practices
-
-1. **Error Handling**: Always handle purchase errors gracefully
-2. **Offline Support**: Check subscription status locally when possible
-3. **Analytics**: Track conversion rates and subscription events
-4. **Receipt Validation**: Let RevenueCat handle all receipt validation
-5. **User Experience**: Show appropriate loading states during purchases
-6. **Restore Purchases**: Always provide a visible way to restore purchases
-
-## RevenueCat Dashboard Configuration
-
-Set up in the RevenueCat dashboard:
-1. Create products that match App Store/Play Store configurations
-2. Set up entitlements that reflect feature access levels
-3. Configure offerings to group product packages logically
-4. Set up subscriber attributes for user segmentation (optional)
-
-## Additional Resources
-
-- [RevenueCat React Native SDK Documentation](https://docs.revenuecat.com/docs/reactnative)
-- [Testing In-App Purchases](https://docs.revenuecat.com/docs/testing)
-- [Subscription Status Tracking](https://docs.revenuecat.com/docs/subscription-status)
-- [User Management](https://docs.revenuecat.com/docs/user-management)
+- [RevenueCat Android Documentation](https://docs.revenuecat.com/docs/android)
+- [React Native Purchases Documentation](https://docs.revenuecat.com/docs/reactnative)
+- [Expo + Native Modules Guide](https://docs.expo.dev/bare/native-modules/)

@@ -30,6 +30,7 @@ import { GlobalAudioProvider } from "@/contexts/GlobalAudioContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
+import { DebugRevenueCat } from "@/debug-revenuecat";
 import { oauth2ClientId } from "@/utils/medplum-oauth2";
 import { initializeRevenueCat } from "@/utils/subscription/initialize-revenue-cat";
 
@@ -294,6 +295,7 @@ export default function RootLayout() {
         <StatusBar />
         <SafeAreaView className="h-full bg-background-0 md:w-full">
           <MedplumProvider medplum={medplum}>
+            <DebugRevenueCat />
             <NotificationsProvider>
               <UserPreferencesProvider>
                 <SubscriptionProvider>

@@ -6,167 +6,68 @@ Last Updated
 Payload
 
 no filters	
-	5/20/2025, 12:50:42 PM	
-Content
-SubscriptionScreen Restore Attempt
-Content
-{"timestamp":"2025-05-20T19:50:42.613Z","component":"SubscriptionScreen","currentStatus":"free"}
-	5/20/2025, 12:50:32 PM	
+	5/25/2025, 9:32:16 AM	
 Content
 SubscriptionScreen Initial Status
 Content
-{"timestamp":"2025-05-20T19:50:33.206Z","component":"SubscriptionScreen","isPremium":false,"hasCustomerInfo":false,"activeEntitlements":[],"customerInfoId":null,"hasPackages":false,"packageCount":0,"status":"Text Companion"}
-	5/20/2025, 12:50:32 PM	
+{"timestamp":"2025-05-25T16:32:17.019Z","component":"SubscriptionScreen","isPremium":false,"hasCustomerInfo":true,"activeEntitlements":[],"customerInfoId":"$RCAnonymousID:6875bc1acec841d9ba28d451804772e8","hasPackages":false,"packageCount":0,"status":"Text Companion"}
+	5/25/2025, 9:32:16 AM	
 Content
 SubscriptionScreen Initial Status
 Content
-{"timestamp":"2025-05-20T19:50:33.267Z","component":"SubscriptionScreen","isPremium":false,"hasCustomerInfo":false,"activeEntitlements":[],"customerInfoId":null,"hasPackages":false,"packageCount":0,"status":"Text Companion"}
-	5/20/2025, 12:50:30 PM	
+{"timestamp":"2025-05-25T16:32:17.089Z","component":"SubscriptionScreen","isPremium":false,"hasCustomerInfo":true,"activeEntitlements":[],"customerInfoId":"$RCAnonymousID:6875bc1acec841d9ba28d451804772e8","hasPackages":false,"packageCount":0,"status":"Text Companion"}
+	5/25/2025, 9:32:14 AM	
 Content
 SettingsModal RevenueCat Status
 Content
-{"timestamp":"2025-05-20T19:50:31.278Z","component":"SettingsModal","isPremium":false,"hasCustomerInfo":false,"activeEntitlements":[],"customerInfoId":null,"status":"Text Companion"}
-	5/20/2025, 12:50:24 PM	
-Content
-PANEL: Detailed Status Button Pressed
-Content
-{"timestamp":"2025-05-20T19:50:24.802Z","isInitialized":false,"initializationAttempted":true,"lastError":null,"lastAttemptTime":"2025-05-20T19:49:40.713Z","platform":"android","purchasesType":"function","purchasesAvailable":false,"nativeModuleCheck":{"hasRNPurchases":true,"methods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"],"allModules":[]}}
-	5/20/2025, 12:50:22 PM	
-Content
-PANEL: Native Module Call Attempt
-Content
-{"timestamp":"2025-05-20T19:50:23.127Z","hasRNPurchases":true,"methods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"],"platform":"android"}
-	5/20/2025, 12:50:22 PM	
-Content
-PANEL: Native Method Error
-Content
-{"timestamp":"2025-05-20T19:50:23.129Z","error":"setup method not available on RNPurchases","availableMethods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"]}
-	5/20/2025, 12:50:15 PM	
-Content
-RevenueCat login failed
-Content
-{"timestamp":"2025-05-20T19:50:16.327Z","method":"Purchases.logIn","profileId":"01969ccc-37e7-761a-a31e-405b20337a1d","retryCount":2,"status":"error","error":"There is no singleton instance. Make sure you configure Purchases before trying to get the default instance. More info here: https://errors.rev.cat/configuring-sdk"}
-	5/20/2025, 12:50:15 PM	
-Content
-RevenueCat login attempt
-Content
-{"timestamp":"2025-05-20T19:50:15.940Z","method":"Purchases.logIn","profileId":"01969ccc-37e7-761a-a31e-405b20337a1d","retryCount":2,"status":"attempting"}
-	5/20/2025, 12:50:11 PM	
-Content
-RevenueCat login failed
-Content
-{"timestamp":"2025-05-20T19:50:11.609Z","method":"Purchases.logIn","profileId":"01969ccc-37e7-761a-a31e-405b20337a1d","retryCount":1,"status":"error","error":"There is no singleton instance. Make sure you configure Purchases before trying to get the default instance. More info here: https://errors.rev.cat/configuring-sdk"}
-	5/20/2025, 12:50:10 PM	
-Content
-RevenueCat login attempt
-Content
-{"timestamp":"2025-05-20T19:50:11.279Z","method":"Purchases.logIn","profileId":"01969ccc-37e7-761a-a31e-405b20337a1d","retryCount":1,"status":"attempting"}
-	5/20/2025, 12:50:08 PM	
-Content
-RevenueCat login failed
-Content
-{"timestamp":"2025-05-20T19:50:09.007Z","method":"Purchases.logIn","profileId":"01969ccc-37e7-761a-a31e-405b20337a1d","retryCount":0,"status":"error","error":"There is no singleton instance. Make sure you configure Purchases before trying to get the default instance. More info here: https://errors.rev.cat/configuring-sdk"}
-	5/20/2025, 12:50:08 PM	
-Content
-RevenueCat login attempt
-Content
-{"timestamp":"2025-05-20T19:50:08.666Z","method":"Purchases.logIn","profileId":"01969ccc-37e7-761a-a31e-405b20337a1d","retryCount":0,"status":"attempting"}
-	5/20/2025, 12:50:08 PM	
-Content
-DIAGNOSTIC LOG: Testing Communication Resource Creation
-Content
-{"timestamp":"2025-05-20T19:50:08.669Z","test":"This is a test entry to verify Communication resource creation","platform":"android"}
-	5/20/2025, 12:49:48 PM	
+{"timestamp":"2025-05-25T16:32:14.932Z","component":"SettingsModal","isPremium":false,"hasCustomerInfo":true,"activeEntitlements":[],"customerInfoId":"$RCAnonymousID:6875bc1acec841d9ba28d451804772e8","status":"Text Companion"}
+	5/25/2025, 9:32:09 AM	
 Content
 RevenueCat SDK not available - DEBUG INFO
 Content
-{"timestamp":"2025-05-20T19:49:48.985Z","platform":"android","environment":"production","purchasesType":"function","purchasesValue":"function Purchases() { [bytecode] }","hasRNPurchasesModule":true,"rnPurchasesDetails":"addListener,canMakePayments,checkTrialOrIntroductoryPriceEligibility,collectDeviceIdentifiers,getAppUserID,getCurrentOfferingForPlacement,getCustomerInfo,getOfferings,getProductInfo,getStorefront,invalidateCustomerInfoCache,isAnonymous,isConfigured,isWebPurchaseRedemptionURL,logIn,logOut,purchasePackage,purchaseProduct,purchaseSubscriptionOption,redeemWebPurchase,removeListeners,restorePurchases,setAd,setAdGroup,setAdjustID,setAirshipChannelID,setAllowSharingStoreAccount,setAppsflyerID,setAttributes,setCampaign,setCleverTapID,setCreative,setDebugLogsEnabled,setDisplayName,setEmail,setFBAnonymousID,setFirebaseAppInstanceID,setKeyword,setKochavaDeviceID,setLogHandler,setLogLevel,setMediaSource,setMixpanelDistinctID,setMparticleID,setOnesignalID,setPhoneNumber,setProxyURLString,setPushToken,setTenjinAnalyticsInstallationID,setupPurchases,showInAppMessages,syncAmazonPurchase,syncAttributesAndOfferingsIfNeeded,syncObserverModeAmazonPurchase,syncPurchases,getConstants","availableNativeModules":[],"platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}","isHermes":true,"purchasesVersion":"unknown"}
-	5/20/2025, 12:49:48 PM	
+{"timestamp":"2025-05-25T16:32:09.418Z","platform":"android","environment":"production","purchasesType":"function","purchasesValue":"function Purchases() { [bytecode] }","hasRNPurchasesModule":true,"rnPurchasesDetails":"addListener,canMakePayments,checkTrialOrIntroductoryPriceEligibility,collectDeviceIdentifiers,getAppUserID,getCurrentOfferingForPlacement,getCustomerInfo,getOfferings,getProductInfo,getStorefront,invalidateCustomerInfoCache,isAnonymous,isConfigured,isWebPurchaseRedemptionURL,logIn,logOut,purchasePackage,purchaseProduct,purchaseSubscriptionOption,redeemWebPurchase,removeListeners,restorePurchases,setAd,setAdGroup,setAdjustID,setAirshipChannelID,setAllowSharingStoreAccount,setAppsflyerID,setAttributes,setCampaign,setCleverTapID,setCreative,setDebugLogsEnabled,setDisplayName,setEmail,setFBAnonymousID,setFirebaseAppInstanceID,setKeyword,setKochavaDeviceID,setLogHandler,setLogLevel,setMediaSource,setMixpanelDistinctID,setMparticleID,setOnesignalID,setPhoneNumber,setProxyURLString,setPushToken,setTenjinAnalyticsInstallationID,setupPurchases,showInAppMessages,syncAmazonPurchase,syncAttributesAndOfferingsIfNeeded,syncObserverModeAmazonPurchase,syncPurchases,getConstants","availableNativeModules":[],"platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}","isHermes":true,"purchasesVersion":"unknown"}
+	5/25/2025, 9:32:08 AM	
 Content
 RevenueCat initialization starting
 Content
-{"timestamp":"2025-05-20T19:49:48.517Z","platform":"android","environment":"production","hasRNPurchasesModule":true,"rnPurchasesDetails":"addListener,canMakePayments,checkTrialOrIntroductoryPriceEligibility,collectDeviceIdentifiers,getAppUserID,getCurrentOfferingForPlacement,getCustomerInfo,getOfferings,getProductInfo,getStorefront,invalidateCustomerInfoCache,isAnonymous,isConfigured,isWebPurchaseRedemptionURL,logIn,logOut,purchasePackage,purchaseProduct,purchaseSubscriptionOption,redeemWebPurchase,removeListeners,restorePurchases,setAd,setAdGroup,setAdjustID,setAirshipChannelID,setAllowSharingStoreAccount,setAppsflyerID,setAttributes,setCampaign,setCleverTapID,setCreative,setDebugLogsEnabled,setDisplayName,setEmail,setFBAnonymousID,setFirebaseAppInstanceID,setKeyword,setKochavaDeviceID,setLogHandler,setLogLevel,setMediaSource,setMixpanelDistinctID,setMparticleID,setOnesignalID,setPhoneNumber,setProxyURLString,setPushToken,setTenjinAnalyticsInstallationID,setupPurchases,showInAppMessages,syncAmazonPurchase,syncAttributesAndOfferingsIfNeeded,syncObserverModeAmazonPurchase,syncPurchases,getConstants","availableNativeModules":[],"platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}","isHermes":true,"purchasesType":"function","purchasesVersion":"unknown"}
-	5/20/2025, 12:49:47 PM	
+{"timestamp":"2025-05-25T16:32:09.034Z","platform":"android","environment":"production","hasRNPurchasesModule":true,"rnPurchasesDetails":"addListener,canMakePayments,checkTrialOrIntroductoryPriceEligibility,collectDeviceIdentifiers,getAppUserID,getCurrentOfferingForPlacement,getCustomerInfo,getOfferings,getProductInfo,getStorefront,invalidateCustomerInfoCache,isAnonymous,isConfigured,isWebPurchaseRedemptionURL,logIn,logOut,purchasePackage,purchaseProduct,purchaseSubscriptionOption,redeemWebPurchase,removeListeners,restorePurchases,setAd,setAdGroup,setAdjustID,setAirshipChannelID,setAllowSharingStoreAccount,setAppsflyerID,setAttributes,setCampaign,setCleverTapID,setCreative,setDebugLogsEnabled,setDisplayName,setEmail,setFBAnonymousID,setFirebaseAppInstanceID,setKeyword,setKochavaDeviceID,setLogHandler,setLogLevel,setMediaSource,setMixpanelDistinctID,setMparticleID,setOnesignalID,setPhoneNumber,setProxyURLString,setPushToken,setTenjinAnalyticsInstallationID,setupPurchases,showInAppMessages,syncAmazonPurchase,syncAttributesAndOfferingsIfNeeded,syncObserverModeAmazonPurchase,syncPurchases,getConstants","availableNativeModules":[],"platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}","isHermes":true,"purchasesType":"function","purchasesVersion":"unknown"}
+	5/25/2025, 9:32:08 AM	
 Content
 ALERT: RevenueCat SDK Status
 Content
-{"timestamp":"2025-05-20T19:49:48.484Z","message":"SDK Type: function\nMethods: none\nConfigure available: false\nisConfigured available: false","platform":"android","environment":"production"}
-	5/20/2025, 12:49:40 PM	
+{"timestamp":"2025-05-25T16:32:09.004Z","message":"SDK Type: function\nMethods: none\nConfigure available: false\nisConfigured available: false","platform":"android","environment":"production"}
+	5/25/2025, 9:32:00 AM	
 Content
 ALERT: RevenueCat
 Content
-{"timestamp":"2025-05-20T19:49:40.934Z","message":"Initialization reported failure.","platform":"android","environment":"production"}
-	5/20/2025, 12:49:40 PM	
+{"timestamp":"2025-05-25T16:32:01.356Z","message":"Initialization reported success!","platform":"android","environment":"production"}
+	5/25/2025, 9:32:00 AM	
 Content
-RevenueCat SDK not available
+RevenueCat already initialized
 Content
-{"timestamp":"2025-05-20T19:49:40.713Z","platform":"android","environment":"production","purchasesType":"function"}
-	5/20/2025, 12:49:39 PM	
-Content
-ALERT: RevenueCat
-Content
-{"timestamp":"2025-05-20T19:49:40.484Z","message":"Attempting initialization...","platform":"android","environment":"production"}
-
-
-	
-Last Updated
-
-
-Payload
-
-no filters	
-	5/20/2025, 12:49:39 PM	
-Content
-RevenueCat initialization starting
-Content
-{"timestamp":"2025-05-20T19:49:40.490Z","platform":"android","environment":"production","purchasesType":"function","purchasesVersion":"unknown"}
-	5/20/2025, 12:48:22 PM	
-Content
-PANEL: Detailed Status Button Pressed
-Content
-{"timestamp":"2025-05-20T19:48:21.752Z","isInitialized":false,"initializationAttempted":true,"lastError":null,"lastAttemptTime":"2025-05-20T19:47:45.804Z","platform":"android","purchasesType":"function","purchasesAvailable":false,"nativeModuleCheck":{"hasRNPurchases":true,"methods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"],"allModules":[]}}
-	5/20/2025, 12:48:17 PM	
-Content
-PANEL: Native Module Call Attempt
-Content
-{"timestamp":"2025-05-20T19:48:18.237Z","hasRNPurchases":true,"methods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"],"platform":"android"}
-	5/20/2025, 12:48:17 PM	
-Content
-PANEL: Native Method Error
-Content
-{"timestamp":"2025-05-20T19:48:18.243Z","error":"setup method not available on RNPurchases","availableMethods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"]}
-	5/20/2025, 12:47:53 PM	
-Content
-RevenueCat SDK not available - DEBUG INFO
-Content
-{"timestamp":"2025-05-20T19:47:53.682Z","platform":"android","environment":"production","purchasesType":"function","purchasesValue":"function Purchases() { [bytecode] }","hasRNPurchasesModule":true,"rnPurchasesDetails":"addListener,canMakePayments,checkTrialOrIntroductoryPriceEligibility,collectDeviceIdentifiers,getAppUserID,getCurrentOfferingForPlacement,getCustomerInfo,getOfferings,getProductInfo,getStorefront,invalidateCustomerInfoCache,isAnonymous,isConfigured,isWebPurchaseRedemptionURL,logIn,logOut,purchasePackage,purchaseProduct,purchaseSubscriptionOption,redeemWebPurchase,removeListeners,restorePurchases,setAd,setAdGroup,setAdjustID,setAirshipChannelID,setAllowSharingStoreAccount,setAppsflyerID,setAttributes,setCampaign,setCleverTapID,setCreative,setDebugLogsEnabled,setDisplayName,setEmail,setFBAnonymousID,setFirebaseAppInstanceID,setKeyword,setKochavaDeviceID,setLogHandler,setLogLevel,setMediaSource,setMixpanelDistinctID,setMparticleID,setOnesignalID,setPhoneNumber,setProxyURLString,setPushToken,setTenjinAnalyticsInstallationID,setupPurchases,showInAppMessages,syncAmazonPurchase,syncAttributesAndOfferingsIfNeeded,syncObserverModeAmazonPurchase,syncPurchases,getConstants","availableNativeModules":[],"platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}","isHermes":true,"purchasesVersion":"unknown"}
-	5/20/2025, 12:47:52 PM	
-Content
-RevenueCat initialization starting
-Content
-{"timestamp":"2025-05-20T19:47:53.298Z","platform":"android","environment":"production","hasRNPurchasesModule":true,"rnPurchasesDetails":"addListener,canMakePayments,checkTrialOrIntroductoryPriceEligibility,collectDeviceIdentifiers,getAppUserID,getCurrentOfferingForPlacement,getCustomerInfo,getOfferings,getProductInfo,getStorefront,invalidateCustomerInfoCache,isAnonymous,isConfigured,isWebPurchaseRedemptionURL,logIn,logOut,purchasePackage,purchaseProduct,purchaseSubscriptionOption,redeemWebPurchase,removeListeners,restorePurchases,setAd,setAdGroup,setAdjustID,setAirshipChannelID,setAllowSharingStoreAccount,setAppsflyerID,setAttributes,setCampaign,setCleverTapID,setCreative,setDebugLogsEnabled,setDisplayName,setEmail,setFBAnonymousID,setFirebaseAppInstanceID,setKeyword,setKochavaDeviceID,setLogHandler,setLogLevel,setMediaSource,setMixpanelDistinctID,setMparticleID,setOnesignalID,setPhoneNumber,setProxyURLString,setPushToken,setTenjinAnalyticsInstallationID,setupPurchases,showInAppMessages,syncAmazonPurchase,syncAttributesAndOfferingsIfNeeded,syncObserverModeAmazonPurchase,syncPurchases,getConstants","availableNativeModules":[],"platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}","isHermes":true,"purchasesType":"function","purchasesVersion":"unknown"}
-	5/20/2025, 12:47:52 PM	
-Content
-ALERT: RevenueCat SDK Status
-Content
-{"timestamp":"2025-05-20T19:47:53.266Z","message":"SDK Type: function\nMethods: none\nConfigure available: false\nisConfigured available: false","platform":"android","environment":"production"}
-	5/20/2025, 12:47:45 PM	
+{"timestamp":"2025-05-25T16:32:01.019Z","platform":"android","environment":"production"}
+	5/25/2025, 9:32:00 AM	
 Content
 ALERT: RevenueCat
 Content
-{"timestamp":"2025-05-20T19:47:46.214Z","message":"Initialization reported failure.","platform":"android","environment":"production"}
-	5/20/2025, 12:47:45 PM	
+{"timestamp":"2025-05-25T16:32:01.006Z","message":"Attempting initialization...","platform":"android","environment":"production"}
+	5/25/2025, 9:31:59 AM	
 Content
-RevenueCat SDK not available
+Subscription status check: FREE
 Content
-{"timestamp":"2025-05-20T19:47:45.805Z","platform":"android","environment":"production","purchasesType":"function"}
-	5/20/2025, 12:47:44 PM	
+{"timestamp":"2025-05-25T16:32:00.262Z","platform":"android","environment":"production","entitlements":[],"originalAppUserId":"$RCAnonymousID:6875bc1acec841d9ba28d451804772e8","customerInfo":{"activeSubscriptions":[],"allPurchasedProductIdentifiers":[]}}
+	5/25/2025, 9:31:59 AM	
 Content
-ALERT: RevenueCat
+Subscription status check: FREE
 Content
-{"timestamp":"2025-05-20T19:47:45.262Z","message":"Attempting initialization...","platform":"android","environment":"production"}
-	5/20/2025, 12:47:44 PM	
+{"timestamp":"2025-05-25T16:32:00.250Z","platform":"android","environment":"production","entitlements":[],"originalAppUserId":"$RCAnonymousID:6875bc1acec841d9ba28d451804772e8","customerInfo":{"activeSubscriptions":[],"allPurchasedProductIdentifiers":[]}}
+	5/25/2025, 9:31:59 AM	
 Content
-RevenueCat initialization starting
+Subscription status check: FREE
 Content
-{"timestamp":"2025-05-20T19:47:45.281Z","platform":"android","environment":"production","purchasesType":"function","purchasesVersion":"unknown"}
+{"timestamp":"2025-05-25T16:32:00.261Z","platform":"android","environment":"production","entitlements":[],"originalAppUserId":"$RCAnonymousID:6875bc1acec841d9ba28d451804772e8","customerInfo":{"activeSubscriptions":[],"allPurchasedProductIdentifiers":[]}}
+	5/25/2025, 9:31:59 AM	
+Content
+Subscription status check: FREE
+Content
+{"timestamp":"2025-05-25T16:32:00.048Z","platform":"android","environment":"production","entitlements":[],"originalAppUserId":"$RCAnonymousID:6875bc1acec841d9ba28d451804772e8","customerInfo":{"activeSubscriptions":[],"allPurchasedProductIdentifiers":[]}}

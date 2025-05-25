@@ -221,6 +221,10 @@ export const initializeRevenueCat = async (
   });
 
   try {
+    // Wait a short moment to ensure native module is registered
+    // This helps with timing issues between native and JS
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     // Verify Purchases object is available
     if (typeof Purchases !== "object" || Purchases === null) {
       const message = "RevenueCat SDK is not available";
@@ -235,8 +239,20 @@ export const initializeRevenueCat = async (
       return false;
     }
 
+    // Gather diagnostic info about the Purchases object
+    const purchasesType = typeof Purchases;
+    const hasConfigureMethod = typeof Purchases.configure === "function";
+    const hasIsConfiguredMethod = typeof Purchases.isConfigured === "function";
+
+    await logToCommunication(medplum, "RevenueCat Initialization Check", {
+      purchasesType,
+      hasConfigureMethod,
+      hasIsConfiguredMethod,
+      platform: Platform.OS,
+    });
+
     // Verify configure method is available
-    if (typeof Purchases.configure !== "function") {
+    if (!hasConfigureMethod) {
       const message = "RevenueCat configure method is not available";
       showVisibleMessage("RevenueCat Error", message, true);
 
@@ -249,31 +265,29 @@ export const initializeRevenueCat = async (
       return false;
     }
 
-    // Check if already configured - ALWAYS VERIFY WITH isConfigured()
+    // First check if already configured by native side
     let configuredSuccessfully = false;
+    let nativelyConfigured = false;
 
     try {
-      if (typeof Purchases.isConfigured === "function") {
+      if (hasIsConfiguredMethod) {
         configuredSuccessfully = Purchases.isConfigured();
 
         if (configuredSuccessfully) {
-          const message = "RevenueCat is already configured according to isConfigured()";
-          showVisibleMessage("RevenueCat Info", message);
+          showVisibleMessage("RevenueCat", "Already configured by native module");
+          nativelyConfigured = true;
 
-          // Double-check by trying to call another method
+          // Verify with a method call
           try {
             if (typeof Purchases.getAppUserID === "function") {
               const appUserId = await Purchases.getAppUserID();
-              showVisibleMessage(
-                "RevenueCat Verification",
-                `Verified with getAppUserID: ${appUserId}`,
-              );
+              showVisibleMessage("RevenueCat", `Verified with getAppUserID: ${appUserId}`);
 
-              // If we get here, it's really configured
+              // Everything is working - mark as initialized
               isInitialized = true;
               revenueCatStatus.isInitialized = true;
 
-              await logToCommunication(medplum, "RevenueCat verified as configured", {
+              await logToCommunication(medplum, "RevenueCat already configured by native module", {
                 platform: Platform.OS,
                 environment: __DEV__ ? "development" : "production",
                 appUserId,
@@ -282,8 +296,6 @@ export const initializeRevenueCat = async (
               return true;
             }
           } catch (verifyError) {
-            // If verification fails, it's not really configured properly
-            configuredSuccessfully = false;
             showVisibleMessage(
               "RevenueCat Warning",
               `isConfigured() returns true but verification failed: ${verifyError}`,
@@ -299,11 +311,18 @@ export const initializeRevenueCat = async (
                 error: verifyError instanceof Error ? verifyError.message : String(verifyError),
               },
             );
+
+            // Continue with JS configuration as fallback
+            nativelyConfigured = false;
+            configuredSuccessfully = false;
           }
         }
       }
     } catch (configError) {
-      showVisibleMessage("RevenueCat Error", `Error checking configuration: ${configError}`, true);
+      showVisibleMessage(
+        "RevenueCat Error",
+        `Error checking configuration status: ${configError}, will attempt JS configuration`,
+      );
 
       await logToCommunication(medplum, "Error checking RevenueCat configuration", {
         platform: Platform.OS,
@@ -312,142 +331,85 @@ export const initializeRevenueCat = async (
       });
 
       configuredSuccessfully = false;
+      nativelyConfigured = false;
     }
 
-    // If verification failed, we need to force re-initialization
-    if (!configuredSuccessfully) {
-      showVisibleMessage("RevenueCat", "Not properly configured, proceeding with initialization");
-    }
-
-    // Get the appropriate API key for the platform
-    const apiKey = Platform.OS === "ios" ? REVENUE_CAT_API_KEYS.ios : REVENUE_CAT_API_KEYS.android;
-
-    // Display which API key we're using (hiding most of it)
-    const apiKeyPrefix = apiKey.substring(0, 6);
-    const apiKeySuffix = apiKey.substring(apiKey.length - 4);
-    showVisibleMessage("RevenueCat", `Configuring with ${apiKeyPrefix}...${apiKeySuffix}`);
-
-    // Set verbose logging in development BEFORE configuration
-    if (__DEV__ && typeof Purchases.setLogLevel === "function") {
-      Purchases.setLogLevel(Purchases.LOG_LEVEL.VERBOSE);
-    }
-
-    try {
-      // Check if already configured by the native module
-      if (typeof Purchases.isConfigured === "function" && Purchases.isConfigured()) {
-        showVisibleMessage(
-          "RevenueCat",
-          "Already configured by native module, skipping JS configuration",
-        );
-
-        await logToCommunication(medplum, "RevenueCat already configured by native module", {
-          platform: Platform.OS,
-          environment: __DEV__ ? "development" : "production",
-        });
-      } else {
-        // Configure RevenueCat from JS only if not already configured
-        Purchases.configure({ apiKey });
-      }
-    } catch (configError) {
-      // If checking isConfigured fails, try to configure anyway
+    // If not already configured by native module, proceed with JS configuration
+    if (!nativelyConfigured) {
       showVisibleMessage(
         "RevenueCat",
-        `Error checking configuration status: ${configError}, attempting to configure anyway`,
+        "Not configured by native module, proceeding with JS initialization",
       );
 
+      // Get the appropriate API key for the platform
+      const apiKey =
+        Platform.OS === "ios" ? REVENUE_CAT_API_KEYS.ios : REVENUE_CAT_API_KEYS.android;
+
+      // Set verbose logging in development BEFORE configuration
+      if (__DEV__ && typeof Purchases.setLogLevel === "function") {
+        Purchases.setLogLevel(Purchases.LOG_LEVEL.VERBOSE);
+      }
+
       try {
+        // Configure RevenueCat from JS
         Purchases.configure({ apiKey });
-      } catch (secondConfigError) {
-        showVisibleMessage(
-          "RevenueCat Error",
-          `JS configuration failed: ${secondConfigError}`,
-          true,
-        );
+        showVisibleMessage("RevenueCat", "Configured from JavaScript");
+
+        // Verify configuration worked with a method call
+        try {
+          if (typeof Purchases.getAppUserID === "function") {
+            const appUserId = await Purchases.getAppUserID();
+            showVisibleMessage("RevenueCat", `Verified with getAppUserID: ${appUserId}`);
+
+            configuredSuccessfully = true;
+            isInitialized = true;
+            revenueCatStatus.isInitialized = true;
+
+            await logToCommunication(medplum, "RevenueCat JS configuration successful", {
+              platform: Platform.OS,
+              environment: __DEV__ ? "development" : "production",
+              appUserId,
+            });
+
+            return true;
+          }
+        } catch (verifyError) {
+          showVisibleMessage(
+            "RevenueCat Error",
+            `Verification failed after JS configuration: ${verifyError}`,
+            true,
+          );
+
+          await logToCommunication(medplum, "RevenueCat verification failed after JS configure", {
+            platform: Platform.OS,
+            environment: __DEV__ ? "development" : "production",
+            error: String(verifyError),
+          });
+
+          return false;
+        }
+      } catch (configError) {
+        showVisibleMessage("RevenueCat Error", `JS configuration failed: ${configError}`, true);
 
         await logToCommunication(medplum, "RevenueCat JS configuration failed", {
           platform: Platform.OS,
           environment: __DEV__ ? "development" : "production",
-          error:
-            secondConfigError instanceof Error
-              ? secondConfigError.message
-              : String(secondConfigError),
+          error: configError instanceof Error ? configError.message : String(configError),
         });
+
+        return false;
       }
     }
 
-    // Verify configuration worked with rigorous checks
-    // We need to reset the success flag for another round of checks
-    configuredSuccessfully = false;
-
-    // First check isConfigured()
-    if (typeof Purchases.isConfigured === "function") {
-      try {
-        configuredSuccessfully = Purchases.isConfigured();
-        showVisibleMessage("RevenueCat", `isConfigured() returned: ${configuredSuccessfully}`);
-      } catch (configError) {
-        showVisibleMessage("RevenueCat Error", `isConfigured() threw error: ${configError}`, true);
-        configuredSuccessfully = false;
-      }
-    } else {
-      showVisibleMessage("RevenueCat Warning", "isConfigured() method not available", true);
-      // Don't assume success - we'll verify with other methods
-    }
-
-    // Secondary verification - try to call a method that requires initialization
-    try {
-      if (typeof Purchases.getAppUserID === "function") {
-        const appUserId = await Purchases.getAppUserID();
-        showVisibleMessage("RevenueCat", `Verified with getAppUserID: ${appUserId}`);
-
-        // If this succeeds, it's definitely configured
-        configuredSuccessfully = true;
-
-        await logToCommunication(medplum, "RevenueCat configuration verified with getAppUserID", {
-          platform: Platform.OS,
-          environment: __DEV__ ? "development" : "production",
-          appUserId,
-        });
-      } else {
-        showVisibleMessage("RevenueCat Warning", "getAppUserID() method not available", true);
-      }
-    } catch (verifyError) {
-      // If this fails after configure, something is wrong
-      showVisibleMessage("RevenueCat Error", `Secondary verification failed: ${verifyError}`, true);
-      configuredSuccessfully = false;
-
-      await logToCommunication(medplum, "RevenueCat secondary verification failed", {
-        platform: Platform.OS,
-        environment: __DEV__ ? "development" : "production",
-        error: verifyError instanceof Error ? verifyError.message : String(verifyError),
-      });
-    }
-
-    if (!configuredSuccessfully) {
-      const message = "RevenueCat verification failed after configure()";
-      showVisibleMessage("RevenueCat Error", message, true);
-
-      await logToCommunication(medplum, "RevenueCat configuration failed verification", {
-        platform: Platform.OS,
-        environment: __DEV__ ? "development" : "production",
-        apiKeyPrefix: apiKey.substring(0, 6) + "...",
-      });
-
+    // If we get here but initialization is still not detected, return false
+    if (!isInitialized) {
+      showVisibleMessage(
+        "RevenueCat Error",
+        "Initialization process completed but status checks failed",
+        true,
+      );
       return false;
     }
-
-    // Success!
-    const message = "Successfully initialized RevenueCat!";
-    showVisibleMessage("RevenueCat Success", message);
-
-    await logToCommunication(medplum, "RevenueCat initialized successfully", {
-      platform: Platform.OS,
-      environment: __DEV__ ? "development" : "production",
-      apiKeyPrefix: apiKey.substring(0, 6) + "...",
-    });
-
-    isInitialized = true;
-    revenueCatStatus.isInitialized = true;
-    revenueCatStatus.lastError = null;
 
     return true;
   } catch (error) {

@@ -49,6 +49,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     favicon: "./assets/images/favicon.png",
   },
   plugins: [
+    "./plugins/withRevenueCat", // Add RevenueCat native initialization
     "expo-router",
     "expo-font",
     [

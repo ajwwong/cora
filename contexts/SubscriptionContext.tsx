@@ -312,7 +312,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         try {
           // Handle case where RevenueCat is not available at all
           if (
-            typeof Purchases !== "object" ||
+            typeof Purchases === "undefined" ||
             Purchases === null ||
             typeof Purchases.configure !== "function"
           ) {
@@ -946,7 +946,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       // Check if RevenueCat SDK is available
-      if (typeof Purchases !== "object" || Purchases === null) {
+      if (typeof Purchases === "undefined" || Purchases === null) {
         console.warn("📱 [SubscriptionContext] RevenueCat SDK is not available");
 
         // Log this issue as a Communication resource
@@ -1064,7 +1064,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
 
       // Check if RevenueCat SDK is available
-      if (typeof Purchases !== "object" || Purchases === null) {
+      if (typeof Purchases === "undefined" || Purchases === null) {
         console.warn("📱 [SubscriptionContext] RevenueCat SDK is not available");
 
         // Log this issue as a Communication resource
