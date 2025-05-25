@@ -139,7 +139,7 @@ export const getRevenueCatDebugInfo = (): Record<string, unknown> => {
       timestamp: new Date().toISOString(),
       platform: Platform.OS,
       purchasesType: typeof Purchases,
-      purchasesAvailable: typeof Purchases === "object" && Purchases !== null,
+      purchasesAvailable: typeof Purchases !== "undefined" && Purchases !== null,
     };
 
     // Add additional info if Purchases is available
@@ -226,7 +226,7 @@ export const initializeRevenueCat = async (
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify Purchases object is available
-    if (typeof Purchases !== "object" || Purchases === null) {
+    if (typeof Purchases === "undefined" || Purchases === null) {
       const message = "RevenueCat SDK is not available";
       showVisibleMessage("RevenueCat Error", message, true);
 

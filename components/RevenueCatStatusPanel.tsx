@@ -1,6 +1,7 @@
 import { useMedplumContext } from "@medplum/react-hooks";
 import React, { useEffect, useState } from "react";
 import { Alert, NativeModules, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import Purchases from "react-native-purchases";
 
 import { getRevenueCatDebugInfo } from "@/utils/subscription/initialize-revenue-cat";
 
@@ -74,13 +75,9 @@ export const RevenueCatStatusPanel: React.FC<StatusProps> = ({ onClose }) => {
     logToCommunication("Detailed Status Button Pressed", enhancedInfo);
   };
 
-  const attemptDirectNativeCall = () => {
+  const attemptBridgeDiagnostic = () => {
     // Log initial attempt to Communication
-    logToCommunication("Native Module Call Attempt", {
-      hasRNPurchases: !!NativeModules.RNPurchases,
-      methods: NativeModules.RNPurchases
-        ? Object.getOwnPropertyNames(NativeModules.RNPurchases)
-        : "none",
+    logToCommunication("Native Bridge Diagnostic Started", {
       platform: Platform.OS,
     });
 
@@ -91,51 +88,86 @@ export const RevenueCatStatusPanel: React.FC<StatusProps> = ({ onClose }) => {
       return;
     }
 
+    const diagnosticInfo = {
+      hasRNPurchases: !!NativeModules.RNPurchases,
+      availableMethods: NativeModules.RNPurchases
+        ? Object.getOwnPropertyNames(NativeModules.RNPurchases)
+        : [],
+      bridgeMethodCheck: {
+        hasSetup: typeof NativeModules.RNPurchases?.setup === "function",
+        hasSetupPurchases: typeof NativeModules.RNPurchases?.setupPurchases === "function",
+        hasConfigure: typeof NativeModules.RNPurchases?.configure === "function",
+        hasGetAppUserID: typeof NativeModules.RNPurchases?.getAppUserID === "function",
+      },
+      jsSDKMethods: {
+        hasConfigure: typeof Purchases.configure === "function",
+        hasIsConfigured: typeof Purchases.isConfigured === "function",
+        hasGetAppUserID: typeof Purchases.getAppUserID === "function",
+        hasLogIn: typeof Purchases.logIn === "function",
+      },
+      sdkVersion: Purchases?.VERSION || "unknown",
+      platform: Platform.OS,
+      timestamp: new Date().toISOString(),
+    };
+
+    Alert.alert("Bridge Diagnostic", JSON.stringify(diagnosticInfo, null, 2));
+    logToCommunication("Native Bridge Diagnostic Complete", diagnosticInfo);
+  };
+
+  const testUserLinking = async () => {
     try {
-      // Try to call a method directly on the native module
-      if (typeof NativeModules.RNPurchases.setup === "function") {
-        // This is a direct call to the native module, bypassing the JS wrapper
-        const apiKey =
-          Platform.OS === "ios"
-            ? "appl_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-            : "goog_ocxwCYOseIPqHeYRlHAuuaIAWBo";
-
-        const message = "Attempting direct setup call...";
-        Alert.alert("Native Module", message);
-        logToCommunication("Native Module Setup", {
-          message,
-          apiKeyPrefix: apiKey.substring(0, 6) + "...",
-        });
-
-        NativeModules.RNPurchases.setup(
-          apiKey,
-          null, // appUserID
-          true, // observerMode
-          {}, // userDefaultsSuiteName
-          () => {
-            const successMsg = "Native module setup succeeded";
-            Alert.alert("Setup Success", successMsg);
-            logToCommunication("Native Module Setup Success", { message: successMsg });
-          },
-          (error: string) => {
-            Alert.alert("Setup Error", error);
-            logToCommunication("Native Module Setup Error", { error });
-          },
-        );
-      } else {
-        const errorMsg = "setup method not available on RNPurchases";
-        Alert.alert("Native Method Error", errorMsg);
-        logToCommunication("Native Method Error", {
-          error: errorMsg,
-          availableMethods: NativeModules.RNPurchases
-            ? Object.getOwnPropertyNames(NativeModules.RNPurchases)
-            : "none",
-        });
+      const profile = medplum.getProfile();
+      if (!profile?.id) {
+        Alert.alert("User Linking Test", "No Medplum profile available for linking");
+        return;
       }
+
+      const currentUserID = await Purchases.getAppUserID();
+      Alert.alert(
+        "User Linking Test",
+        `Current RevenueCat User ID: ${currentUserID}\nWill link to Patient ID: ${profile.id}`,
+      );
+
+      // Log the test attempt
+      await logToCommunication("User Linking Test Started", {
+        currentUserID,
+        patientID: profile.id,
+        platform: Platform.OS,
+      });
+
+      // Switch to Patient ID
+      await Purchases.logIn(profile.id);
+
+      // Invalidate cache to ensure fresh data
+      await Purchases.invalidateCustomerInfoCache();
+
+      // Wait for cache invalidation
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Get new user ID and customer info to confirm
+      const newUserID = await Purchases.getAppUserID();
+      const newCustomerInfo = await Purchases.getCustomerInfo();
+
+      Alert.alert(
+        "User Linking Test",
+        `SUCCESS!\nPrevious ID: ${currentUserID}\nNew User ID: ${newUserID}\nCustomer ID: ${newCustomerInfo.originalAppUserId}`,
+      );
+
+      // Log success
+      await logToCommunication("User Linking Test Success", {
+        previousID: currentUserID,
+        newID: newUserID,
+        customerInfoID: newCustomerInfo.originalAppUserId,
+        cacheInvalidated: true,
+        platform: Platform.OS,
+      });
     } catch (error) {
-      const errorMsg = String(error);
-      Alert.alert("Native Call Error", errorMsg);
-      logToCommunication("Native Call Error", { error: errorMsg });
+      Alert.alert("User Linking Test", `ERROR: ${error}`);
+
+      await logToCommunication("User Linking Test Failed", {
+        error: error instanceof Error ? error.message : String(error),
+        platform: Platform.OS,
+      });
     }
   };
 
@@ -185,9 +217,18 @@ export const RevenueCatStatusPanel: React.FC<StatusProps> = ({ onClose }) => {
 
         <Pressable
           style={[styles.button, { backgroundColor: "#ff9800" }]}
-          onPress={attemptDirectNativeCall}
+          onPress={attemptBridgeDiagnostic}
         >
-          <Text style={styles.buttonText}>Try Native Call</Text>
+          <Text style={styles.buttonText}>Bridge Diagnostic</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.buttonRow}>
+        <Pressable
+          style={[styles.button, { backgroundColor: "#4caf50" }]}
+          onPress={testUserLinking}
+        >
+          <Text style={styles.buttonText}>Test User Linking</Text>
         </Pressable>
 
         {onClose && (

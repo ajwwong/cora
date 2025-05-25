@@ -245,6 +245,110 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     };
 
+    // NEW: Function to link anonymous RevenueCat user to Patient ID
+    const linkRevenueCatToPatient = async (): Promise<boolean> => {
+      try {
+        const profile = medplum.getProfile();
+        if (!profile?.id) {
+          console.log("📱 [SubscriptionContext] No patient profile available for linking");
+          return false;
+        }
+
+        // Get current RevenueCat user ID
+        const currentUserID = await Purchases.getAppUserID();
+
+        // DEBUG: Always log the current state for diagnosis
+        await logToCommunication("User Linking Debug Check", {
+          currentRevenueCatID: currentUserID,
+          expectedPatientID: profile.id,
+          isAlreadyLinked: currentUserID === profile.id,
+          platform: Platform.OS,
+        });
+
+        console.log(
+          `📱 [SubscriptionContext] Current RevenueCat ID: ${currentUserID}, Expected Patient ID: ${profile.id}`,
+        );
+
+        // If already using Patient ID, skip
+        if (currentUserID === profile.id) {
+          console.log("📱 [SubscriptionContext] Already linked to Patient ID");
+          return true;
+        }
+
+        // Log the linking attempt
+        await logToCommunication("RevenueCat User Linking Started", {
+          anonymousID: currentUserID,
+          patientID: profile.id,
+          platform: Platform.OS,
+        });
+
+        console.log(
+          `📱 [SubscriptionContext] Linking RevenueCat user from ${currentUserID} to ${profile.id}`,
+        );
+
+        // Switch to Patient ID (logIn handles user switching correctly)
+        await Purchases.logIn(profile.id);
+
+        // CRITICAL: Force complete cache invalidation
+        await Purchases.invalidateCustomerInfoCache();
+
+        // Additional safety: wait for cache to clear
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // Verify the switch was successful
+        const verificationUserID = await Purchases.getAppUserID();
+        const verificationCustomerInfo = await Purchases.getCustomerInfo();
+
+        await logToCommunication("User Switch Verification", {
+          expectedPatientID: profile.id,
+          actualUserID: verificationUserID,
+          actualCustomerInfoID: verificationCustomerInfo.originalAppUserId,
+          switchSuccessful:
+            verificationUserID === profile.id &&
+            verificationCustomerInfo.originalAppUserId === profile.id,
+          cacheInvalidated: true,
+          platform: Platform.OS,
+        });
+
+        if (
+          verificationUserID === profile.id &&
+          verificationCustomerInfo.originalAppUserId === profile.id
+        ) {
+          console.log("📱 [SubscriptionContext] User switch verified - both IDs match Patient ID");
+
+          // Log successful linking
+          await logToCommunication("RevenueCat User Linking Successful", {
+            previousID: currentUserID,
+            newPatientID: profile.id,
+            platform: Platform.OS,
+          });
+
+          return true;
+        } else {
+          console.warn(
+            "📱 [SubscriptionContext] User switch verification failed - ID mismatch detected",
+          );
+          await logToCommunication("User Switch Verification Failed", {
+            expectedPatientID: profile.id,
+            actualUserID: verificationUserID,
+            actualCustomerInfoID: verificationCustomerInfo.originalAppUserId,
+            platform: Platform.OS,
+          });
+          return false;
+        }
+      } catch (error) {
+        console.error("📱 [SubscriptionContext] Failed to link RevenueCat user:", error);
+
+        // Log linking failure
+        await logToCommunication("RevenueCat User Linking Failed", {
+          error: error instanceof Error ? error.message : String(error),
+          platform: Platform.OS,
+        });
+
+        return false;
+      }
+    };
+
     const initializePurchases = async () => {
       // Log native modules availability
       try {
@@ -695,6 +799,56 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             const hasPremium = checkPremiumEntitlement(info);
             console.log(`📱 [SubscriptionContext] Premium status: ${hasPremium}`);
 
+            // NEW: Link anonymous user to Patient ID if authenticated
+            console.log(
+              "📱 [SubscriptionContext] RevenueCat initialized successfully, attempting user linking",
+            );
+
+            await logToCommunication("User Linking Attempt Starting", {
+              initialized: true,
+              platform: Platform.OS,
+            });
+
+            const linkingSuccess = await linkRevenueCatToPatient();
+
+            if (linkingSuccess) {
+              console.log(
+                "📱 [SubscriptionContext] User switch successful, refreshing customer info",
+              );
+
+              try {
+                // Simple refresh since cache invalidation should have resolved identity issues
+                const updatedInfo = await safelyExecuteRevenueCatMethod(
+                  "getCustomerInfo",
+                  () => Purchases.getCustomerInfo(),
+                  null,
+                );
+
+                if (updatedInfo) {
+                  setCustomerInfo(updatedInfo);
+                  console.log(
+                    `📱 [SubscriptionContext] Customer info updated - ID: ${updatedInfo.originalAppUserId}`,
+                  );
+
+                  await logToCommunication("Customer Info Updated After Switch", {
+                    newCustomerID: updatedInfo.originalAppUserId,
+                    platform: Platform.OS,
+                  });
+                }
+              } catch (refreshError) {
+                console.warn(
+                  "📱 [SubscriptionContext] Failed to refresh customer info after switch:",
+                  refreshError,
+                );
+
+                await logToCommunication("Customer Info Refresh Failed After Switch", {
+                  error:
+                    refreshError instanceof Error ? refreshError.message : String(refreshError),
+                  platform: Platform.OS,
+                });
+              }
+            }
+
             // We'll log subscription info using Communication resources instead
             try {
               // Log successful subscription check
@@ -1143,6 +1297,13 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const debugGetCustomerInfo = async (): Promise<void> => {
     try {
       console.log("📱 [SubscriptionContext] Debug: Manually fetching customer info");
+
+      // Log debug action (using console since this is outside component scope)
+      console.log("📱 [SubscriptionContext] PANEL: Debug Get Customer Info Started", {
+        timestamp: new Date().toISOString(),
+        platform: Platform.OS,
+      });
+
       if (Platform.OS === "web") {
         console.log(
           "📱 [SubscriptionContext] Debug: Web platform detected, cannot fetch customer info",
@@ -1162,15 +1323,43 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
           JSON.stringify(info, null, 2),
         );
 
+        // Log the customer info details
+        console.log("📱 [SubscriptionContext] PANEL: Debug Customer Info Retrieved", {
+          timestamp: new Date().toISOString(),
+          originalAppUserId: info.originalAppUserId,
+          activeSubscriptions: info.activeSubscriptions,
+          allPurchasedProductIdentifiers: info.allPurchasedProductIdentifiers,
+          entitlements: Object.keys(info.entitlements?.active || {}),
+          platform: Platform.OS,
+        });
+
         // Update state with fresh data
         setCustomerInfo(info);
         const hasPremium = checkPremiumEntitlement(info);
         console.log(`📱 [SubscriptionContext] Debug: Updated premium status: ${hasPremium}`);
+
+        // Log the state update
+        console.log("📱 [SubscriptionContext] PANEL: Debug State Updated", {
+          timestamp: new Date().toISOString(),
+          premiumStatus: hasPremium,
+          stateUpdated: true,
+          platform: Platform.OS,
+        });
       } else {
         console.warn("📱 [SubscriptionContext] Debug: No customer info retrieved");
+        console.log("📱 [SubscriptionContext] PANEL: Debug Customer Info Failed", {
+          timestamp: new Date().toISOString(),
+          error: "No customer info retrieved",
+          platform: Platform.OS,
+        });
       }
     } catch (error) {
       console.error("📱 [SubscriptionContext] Debug: Error fetching customer info:", error);
+      console.log("📱 [SubscriptionContext] PANEL: Debug Customer Info Error", {
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : String(error),
+        platform: Platform.OS,
+      });
     }
   };
 
