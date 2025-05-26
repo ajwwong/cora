@@ -2,7 +2,7 @@ import { Patient } from "@medplum/fhirtypes";
 import { useMedplum } from "@medplum/react-hooks";
 import { router } from "expo-router";
 import { Bug, CreditCard, Loader, Mail, Moon, Sun, User } from "lucide-react-native";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Divider } from "@/components/ui/divider";
@@ -30,7 +30,7 @@ interface SettingsModalProps {
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { isAutoplayEnabled, isLoadingPreference, toggleAutoplay } = useUserPreferences();
-  const { isPremium, customerInfo } = useSubscription();
+  const { isPremium, customerInfo, retryUserLinking, isLinkingInProgress } = useSubscription();
   const medplum = useMedplum();
   const [patientInfo, setPatientInfo] = useState<Patient | null>(null);
   const [isLoadingPatient, setIsLoadingPatient] = useState(false);
@@ -163,7 +163,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               devices.
             </Text>
 
-            <Divider my={4} />
+            <Divider className="my-4" />
 
             {/* Subscription Management */}
             <View className="flex-row items-center justify-between py-2">
@@ -178,14 +178,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </View>
             </View>
 
-            <Button variant="outline" onPress={navigateToSubscription} size="sm" className="mb-4">
+            <Button variant="outline" onPress={navigateToSubscription} size="sm" className="mb-2">
               <ButtonIcon as={CreditCard} size="sm" />
               <ButtonText>
                 {isPremium ? "Manage Subscription" : "Upgrade to Voice Connect"}
               </ButtonText>
             </Button>
 
-            <Divider my={4} />
+            <Button
+              variant="outline"
+              onPress={retryUserLinking}
+              size="sm"
+              className="mb-4"
+              disabled={isLinkingInProgress}
+            >
+              <ButtonIcon as={isLinkingInProgress ? Loader : User} size="sm" />
+              <ButtonText>{isLinkingInProgress ? "Linking..." : "Retry User Linking"}</ButtonText>
+            </Button>
+
+            <Divider className="my-4" />
 
             {/* User Information Section */}
             <View className="flex-col gap-2 py-2">
@@ -218,7 +229,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {/* Debug Tools Section - only in development or with special flag */}
             {(__DEV__ || patientInfo?.id === "961" || patientInfo?.id === "1") && (
               <>
-                <Divider my={4} />
+                <Divider className="my-4" />
 
                 <View className="flex-row items-center justify-between py-2">
                   <View className="flex-row items-center gap-2">

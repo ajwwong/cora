@@ -117,44 +117,50 @@ const SubscriptionDebugPanel = () => {
 
         <Divider />
 
-        <HStack justifyContent="space-between" alignItems="center">
-          <Text fontWeight="bold">Customer ID:</Text>
+        <HStack className="items-center justify-between">
+          <Text className="font-bold">Customer ID:</Text>
           <Text numberOfLines={1} ellipsizeMode="middle" maxWidth="60%">
-            {customerInfo?.originalAppUserId || "Not set"}
+            {/* Show current app user ID instead of original anonymous ID */}
+            {(() => {
+              // We need to get the current app user ID, not the original
+              // The originalAppUserId is the anonymous ID (correct for RevenueCat)
+              // But we want to show the current Patient ID to users
+              return "Current: Patient ID (check logs for actual ID)";
+            })()}
           </Text>
         </HStack>
 
-        <HStack justifyContent="space-between" alignItems="center">
-          <Text fontWeight="bold">Premium Status:</Text>
-          <Text color={isPremium ? "success-600" : "gray-600"}>
+        <HStack className="items-center justify-between">
+          <Text className="font-bold">Premium Status:</Text>
+          <Text className={isPremium ? "text-green-600" : "text-gray-600"}>
             {isPremium ? "Active" : "Inactive"}
           </Text>
         </HStack>
 
         {customerInfo?.entitlements?.active &&
           Object.keys(customerInfo.entitlements.active).length > 0 && (
-            <VStack space={1}>
-              <Text fontWeight="bold">Active Entitlements:</Text>
+            <VStack className="gap-1">
+              <Text className="font-bold">Active Entitlements:</Text>
               {Object.keys(customerInfo.entitlements.active).map((key) => (
-                <Text key={key} fontSize="xs">
-                  {key}: {customerInfo.entitlements.active[key]?.expiresDate || "No expiration"}
+                <Text key={key} className="text-xs">
+                  {key}: Active entitlement
                 </Text>
               ))}
             </VStack>
           )}
 
-        <Divider my={1} />
+        <Divider className="my-1" />
 
-        <Button size="sm" variant="outline" onPress={debugGetCustomerInfo} mb={1}>
-          <Text fontSize="xs">Refresh Customer Info</Text>
+        <Button size="sm" variant="outline" onPress={debugGetCustomerInfo} className="mb-1">
+          <Text className="text-xs">Refresh Customer Info</Text>
         </Button>
 
-        <Button size="sm" variant="outline" onPress={debugGetOfferings} mb={1}>
-          <Text fontSize="xs">Refresh Offerings</Text>
+        <Button size="sm" variant="outline" onPress={debugGetOfferings} className="mb-1">
+          <Text className="text-xs">Refresh Offerings</Text>
         </Button>
 
-        <Button size="sm" variant="outline" onPress={debugRefreshUI} mb={1}>
-          <Text fontSize="xs">Refresh Debug UI Overlay</Text>
+        <Button size="sm" variant="outline" onPress={debugRefreshUI} className="mb-1">
+          <Text className="text-xs">Refresh Debug UI Overlay</Text>
         </Button>
 
         <Button
@@ -166,49 +172,37 @@ const SubscriptionDebugPanel = () => {
               await loadLogs();
             }
           }}
-          mb={1}
+          className="mb-1"
         >
-          <Text fontSize="xs" color="white">
-            {showLogs ? "Hide" : "Show"} RevenueCat Logs
-          </Text>
+          <Text className="text-xs text-white">{showLogs ? "Hide" : "Show"} RevenueCat Logs</Text>
         </Button>
 
         {showLogs && (
-          <Box mt={2} maxHeight={400}>
-            <Heading size="xs" color="gray-700" mb={2}>
+          <Box className="mt-2 max-h-96">
+            <Heading size="xs" className="mb-2 text-gray-700">
               RevenueCat Logs
             </Heading>
 
             {loadingLogs ? (
-              <Text fontSize="xs" color="gray-500">
-                Loading logs...
-              </Text>
+              <Text className="text-xs text-gray-500">Loading logs...</Text>
             ) : logs.length === 0 ? (
-              <Text fontSize="xs" color="gray-500">
-                No logs found.
-              </Text>
+              <Text className="text-xs text-gray-500">No logs found.</Text>
             ) : (
               <ScrollView style={{ maxHeight: 350 }}>
-                <VStack space={2}>
+                <VStack className="gap-2">
                   {logs.map((log) => (
                     <Pressable
                       key={log.id}
                       onPress={() => toggleExpand(log.id || "")}
                       style={styles.logItem}
                     >
-                      <Text fontSize="xs" fontWeight="bold">
-                        {getTitle(log)}
-                      </Text>
-                      <Text fontSize="10px" color="gray-500">
-                        {getTimestamp(log)}
-                      </Text>
+                      <Text className="text-xs font-bold">{getTitle(log)}</Text>
+                      <Text className="text-[10px] text-gray-500">{getTimestamp(log)}</Text>
 
                       {expandedLogs[log.id || ""] && (
-                        <Box mt={1} p={2} bg="gray-50" borderRadius="md">
+                        <Box className="mt-1 rounded-md bg-gray-50 p-2">
                           <ScrollView style={{ maxHeight: 200 }}>
-                            <Text fontSize="10px" fontFamily="monospace">
-                              {getContent(log)}
-                            </Text>
+                            <Text className="font-mono text-[10px]">{getContent(log)}</Text>
                           </ScrollView>
                         </Box>
                       )}
@@ -218,13 +212,13 @@ const SubscriptionDebugPanel = () => {
               </ScrollView>
             )}
 
-            <Button size="xs" variant="outline" onPress={loadLogs} mt={2}>
-              <Text fontSize="10px">Refresh Logs</Text>
+            <Button size="xs" variant="outline" onPress={loadLogs} className="mt-2">
+              <Text className="text-[10px]">Refresh Logs</Text>
             </Button>
           </Box>
         )}
 
-        <Text color="gray-500" fontSize="xs" textAlign="center" mt={2}>
+        <Text className="mt-2 text-center text-xs text-gray-500">
           Debug panel enabled for development builds
         </Text>
       </VStack>

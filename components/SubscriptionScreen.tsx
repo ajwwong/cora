@@ -3,19 +3,14 @@ import { useRouter } from "expo-router";
 import * as React from "react";
 import { useEffect } from "react";
 import { Platform } from "react-native";
+import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { FREE_DAILY_VOICE_MESSAGE_LIMIT } from "../utils/subscription/config";
 import LoadingScreen from "./LoadingScreen";
 import SubscriptionDebugPanel from "./SubscriptionDebugPanel";
 import { Box, Button, Divider, Heading, HStack, ScrollView, Text, VStack } from "./ui";
-// Directly access useState from React object as a fallback in case of import issues
-// This is needed for specific React Native handling, not a typical pattern
-const useState =
-  React.useState ||
-  function (initialState: unknown) {
-    return [initialState, () => {}];
-  };
+const { useState } = React;
 
 /**
  * Component to display subscription plans and handle purchases
@@ -24,19 +19,7 @@ const SubscriptionScreen = () => {
   const router = useRouter();
   const medplum = useMedplum();
 
-  let purchaseInProgress = false;
-  let setPurchaseInProgress = (value: boolean) => {
-    purchaseInProgress = value;
-  };
-
-  try {
-    // Try-catch around useState to prevent "displayName" error
-    const [purchaseInProgressState, setPurchaseInProgressState] = useState(false);
-    purchaseInProgress = purchaseInProgressState;
-    setPurchaseInProgress = setPurchaseInProgressState;
-  } catch (error) {
-    console.warn("Error initializing state in SubscriptionScreen:", error);
-  }
+  // Using RevenueCat native paywall instead of custom purchase state
   const {
     isLoading,
     availablePackages,
@@ -95,55 +78,63 @@ const SubscriptionScreen = () => {
     logSubscriptionInfo();
   }, [isPremium, customerInfo, availablePackages, logToMedplum]);
 
-  // Handle package purchase
-  const handlePurchase = async (packageIndex: number) => {
-    if (!availablePackages || availablePackages.length <= packageIndex) return;
-
-    const selectedPackage = availablePackages[packageIndex];
-
-    // Log purchase attempt
-    await logToMedplum("SubscriptionScreen Purchase Attempt", {
-      packageIdentifier: selectedPackage.identifier,
-      packageType: selectedPackage.packageType,
-      productIdentifier: selectedPackage.product.identifier,
-      price: selectedPackage.product.price,
-      priceString: selectedPackage.product.priceString,
-      currentStatus: isPremium ? "premium" : "free",
-    });
-
+  // Handle purchase using RevenueCat native paywall
+  const handlePurchase = async () => {
     try {
-      setPurchaseInProgress(true);
-      const success = await purchasePackage(selectedPackage);
+      // Log purchase attempt
+      await logToMedplum("SubscriptionScreen PaywallUI Attempt", {
+        currentStatus: isPremium ? "premium" : "free",
+      });
 
-      if (success) {
-        // Log purchase success
-        await logToMedplum("SubscriptionScreen Purchase Success", {
-          packageIdentifier: selectedPackage.identifier,
-          result: "success",
-          premium: true,
-        });
+      console.log("🛒 Presenting RevenueCat native paywall");
 
-        // Show success message or navigate back
-        router.back();
-      } else {
-        // Log purchase failure
-        await logToMedplum("SubscriptionScreen Purchase Failure", {
-          packageIdentifier: selectedPackage.identifier,
-          result: "failed",
-          reason: "purchase operation returned false",
-        });
+      // Present RevenueCat native paywall
+      const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();
+
+      console.log("🛒 Paywall result:", paywallResult);
+
+      switch (paywallResult) {
+        case PAYWALL_RESULT.PURCHASED:
+          await logToMedplum("SubscriptionScreen PaywallUI Success", {
+            result: "purchased",
+            premium: true,
+          });
+          console.log("🛒 Purchase successful via paywall, navigating to main screen");
+          router.push("/(app)");
+          break;
+
+        case PAYWALL_RESULT.RESTORED:
+          await logToMedplum("SubscriptionScreen PaywallUI Success", {
+            result: "restored",
+            premium: true,
+          });
+          console.log("🛒 Purchases restored via paywall, navigating to main screen");
+          router.push("/(app)");
+          break;
+
+        case PAYWALL_RESULT.CANCELLED:
+          await logToMedplum("SubscriptionScreen PaywallUI Cancelled", {
+            result: "cancelled",
+          });
+          console.log("🛒 User cancelled paywall");
+          break;
+
+        case PAYWALL_RESULT.NOT_PRESENTED:
+        case PAYWALL_RESULT.ERROR:
+        default:
+          await logToMedplum("SubscriptionScreen PaywallUI Error", {
+            result: paywallResult,
+          });
+          console.log("🛒 Paywall error or not presented:", paywallResult);
+          break;
       }
     } catch (error) {
-      console.error("Purchase failed:", error);
+      console.error("🛒 Paywall error:", error);
 
-      // Log purchase error
-      await logToMedplum("SubscriptionScreen Purchase Error", {
-        packageIdentifier: selectedPackage.identifier,
-        result: "error",
+      await logToMedplum("SubscriptionScreen PaywallUI Exception", {
+        result: "exception",
         error: error instanceof Error ? error.message : String(error),
       });
-    } finally {
-      setPurchaseInProgress(false);
     }
   };
 
@@ -155,7 +146,6 @@ const SubscriptionScreen = () => {
     });
 
     try {
-      setPurchaseInProgress(true);
       const success = await restorePurchases();
 
       if (success) {
@@ -165,8 +155,8 @@ const SubscriptionScreen = () => {
           premium: true,
         });
 
-        // Show success message or navigate back
-        router.back();
+        // Show success message or navigate to main screen
+        router.push("/(app)");
       } else {
         // Log no purchases found
         await logToMedplum("SubscriptionScreen Restore No Purchases", {
@@ -185,12 +175,10 @@ const SubscriptionScreen = () => {
         result: "error",
         error: error instanceof Error ? error.message : String(error),
       });
-    } finally {
-      setPurchaseInProgress(false);
     }
   };
 
-  if (isLoading || purchaseInProgress) {
+  if (isLoading) {
     return <LoadingScreen />;
   }
 
@@ -315,7 +303,7 @@ const SubscriptionScreen = () => {
                     Save with annual billing
                   </Text>
                 )}
-                <Button onPress={() => handlePurchase(index)} mt={2}>
+                <Button onPress={handlePurchase} mt={2}>
                   <Text color="white">Subscribe</Text>
                 </Button>
               </VStack>

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, NativeModules, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import Purchases from "react-native-purchases";
 
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { getRevenueCatDebugInfo } from "@/utils/subscription/initialize-revenue-cat";
 
 interface StatusProps {
@@ -15,6 +16,7 @@ interface StatusProps {
  */
 export const RevenueCatStatusPanel: React.FC<StatusProps> = ({ onClose }) => {
   const { medplum } = useMedplumContext();
+  const { retryUserLinking, isLinkingInProgress } = useSubscription();
   const [debugInfo, setDebugInfo] = useState(getRevenueCatDebugInfo());
 
   // Helper function to log panel actions to Communication resources
@@ -150,7 +152,7 @@ export const RevenueCatStatusPanel: React.FC<StatusProps> = ({ onClose }) => {
 
       Alert.alert(
         "User Linking Test",
-        `SUCCESS!\nPrevious ID: ${currentUserID}\nNew User ID: ${newUserID}\nCustomer ID: ${newCustomerInfo.originalAppUserId}`,
+        `SUCCESS!\nPrevious ID: ${currentUserID}\nNew User ID: ${newUserID}\nCurrent App User ID: ${newUserID}\nOriginal (Anonymous) ID: ${newCustomerInfo.originalAppUserId}\n\nNote: Current App User ID should match Patient ID if linking worked!`,
       );
 
       // Log success
@@ -229,6 +231,22 @@ export const RevenueCatStatusPanel: React.FC<StatusProps> = ({ onClose }) => {
           onPress={testUserLinking}
         >
           <Text style={styles.buttonText}>Test User Linking</Text>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.button,
+            {
+              backgroundColor: isLinkingInProgress ? "#9e9e9e" : "#2196f3",
+              opacity: isLinkingInProgress ? 0.6 : 1,
+            },
+          ]}
+          onPress={retryUserLinking}
+          disabled={isLinkingInProgress}
+        >
+          <Text style={styles.buttonText}>
+            {isLinkingInProgress ? "Linking..." : "Retry Linking"}
+          </Text>
         </Pressable>
 
         {onClose && (

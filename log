@@ -1,152 +1,297 @@
-
-	
-Last Updated
-
-
-Payload
-
-no filters	
-	5/25/2025, 2:09:20 PM	
-Content
-SubscriptionScreen Initial Status
-Content
-{"timestamp":"2025-05-25T21:09:21.095Z","component":"SubscriptionScreen","isPremium":true,"hasCustomerInfo":true,"activeEntitlements":["premium"],"customerInfoId":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","hasPackages":true,"packageCount":2,"status":"Voice Connect"}
-	5/25/2025, 2:09:20 PM	
-Content
-SubscriptionScreen Initial Status
-Content
-{"timestamp":"2025-05-25T21:09:21.231Z","component":"SubscriptionScreen","isPremium":true,"hasCustomerInfo":true,"activeEntitlements":["premium"],"customerInfoId":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","hasPackages":true,"packageCount":2,"status":"Voice Connect"}
-	5/25/2025, 2:09:18 PM	
-Content
-SettingsModal RevenueCat Status
-Content
-{"timestamp":"2025-05-25T21:09:18.995Z","component":"SettingsModal","isPremium":true,"hasCustomerInfo":true,"activeEntitlements":["premium"],"customerInfoId":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","status":"Voice Connect"}
-	5/25/2025, 2:07:38 PM	
-Content
-PANEL: Native Bridge Diagnostic Complete
-Content
-{"timestamp":"2025-05-25T21:07:38.626Z","hasRNPurchases":true,"availableMethods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"],"bridgeMethodCheck":{"hasSetup":false,"hasSetupPurchases":true,"hasConfigure":false,"hasGetAppUserID":true},"jsSDKMethods":{"hasConfigure":true,"hasIsConfigured":true,"hasGetAppUserID":true,"hasLogIn":true},"sdkVersion":"unknown","platform":"android"}
-	5/25/2025, 2:07:37 PM	
-Content
-PANEL: Native Bridge Diagnostic Started
-Content
-{"timestamp":"2025-05-25T21:07:38.624Z","platform":"android"}
-	5/25/2025, 2:07:33 PM	
-Content
-PANEL: Native Bridge Diagnostic Complete
-Content
-{"timestamp":"2025-05-25T21:07:34.540Z","hasRNPurchases":true,"availableMethods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"],"bridgeMethodCheck":{"hasSetup":false,"hasSetupPurchases":true,"hasConfigure":false,"hasGetAppUserID":true},"jsSDKMethods":{"hasConfigure":true,"hasIsConfigured":true,"hasGetAppUserID":true,"hasLogIn":true},"sdkVersion":"unknown","platform":"android"}
-	5/25/2025, 2:07:33 PM	
-Content
-PANEL: Native Bridge Diagnostic Started
-Content
-{"timestamp":"2025-05-25T21:07:34.533Z","platform":"android"}
-	5/25/2025, 2:07:31 PM	
-Content
-PANEL: Detailed Status Button Pressed
-Content
-{"timestamp":"2025-05-25T21:07:31.566Z","isInitialized":true,"initializationAttempted":true,"lastError":null,"lastAttemptTime":"2025-05-25T21:07:07.044Z","platform":"android","purchasesType":"function","purchasesAvailable":true,"purchasesVersion":"unknown","availableMethods":["configure","setAllowSharingStoreAccount","setSimulatesAskToBuyInSandbox","addCustomerInfoUpdateListener","removeCustomerInfoUpdateListener","addShouldPurchasePromoProductListener","removeShouldPurchasePromoProductListener","getOfferings","getCurrentOfferingForPlacement","syncAttributesAndOfferingsIfNeeded","getProducts","purchaseProduct","purchaseStoreProduct","purchaseDiscountedProduct","purchasePackage","purchaseSubscriptionOption","purchaseDiscountedPackage","restorePurchases","getAppUserID","getStorefront","logIn","logOut","setDebugLogsEnabled","setLogLevel","setLogHandler","getCustomerInfo","syncPurchases","syncAmazonPurchase","syncObserverModeAmazonPurchase","recordPurchase","enableAdServicesAttributionTokenCollection","isAnonymous","checkTrialOrIntroductoryPriceEligibility","getPromotionalOffer","getEligibleWinBackOffersForProduct","getEligibleWinBackOffersForPackage","purchaseProductWithWinBackOffer","purchasePackageWithWinBackOffer","invalidateCustomerInfoCache","presentCodeRedemptionSheet","setAttributes","setEmail","setPhoneNumber","setDisplayName","setPushToken","setProxyURL","collectDeviceIdentifiers","setAdjustID","setAppsflyerID","setFBAnonymousID","setMparticleID","setCleverTapID","setMixpanelDistinctID","setFirebaseAppInstanceID","setTenjinAnalyticsInstallationID","setKochavaDeviceID","setOnesignalID","setAirshipChannelID","setMediaSource","setCampaign","setAdGroup","setAd","setKeyword","setCreative","canMakePayments","beginRefundRequestForActiveEntitlement","beginRefundRequestForEntitlement","beginRefundRequestForProduct","showManageSubscriptions","showInAppMessages","parseAsWebPurchaseRedemption","redeemWebPurchase","isConfigured","throwIfNotConfigured","throwIfAndroidPlatform","throwIfIOSPlatform","isPurchasesAreCompletedByMyApp","convertIntToRefundRequestStatus","UninitializedPurchasesError","UnsupportedPlatformError"],"isConfigured":{"_h":0,"_i":1,"_j":true,"_k":null},"nativeModuleCheck":{"hasRNPurchases":true,"methods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"],"allModules":[]}}
-	5/25/2025, 2:07:25 PM	
-Content
-SubscriptionScreen Initial Status
-Content
-{"timestamp":"2025-05-25T21:07:25.957Z","component":"SubscriptionScreen","isPremium":true,"hasCustomerInfo":true,"activeEntitlements":["premium"],"customerInfoId":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","hasPackages":true,"packageCount":2,"status":"Voice Connect"}
-	5/25/2025, 2:07:20 PM	
-Content
-SubscriptionScreen Initial Status
-Content
-{"timestamp":"2025-05-25T21:07:21.035Z","component":"SubscriptionScreen","isPremium":true,"hasCustomerInfo":true,"activeEntitlements":["premium"],"customerInfoId":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","hasPackages":true,"packageCount":2,"status":"Voice Connect"}
-	5/25/2025, 2:07:20 PM	
-Content
-SubscriptionScreen Initial Status
-Content
-{"timestamp":"2025-05-25T21:07:20.970Z","component":"SubscriptionScreen","isPremium":true,"hasCustomerInfo":true,"activeEntitlements":["premium"],"customerInfoId":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","hasPackages":true,"packageCount":2,"status":"Voice Connect"}
-	5/25/2025, 2:07:18 PM	
-Content
-SettingsModal RevenueCat Status
-Content
-{"timestamp":"2025-05-25T21:07:19.296Z","component":"SettingsModal","isPremium":true,"hasCustomerInfo":true,"activeEntitlements":["premium"],"customerInfoId":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","status":"Voice Connect"}
-	5/25/2025, 2:07:15 PM	
-Content
-RevenueCat initialization successful: PREMIUM
-Content
-{"timestamp":"2025-05-25T21:07:16.518Z","platform":"android","environment":"production","customerInfo":{"entitlements":["premium"],"activeSubscriptions":["feelheard_premium:monthly-autorenewing"]}}
-	5/25/2025, 2:07:15 PM	
-Content
-PANEL: Native Bridge Diagnostic Complete
-Content
-{"timestamp":"2025-05-25T21:07:16.444Z","hasRNPurchases":true,"availableMethods":["addListener","canMakePayments","checkTrialOrIntroductoryPriceEligibility","collectDeviceIdentifiers","getAppUserID","getCurrentOfferingForPlacement","getCustomerInfo","getOfferings","getProductInfo","getStorefront","invalidateCustomerInfoCache","isAnonymous","isConfigured","isWebPurchaseRedemptionURL","logIn","logOut","purchasePackage","purchaseProduct","purchaseSubscriptionOption","redeemWebPurchase","removeListeners","restorePurchases","setAd","setAdGroup","setAdjustID","setAirshipChannelID","setAllowSharingStoreAccount","setAppsflyerID","setAttributes","setCampaign","setCleverTapID","setCreative","setDebugLogsEnabled","setDisplayName","setEmail","setFBAnonymousID","setFirebaseAppInstanceID","setKeyword","setKochavaDeviceID","setLogHandler","setLogLevel","setMediaSource","setMixpanelDistinctID","setMparticleID","setOnesignalID","setPhoneNumber","setProxyURLString","setPushToken","setTenjinAnalyticsInstallationID","setupPurchases","showInAppMessages","syncAmazonPurchase","syncAttributesAndOfferingsIfNeeded","syncObserverModeAmazonPurchase","syncPurchases","getConstants"],"bridgeMethodCheck":{"hasSetup":false,"hasSetupPurchases":true,"hasConfigure":false,"hasGetAppUserID":true},"jsSDKMethods":{"hasConfigure":true,"hasIsConfigured":true,"hasGetAppUserID":true,"hasLogIn":true},"sdkVersion":"unknown","platform":"android"}
-	5/25/2025, 2:07:15 PM	
-Content
-PANEL: Native Bridge Diagnostic Started
-Content
-{"timestamp":"2025-05-25T21:07:16.438Z","platform":"android"}
-	5/25/2025, 2:07:15 PM	
-Content
-Subscription status check: PREMIUM
-Content
-{"timestamp":"2025-05-25T21:07:16.124Z","platform":"android","environment":"production","entitlements":["premium"],"originalAppUserId":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","customerInfo":{"activeSubscriptions":["feelheard_premium:monthly-autorenewing"],"allPurchasedProductIdentifiers":["feelheard_premium:monthly-autorenewing"]}}
-	5/25/2025, 2:07:15 PM	
-Content
-Customer Info Updated After Switch
-Content
-{"timestamp":"2025-05-25T21:07:16.183Z","newCustomerID":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","platform":"android"}
-	5/25/2025, 2:07:14 PM	
-Content
-RevenueCat native module properly initialized
-Content
-{"timestamp":"2025-05-25T21:07:15.494Z","platform":"android","environment":"production","rnPurchasesModuleProps":"addListener,canMakePayments,checkTrialOrIntroductoryPriceEligibility,collectDeviceIdentifiers,getAppUserID,getCurrentOfferingForPlacement,getCustomerInfo,getOfferings,getProductInfo,getStorefront,invalidateCustomerInfoCache,isAnonymous,isConfigured,isWebPurchaseRedemptionURL,logIn,logOut,purchasePackage,purchaseProduct,purchaseSubscriptionOption,redeemWebPurchase,removeListeners,restorePurchases,setAd,setAdGroup,setAdjustID,setAirshipChannelID,setAllowSharingStoreAccount,setAppsflyerID,setAttributes,setCampaign,setCleverTapID,setCreative,setDebugLogsEnabled,setDisplayName,setEmail,setFBAnonymousID,setFirebaseAppInstanceID,setKeyword,setKochavaDeviceID,setLogHandler,setLogLevel,setMediaSource,setMixpanelDistinctID,setMparticleID,setOnesignalID,setPhoneNumber,setProxyURLString,setPushToken,setTenjinAnalyticsInstallationID,setupPurchases,showInAppMessages,syncAmazonPurchase,syncAttributesAndOfferingsIfNeeded,syncObserverModeAmazonPurchase,syncPurchases,getConstants","availableModules":[]}
-	5/25/2025, 2:07:14 PM	
-Content
-RevenueCat initialization starting
-Content
-{"timestamp":"2025-05-25T21:07:15.080Z","platform":"android","environment":"production","hasRNPurchasesModule":true,"rnPurchasesDetails":"addListener,canMakePayments,checkTrialOrIntroductoryPriceEligibility,collectDeviceIdentifiers,getAppUserID,getCurrentOfferingForPlacement,getCustomerInfo,getOfferings,getProductInfo,getStorefront,invalidateCustomerInfoCache,isAnonymous,isConfigured,isWebPurchaseRedemptionURL,logIn,logOut,purchasePackage,purchaseProduct,purchaseSubscriptionOption,redeemWebPurchase,removeListeners,restorePurchases,setAd,setAdGroup,setAdjustID,setAirshipChannelID,setAllowSharingStoreAccount,setAppsflyerID,setAttributes,setCampaign,setCleverTapID,setCreative,setDebugLogsEnabled,setDisplayName,setEmail,setFBAnonymousID,setFirebaseAppInstanceID,setKeyword,setKochavaDeviceID,setLogHandler,setLogLevel,setMediaSource,setMixpanelDistinctID,setMparticleID,setOnesignalID,setPhoneNumber,setProxyURLString,setPushToken,setTenjinAnalyticsInstallationID,setupPurchases,showInAppMessages,syncAmazonPurchase,syncAttributesAndOfferingsIfNeeded,syncObserverModeAmazonPurchase,syncPurchases,getConstants","availableNativeModules":[],"platformDetails":"{\"uiMode\":\"normal\",\"reactNativeVersion\":{\"minor\":79,\"prerelease\":null,\"major\":0,\"patch\":2},\"isTesting\":false,\"Brand\":\"google\",\"Manufacturer\":\"Google\",\"Release\":\"15\",\"Fingerprint\":\"google/oriole/oriole:15/BP1A.250305.019/13003188:user/release-keys\",\"Serial\":\"unknown\",\"Model\":\"Pixel 6\",\"Version\":35}","isHermes":true,"purchasesType":"function","purchasesVersion":"unknown"}
-	5/25/2025, 2:07:14 PM	
-Content
-ALERT: RevenueCat SDK Status
-Content
-{"timestamp":"2025-05-25T21:07:15.037Z","message":"SDK Type: function\nMethods: none\nConfigure available: false\nisConfigured available: false","platform":"android","environment":"production"}
-
-
-	
-Last Updated
-
-
-Payload
-
-no filters	
-	5/25/2025, 2:07:06 PM	
-Content
-ALERT: RevenueCat
-Content
-{"timestamp":"2025-05-25T21:07:07.323Z","message":"Initialization reported success!","platform":"android","environment":"production"}
-	5/25/2025, 2:07:06 PM	
-Content
-RevenueCat already initialized
-Content
-{"timestamp":"2025-05-25T21:07:07.044Z","platform":"android","environment":"production"}
-	5/25/2025, 2:07:06 PM	
-Content
-ALERT: RevenueCat
-Content
-{"timestamp":"2025-05-25T21:07:07.036Z","message":"Attempting initialization...","platform":"android","environment":"production"}
-	5/25/2025, 2:07:05 PM	
-Content
-Subscription status check: PREMIUM
-Content
-{"timestamp":"2025-05-25T21:07:06.407Z","platform":"android","environment":"production","entitlements":["premium"],"originalAppUserId":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","customerInfo":{"activeSubscriptions":["feelheard_premium:monthly-autorenewing"],"allPurchasedProductIdentifiers":["feelheard_premium:monthly-autorenewing"]}}
-	5/25/2025, 2:07:05 PM	
-Content
-Subscription status check: PREMIUM
-Content
-{"timestamp":"2025-05-25T21:07:06.299Z","platform":"android","environment":"production","entitlements":["premium"],"originalAppUserId":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","customerInfo":{"activeSubscriptions":["feelheard_premium:monthly-autorenewing"],"allPurchasedProductIdentifiers":["feelheard_premium:monthly-autorenewing"]}}
-	5/25/2025, 2:07:05 PM	
-Content
-Subscription status check: PREMIUM
-Content
-{"timestamp":"2025-05-25T21:07:06.235Z","platform":"android","environment":"production","entitlements":["premium"],"originalAppUserId":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","customerInfo":{"activeSubscriptions":["feelheard_premium:monthly-autorenewing"],"allPurchasedProductIdentifiers":["feelheard_premium:monthly-autorenewing"]}}
-	5/25/2025, 2:07:05 PM	
-Content
-Subscription status check: PREMIUM
-Content
-{"timestamp":"2025-05-25T21:07:06.107Z","platform":"android","environment":"production","entitlements":["premium"],"originalAppUserId":"$RCAnonymousID:7c7ecb49214d4da4aeab1ebc6624f616","customerInfo":{"activeSubscriptions":["feelheard_premium:monthly-autorenewing"],"allPurchasedProductIdentifiers":["feelheard_premium:monthly-autorenewing"]}}
+05-25 21:08:05.394 24527 24670 I ReactNativeJS: ≡ƒô▒ [SubscriptionContext] Current RevenueCat ID: 0196c859-676c-74ce-a1a3-92db477ff861, Expected Patient ID: 0196c859-676c-74ce-a1a3-92db477ff861
+05-25 21:08:05.394 24527 24670 I ReactNativeJS: ≡ƒô▒ [SubscriptionContext] Already linked to Patient ID
+05-25 21:08:05.788 24527 24670 I ReactNativeJS: ≡ƒô▒ [SubscriptionContext] User switch successful, refreshing customer info
+05-25 21:08:05.831 24527 24670 I ReactNativeJS: ≡ƒô▒ [SubscriptionContext] Customer info updated - ID: $RCAnonymousID:981a8e3ffdf34da6a9d567329b80474f
+05-25 21:08:19.403 24494 24494 I artd    : Dex parent of /data/app/~~GgmfOMmk6AtIEePY_NM8fQ==/me.feelheard-KK66fTwPGe9tFuWV6jceXw==/base.apk is not writable: Permission denied
+05-25 21:08:19.403 24494 24494 I artd    : GetBestInfo checking odex in dalvik-cache (/data/dalvik-cache/arm64/data@app@~~GgmfOMmk6AtIEePY_NM8fQ==@me.feelheard-KK66fTwPGe9tFuWV6jceXw==@base.apk@classes.dex)
+05-25 21:08:19.403 24494 24494 I artd    : Loading /data/dalvik-cache/arm64/data@app@~~GgmfOMmk6AtIEePY_NM8fQ==@me.feelheard-KK66fTwPGe9tFuWV6jceXw==@base.apk@classes.dex with executable: 0
+05-25 21:08:19.403 24494 24494 I artd    : OatFileAssistant test for existing oat file /data/dalvik-cache/arm64/data@app@~~GgmfOMmk6AtIEePY_NM8fQ==@me.feelheard-KK66fTwPGe9tFuWV6jceXw==@base.apk@classes.dex: File /data/dalvik-cache/arm64/data@app@~~GgmfOMmk6AtIEePY_NM8fQ==@me.feelheard-KK66fTwPGe9tFuWV6jceXw==@base.apk@classes.vdex does not exist.
+05-25 21:08:19.403 24494 24494 I artd    : GetBestInfo checking odex next to the dex file (/data/app/~~GgmfOMmk6AtIEePY_NM8fQ==/me.feelheard-KK66fTwPGe9tFuWV6jceXw==/oat/arm64/base.odex)
+05-25 21:08:19.403 24494 24494 I artd    : Loading /data/app/~~GgmfOMmk6AtIEePY_NM8fQ==/me.feelheard-KK66fTwPGe9tFuWV6jceXw==/oat/arm64/base.odex with executable: 0
+05-25 21:08:19.403 24494 24494 I artd    : Successfully loaded /data/app/~~GgmfOMmk6AtIEePY_NM8fQ==/me.feelheard-KK66fTwPGe9tFuWV6jceXw==/oat/arm64/base.odex with executable: 0
+05-25 21:08:19.404 24494 24494 I artd    : /data/app/~~GgmfOMmk6AtIEePY_NM8fQ==/me.feelheard-KK66fTwPGe9tFuWV6jceXw==/oat/arm64/base.odex is kOatUpToDate with filter verify
+05-25 21:08:41.411 24527 24670 E ReactNativeJS: TypeError: Cannot read property 'displayName' of undefined
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:
+05-25 21:08:41.411 24527 24670 E ReactNativeJS: This error is located at:
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SubscriptionScreen (address at index.android.bundle:1:3068005)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Subscription (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Suspense (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Route (address at index.android.bundle:1:1625873)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at BaseRoute (address at index.android.bundle:1:1629616)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at StaticContainer (address at index.android.bundle:1:1519383)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at EnsureSingleNavigator (address at index.android.bundle:1:1459615)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SceneView (address at index.android.bundle:1:1516915)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RNSScreenContentWrapper (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ScreenContentWrapper (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at DebugContainer (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RNSScreen (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:664570)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Suspender (address at index.android.bundle:1:1608545)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Suspense (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Freeze (address at index.android.bundle:1:1608605)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at DelayedFreeze (address at index.android.bundle:1:1607800)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at InnerScreen (address at index.android.bundle:1:1605465)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:1607112)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ScreenStackItem (address at index.android.bundle:1:1616171)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SceneView (address at index.android.bundle:1:1554267)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RNSScreenStack (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:1615144)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ScreenStack (address at index.android.bundle:1:1614426)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RCTView (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:564168)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SafeAreaProviderCompat (address at index.android.bundle:1:1600287)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at NativeStackView (address at index.android.bundle:1:1552846)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at PreventRemoveProvider (address at index.android.bundle:1:1494968)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at NavigationContent (address at index.android.bundle:1:1513277)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:1513180)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at NativeStackNavigator (address at index.android.bundle:1:1551451)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:1624801)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ContextProvider (address at index.android.bundle:1:1783270)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ChatProvider (address at index.android.bundle:1:1768237)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at AppLayout (address at index.android.bundle:1:1242967)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Suspense (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Route (address at index.android.bundle:1:1625873)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at BaseRoute (address at index.android.bundle:1:1629616)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at StaticContainer (address at index.android.bundle:1:1519383)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at EnsureSingleNavigator (address at index.android.bundle:1:1459615)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SceneView (address at index.android.bundle:1:1516915)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RNSScreenContentWrapper (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ScreenContentWrapper (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at DebugContainer (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RNSScreen (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:664570)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Suspender (address at index.android.bundle:1:1608545)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Suspense (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Freeze (address at index.android.bundle:1:1608605)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at DelayedFreeze (address at index.android.bundle:1:1607800)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at InnerScreen (address at index.android.bundle:1:1605465)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:1607112)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ScreenStackItem (address at index.android.bundle:1:1616171)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SceneView (address at index.android.bundle:1:1554267)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RNSScreenStack (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:1615144)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ScreenStack (address at index.android.bundle:1:1614426)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RCTView (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:564168)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SafeAreaProviderCompat (address at index.android.bundle:1:1600287)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at NativeStackView (address at index.android.bundle:1:1552846)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at PreventRemoveProvider (address at index.android.bundle:1:1494968)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at NavigationContent (address at index.android.bundle:1:1513277)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:1513180)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at NativeStackNavigator (address at index.android.bundle:1:1551451)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:1624801)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RNGestureHandlerRootView (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at GestureHandlerRootView (address at index.android.bundle:1:2886680)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at GlobalAudioProvider (address at index.android.bundle:1:3111896)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SubscriptionProvider (address at index.android.bundle:1:2092042)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at UserPreferencesProvider (address at index.android.bundle:1:3023316)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at NotificationsProvider (address at index.android.bundle:1:1788568)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ge (address at index.android.bundle:1:1243841)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RNCSafeAreaView (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:1149954)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:568210)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SafeAreaEnv (address at index.android.bundle:1:1145993)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RNCSafeAreaProvider (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SafeAreaProvider (address at index.android.bundle:1:1148008)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SafeAreaProviderShim (address at index.android.bundle:1:1146385)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ToastProvider (address at index.android.bundle:1:3448942)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at PortalProvider (address at index.android.bundle:1:2995310)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RCTView (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:564168)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:568210)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at GluestackUIProvider (address at index.android.bundle:1:3447741)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RootLayout (address at index.android.bundle:1:3316731)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Suspense (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Route (address at index.android.bundle:1:1625873)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at BaseRoute (address at index.android.bundle:1:1629616)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at StaticContainer (address at index.android.bundle:1:1519383)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at EnsureSingleNavigator (address at index.android.bundle:1:1459615)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SceneView (address at index.android.bundle:1:1516915)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at PreventRemoveProvider (address at index.android.bundle:1:1494968)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at NavigationContent (address at index.android.bundle:1:1513277)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:1513180)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at Content (address at index.android.bundle:1:1730295)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SafeAreaEnv (address at index.android.bundle:1:1145993)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RNCSafeAreaProvider (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SafeAreaProvider (address at index.android.bundle:1:1148008)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at SafeAreaProviderShim (address at index.android.bundle:1:1146385)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at wrapper (address at index.android.bundle:1:1729372)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ThemeProvider (address at index.android.bundle:1:1462841)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at EnsureSingleNavigator (address at index.android.bundle:1:1459615)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at BaseNavigationContainer (address at index.android.bundle:1:1438639)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at NavigationContainerInner (address at index.android.bundle:1:1732102)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ContextNavigator (address at index.android.bundle:1:1729570)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at ExpoRoot (address at index.android.bundle:1:1729280)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at App (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at RCTView (<anonymous>)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:564168)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at anonymous (address at index.android.bundle:1:568210)
+05-25 21:08:41.411 24527 24670 E ReactNativeJS:     at AppContainer (address at index.android.bundle:1:563368), js engine: hermes
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: FATAL EXCEPTION: mqt_native_modules
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: Process: me.feelheard, PID: 24527
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: com.facebook.react.common.JavascriptException: TypeError: Cannot read property 'displayName' of undefined
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: This error is located at:
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SubscriptionScreen (address at index.android.bundle:1:3068005)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Subscription (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Suspense (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Route (address at index.android.bundle:1:1625873)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at BaseRoute (address at index.android.bundle:1:1629616)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at StaticContainer (address at index.android.bundle:1:1519383)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at EnsureSingleNavigator (address at index.android.bundle:1:1459615)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SceneView (address at index.android.bundle:1:1516915)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RNSScreenContentWrapper (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ScreenContentWrapper (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at DebugContainer (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RNSScreen (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:664570)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Suspender (address at index.android.bundle:1:1608545)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Suspense (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Freeze (address at index.android.bundle:1:1608605)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at DelayedFreeze (address at index.android.bundle:1:1607800)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at InnerScreen (address at index.android.bundle:1:1605465)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:1607112)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ScreenStackItem (address at index.android.bundle:1:1616171)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SceneView (address at index.android.bundle:1:1554267)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RNSScreenStack (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:1615144)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ScreenStack (address at index.android.bundle:1:1614426)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RCTView (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:564168)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SafeAreaProviderCompat (address at index.android.bundle:1:1600287)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at NativeStackView (address at index.android.bundle:1:1552846)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at PreventRemoveProvider (address at index.android.bundle:1:1494968)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at NavigationContent (address at index.android.bundle:1:1513277)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:1513180)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at NativeStackNavigator (address at index.android.bundle:1:1551451)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:1624801)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ContextProvider (address at index.android.bundle:1:1783270)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ChatProvider (address at index.android.bundle:1:1768237)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at AppLayout (address at index.android.bundle:1:1242967)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Suspense (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Route (address at index.android.bundle:1:1625873)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at BaseRoute (address at index.android.bundle:1:1629616)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at StaticContainer (address at index.android.bundle:1:1519383)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at EnsureSingleNavigator (address at index.android.bundle:1:1459615)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SceneView (address at index.android.bundle:1:1516915)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RNSScreenContentWrapper (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ScreenContentWrapper (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at DebugContainer (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RNSScreen (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:664570)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Suspender (address at index.android.bundle:1:1608545)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Suspense (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Freeze (address at index.android.bundle:1:1608605)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at DelayedFreeze (address at index.android.bundle:1:1607800)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at InnerScreen (address at index.android.bundle:1:1605465)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:1607112)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ScreenStackItem (address at index.android.bundle:1:1616171)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SceneView (address at index.android.bundle:1:1554267)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RNSScreenStack (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:1615144)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ScreenStack (address at index.android.bundle:1:1614426)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RCTView (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:564168)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SafeAreaProviderCompat (address at index.android.bundle:1:1600287)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at NativeStackView (address at index.android.bundle:1:1552846)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at PreventRemoveProvider (address at index.android.bundle:1:1494968)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at NavigationContent (address at index.android.bundle:1:1513277)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:1513180)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at NativeStackNavigator (address at index.android.bundle:1:1551451)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:1624801)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RNGestureHandlerRootView (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at GestureHandlerRootView (address at index.android.bundle:1:2886680)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at GlobalAudioProvider (address at index.android.bundle:1:3111896)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SubscriptionProvider (address at index.android.bundle:1:2092042)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at UserPreferencesProvider (address at index.android.bundle:1:3023316)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at NotificationsProvider (address at index.android.bundle:1:1788568)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ge (address at index.android.bundle:1:1243841)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RNCSafeAreaView (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:1149954)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:568210)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SafeAreaEnv (address at index.android.bundle:1:1145993)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RNCSafeAreaProvider (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SafeAreaProvider (address at index.android.bundle:1:1148008)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SafeAreaProviderShim (address at index.android.bundle:1:1146385)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ToastProvider (address at index.android.bundle:1:3448942)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at PortalProvider (address at index.android.bundle:1:2995310)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RCTView (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:564168)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:568210)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at GluestackUIProvider (address at index.android.bundle:1:3447741)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RootLayout (address at index.android.bundle:1:3316731)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Suspense (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Route (address at index.android.bundle:1:1625873)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at BaseRoute (address at index.android.bundle:1:1629616)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at StaticContainer (address at index.android.bundle:1:1519383)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at EnsureSingleNavigator (address at index.android.bundle:1:1459615)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SceneView (address at index.android.bundle:1:1516915)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at PreventRemoveProvider (address at index.android.bundle:1:1494968)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at NavigationContent (address at index.android.bundle:1:1513277)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:1513180)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at Content (address at index.android.bundle:1:1730295)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SafeAreaEnv (address at index.android.bundle:1:1145993)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RNCSafeAreaProvider (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SafeAreaProvider (address at index.android.bundle:1:1148008)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at SafeAreaProviderShim (address at index.android.bundle:1:1146385)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at wrapper (address at index.android.bundle:1:1729372)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ThemeProvider (address at index.android.bundle:1:1462841)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at EnsureSingleNavigator (address at index.android.bundle:1:1459615)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at BaseNavigationContainer (address at index.android.bundle:1:1438639)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at NavigationContainerInner (address at index.android.bundle:1:1732102)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ContextNavigator (address at index.android.bundle:1:1729570)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at ExpoRoot (address at index.android.bundle:1:1729280)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at App (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at RCTView (<anonymous>)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:564168)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at anonymous (address at index.android.bundle:1:568210)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:     at AppContainer (address at index.android.bundle:1:563368), js engine: hermes, stack:
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: maybeHijackSafeAreaProvider@1:1145872
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: anonymous@1:566362
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: SubscriptionScreen@1:3069444
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: renderWithHooks@1:396786
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: updateFunctionComponent@1:409243
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: beginWork@1:416932
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: performUnitOfWork@1:439566
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: workLoopSync@1:438598
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: renderRootSync@1:438430
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: performWorkOnRoot@1:435692
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: performSyncWorkOnRoot@1:387245
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: flushSyncWorkAcrossRoots_impl@1:386258
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: scheduleUpdateOnFiber@1:435591
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: dispatchSetStateInternal@1:404014
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: dispatchSetState@1:403748
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: ?anon_0_@1:3070492
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: asyncGeneratorStep@1:729373
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: _next@1:729632
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: anonymous@1:472763
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: _callTimer@1:471748
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: _callReactNativeMicrotasksPass@1:471892
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: callReactNativeMicrotasks@1:473837
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: __callReactNativeMicrotasks@1:194206
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: anonymous@1:193341
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: __guard@1:194080
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: flushedQueue@1:193252
+05-25 21:08:41.428 24527 24671 E AndroidRuntime: invokeCallbackAndReturnFlushedQueue@1:193195
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at com.facebook.react.modules.core.ExceptionsManagerModule.reportException(ExceptionsManagerModule.kt:52)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at java.lang.reflect.Method.invoke(Native Method)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at com.facebook.react.bridge.JavaMethodWrapper.invoke(JavaMethodWrapper.java:372)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at com.facebook.react.bridge.JavaModuleWrapper.invoke(JavaModuleWrapper.java:146)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at com.facebook.jni.NativeRunnable.run(Native Method)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at android.os.Handler.handleCallback(Handler.java:991)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at android.os.Handler.dispatchMessage(Handler.java:102)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at com.facebook.react.bridge.queue.MessageQueueThreadHandler.dispatchMessage(MessageQueueThreadHandler.kt:20)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at android.os.Looper.loopOnce(Looper.java:232)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at android.os.Looper.loop(Looper.java:317)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at com.facebook.react.bridge.queue.MessageQueueThreadImpl$Companion.startNewBackgroundThread$lambda$1(MessageQueueThreadImpl.kt:175)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at com.facebook.react.bridge.queue.MessageQueueThreadImpl$Companion.$r8$lambda$ldnZnqelhYFctGaUKkOKYj5rxo4(Unknown Source:0)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at com.facebook.react.bridge.queue.MessageQueueThreadImpl$Companion$$ExternalSyntheticLambda0.run(D8$$SyntheticClass:0)
+05-25 21:08:41.428 24527 24671 E AndroidRuntime:        at java.lang.Thread.run(Thread.java:1012)
+05-25 21:08:41.434  1367  2063 W ActivityTaskManager:   Force finishing activity me.feelheard/.MainActivity
+05-25 21:08:41.564  1367  6426 I WindowManager: WIN DEATH: Window{b363b3 u0 me.feelheard/me.feelheard.MainActivity}
+05-25 21:08:41.565  1367  6944 I ImeTracker: me.feelheard:4343b9c1: onRequestHide at ORIGIN_SERVER reason HIDE_REMOVE_CLIENT fromUser false
+05-25 21:08:41.565  1367  6947 I ActivityManager: Process me.feelheard (pid 24527) has died: fg  TOP
+05-25 21:08:41.566  1367  6944 I ImeTracker: me.feelheard:4343b9c1: onCancelled at PHASE_SERVER_SHOULD_HIDE
+05-25 21:08:41.610  1367  1507 V WindowManager:         {WCT{RemoteToken{873487d Task{58bf0f8 #778 type=standard A=10315:me.feelheard}}} m=CLOSE f=NONE leash=Surface(name=Task=778)/@0x28b5941 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) epz=Point(1080, 2400) d=0 taskParent=-1}
+05-25 21:08:42.132  1367  6947 W WindowManager: Exception thrown during dispatchAppVisibility Window{b363b3 u0 me.feelheard/me.feelheard.MainActivity EXITING}

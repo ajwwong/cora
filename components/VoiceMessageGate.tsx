@@ -148,7 +148,7 @@ export function VoiceMessageGate({
             <Heading size="lg">Voice Message Limit</Heading>
           </ModalHeader>
           <ModalBody>
-            <VStack space={4}>
+            <VStack className="gap-4">
               <Text>
                 You've used all {FREE_DAILY_VOICE_MESSAGE_LIMIT} of your daily voice messages.
               </Text>

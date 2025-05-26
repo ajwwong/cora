@@ -2,7 +2,7 @@ import { Patient } from "@medplum/fhirtypes";
 // Import RevenueCat only on native platforms, not on web
 import { useMedplum } from "@medplum/react-hooks";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { NativeModules, Platform } from "react-native";
+import { AppState, NativeModules, Platform } from "react-native";
 // Import RevenueCat for all platforms
 import Purchases, {
   CustomerInfo,
@@ -26,6 +26,9 @@ type SubscriptionContextType = {
   restorePurchases: () => Promise<boolean>;
   purchasePackage: (pkg: PurchasesPackage) => Promise<boolean>;
   checkEntitlementStatus: (entitlementId: string) => boolean;
+  // User linking methods
+  retryUserLinking: () => Promise<boolean>;
+  isLinkingInProgress: boolean;
   // Debug methods
   debugGetCustomerInfo: () => Promise<void>;
   debugGetOfferings: () => Promise<void>;
@@ -41,6 +44,9 @@ const mockSubscriptionValue: SubscriptionContextType = {
   restorePurchases: async () => true,
   purchasePackage: async () => true,
   checkEntitlementStatus: () => true,
+  // Mock user linking methods
+  retryUserLinking: async () => true,
+  isLinkingInProgress: false,
   // Mock debug methods
   debugGetCustomerInfo: async () => console.log("Debug: Mock customer info fetch"),
   debugGetOfferings: async () => console.log("Debug: Mock offerings fetch"),
@@ -72,6 +78,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [availablePackages, setAvailablePackages] = useState<PurchasesPackage[] | null>(null);
   const [isPremium, setIsPremium] = useState(false);
+  const [lastPatientId, setLastPatientId] = useState<string | null>(null);
+  const [isLinkingInProgress, setIsLinkingInProgress] = useState(false);
   const medplum = useMedplum();
 
   // Helper function to check if the user has premium entitlement
@@ -202,22 +210,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // The tracking utilities were imported incorrectly - removing this code
 
-  // Initialize RevenueCat when component mounts
-  useEffect(() => {
-    // Import the RevenueCat initialization utility
-    import("@/utils/subscription/initialize-revenue-cat")
-      .then(({ ensureRevenueCatInitialized }) => {
-        // Ensure RevenueCat is initialized before proceeding
-        ensureRevenueCatInitialized(medplum).catch((error) => {
-          console.error("Error ensuring RevenueCat is initialized:", error);
-        });
-      })
-      .catch((error) => {
-        console.error("Error importing RevenueCat initialization utility:", error);
-      });
-
-    // Helper function to log to Communication resources
-    const logToCommunication = async (title: string, data: Record<string, unknown>) => {
+  // Helper function to log to Communication resources
+  const logToCommunication = React.useCallback(
+    async (title: string, data: Record<string, unknown>) => {
       try {
         const profile = medplum.getProfile();
         if (profile?.id) {
@@ -243,111 +238,193 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       } catch (error) {
         console.error(`Failed to log "${title}":`, error);
       }
-    };
+    },
+    [medplum],
+  );
 
-    // NEW: Function to link anonymous RevenueCat user to Patient ID
-    const linkRevenueCatToPatient = async (): Promise<boolean> => {
+  // Centralized user linking handler with trigger source tracking
+  const handleUserLinking = React.useCallback(
+    async (
+      triggerSource: "startup" | "authentication_change" | "app_foreground" | "manual_retry",
+    ): Promise<boolean> => {
+      if (isLinkingInProgress) {
+        console.log(
+          `📱 [SubscriptionContext] User linking already in progress, skipping ${triggerSource}`,
+        );
+        return false;
+      }
+
+      setIsLinkingInProgress(true);
+
       try {
-        const profile = medplum.getProfile();
-        if (!profile?.id) {
-          console.log("📱 [SubscriptionContext] No patient profile available for linking");
+        await logToCommunication(`User Linking Triggered: ${triggerSource}`, {
+          triggerSource,
+          timestamp: new Date().toISOString(),
+          platform: Platform.OS,
+          currentPatientId: medplum.getProfile()?.id || null,
+        });
+
+        // Pre-flight checks
+        if (Platform.OS === "web") {
+          console.log(`📱 [SubscriptionContext] Skipping user linking on web platform`);
           return false;
         }
 
-        // Get current RevenueCat user ID
-        const currentUserID = await Purchases.getAppUserID();
-
-        // DEBUG: Always log the current state for diagnosis
-        await logToCommunication("User Linking Debug Check", {
-          currentRevenueCatID: currentUserID,
-          expectedPatientID: profile.id,
-          isAlreadyLinked: currentUserID === profile.id,
-          platform: Platform.OS,
-        });
-
-        console.log(
-          `📱 [SubscriptionContext] Current RevenueCat ID: ${currentUserID}, Expected Patient ID: ${profile.id}`,
-        );
-
-        // If already using Patient ID, skip
-        if (currentUserID === profile.id) {
-          console.log("📱 [SubscriptionContext] Already linked to Patient ID");
-          return true;
-        }
-
-        // Log the linking attempt
-        await logToCommunication("RevenueCat User Linking Started", {
-          anonymousID: currentUserID,
-          patientID: profile.id,
-          platform: Platform.OS,
-        });
-
-        console.log(
-          `📱 [SubscriptionContext] Linking RevenueCat user from ${currentUserID} to ${profile.id}`,
-        );
-
-        // Switch to Patient ID (logIn handles user switching correctly)
-        await Purchases.logIn(profile.id);
-
-        // CRITICAL: Force complete cache invalidation
-        await Purchases.invalidateCustomerInfoCache();
-
-        // Additional safety: wait for cache to clear
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Verify the switch was successful
-        const verificationUserID = await Purchases.getAppUserID();
-        const verificationCustomerInfo = await Purchases.getCustomerInfo();
-
-        await logToCommunication("User Switch Verification", {
-          expectedPatientID: profile.id,
-          actualUserID: verificationUserID,
-          actualCustomerInfoID: verificationCustomerInfo.originalAppUserId,
-          switchSuccessful:
-            verificationUserID === profile.id &&
-            verificationCustomerInfo.originalAppUserId === profile.id,
-          cacheInvalidated: true,
-          platform: Platform.OS,
-        });
-
-        if (
-          verificationUserID === profile.id &&
-          verificationCustomerInfo.originalAppUserId === profile.id
-        ) {
-          console.log("📱 [SubscriptionContext] User switch verified - both IDs match Patient ID");
-
-          // Log successful linking
-          await logToCommunication("RevenueCat User Linking Successful", {
-            previousID: currentUserID,
-            newPatientID: profile.id,
-            platform: Platform.OS,
-          });
-
-          return true;
-        } else {
-          console.warn(
-            "📱 [SubscriptionContext] User switch verification failed - ID mismatch detected",
-          );
-          await logToCommunication("User Switch Verification Failed", {
-            expectedPatientID: profile.id,
-            actualUserID: verificationUserID,
-            actualCustomerInfoID: verificationCustomerInfo.originalAppUserId,
-            platform: Platform.OS,
-          });
+        if (!medplum.getProfile()?.id) {
+          console.log(`📱 [SubscriptionContext] No patient profile available for linking`);
           return false;
         }
+
+        if (typeof Purchases?.logIn !== "function") {
+          console.log(`📱 [SubscriptionContext] RevenueCat logIn method not available`);
+          return false;
+        }
+
+        // Call the actual linking function
+        const success = await linkRevenueCatToPatient();
+
+        await logToCommunication(`User Linking Result: ${triggerSource}`, {
+          triggerSource,
+          success,
+          timestamp: new Date().toISOString(),
+          platform: Platform.OS,
+        });
+
+        return success;
       } catch (error) {
-        console.error("📱 [SubscriptionContext] Failed to link RevenueCat user:", error);
+        console.error(`📱 [SubscriptionContext] User linking failed for ${triggerSource}:`, error);
 
-        // Log linking failure
-        await logToCommunication("RevenueCat User Linking Failed", {
+        await logToCommunication(`User Linking Failed: ${triggerSource}`, {
+          triggerSource,
           error: error instanceof Error ? error.message : String(error),
           platform: Platform.OS,
         });
 
         return false;
+      } finally {
+        setIsLinkingInProgress(false);
       }
-    };
+    },
+    [isLinkingInProgress, medplum, logToCommunication],
+  );
+
+  // NEW: Function to link anonymous RevenueCat user to Patient ID
+  const linkRevenueCatToPatient = React.useCallback(async (): Promise<boolean> => {
+    try {
+      const profile = medplum.getProfile();
+      if (!profile?.id) {
+        console.log("📱 [SubscriptionContext] No patient profile available for linking");
+        return false;
+      }
+
+      // Get current RevenueCat user ID
+      const currentUserID = await Purchases.getAppUserID();
+
+      // DEBUG: Always log the current state for diagnosis
+      await logToCommunication("User Linking Debug Check", {
+        currentRevenueCatID: currentUserID,
+        expectedPatientID: profile.id,
+        isAlreadyLinked: currentUserID === profile.id,
+        platform: Platform.OS,
+      });
+
+      console.log(
+        `📱 [SubscriptionContext] Current RevenueCat ID: ${currentUserID}, Expected Patient ID: ${profile.id}`,
+      );
+
+      // If already using Patient ID, skip
+      if (currentUserID === profile.id) {
+        console.log("📱 [SubscriptionContext] Already linked to Patient ID");
+        return true;
+      }
+
+      // Log the linking attempt
+      await logToCommunication("RevenueCat User Linking Started", {
+        anonymousID: currentUserID,
+        patientID: profile.id,
+        platform: Platform.OS,
+      });
+
+      console.log(
+        `📱 [SubscriptionContext] Linking RevenueCat user from ${currentUserID} to ${profile.id}`,
+      );
+
+      // Switch to Patient ID (logIn handles user switching correctly)
+      await Purchases.logIn(profile.id);
+
+      // CRITICAL: Force complete cache invalidation
+      await Purchases.invalidateCustomerInfoCache();
+
+      // Additional safety: wait for cache to clear
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Verify the switch was successful
+      const verificationUserID = await Purchases.getAppUserID();
+      const verificationCustomerInfo = await Purchases.getCustomerInfo();
+
+      await logToCommunication("User Switch Verification", {
+        expectedPatientID: profile.id,
+        actualUserID: verificationUserID,
+        actualCustomerInfoID: verificationCustomerInfo.originalAppUserId,
+        switchSuccessful:
+          verificationUserID === profile.id &&
+          verificationCustomerInfo.originalAppUserId === profile.id,
+        cacheInvalidated: true,
+        platform: Platform.OS,
+      });
+
+      if (
+        verificationUserID === profile.id &&
+        verificationCustomerInfo.originalAppUserId === profile.id
+      ) {
+        console.log("📱 [SubscriptionContext] User switch verified - both IDs match Patient ID");
+
+        // Log successful linking
+        await logToCommunication("RevenueCat User Linking Successful", {
+          previousID: currentUserID,
+          newPatientID: profile.id,
+          platform: Platform.OS,
+        });
+
+        return true;
+      } else {
+        console.warn(
+          "📱 [SubscriptionContext] User switch verification failed - ID mismatch detected",
+        );
+        await logToCommunication("User Switch Verification Failed", {
+          expectedPatientID: profile.id,
+          actualUserID: verificationUserID,
+          actualCustomerInfoID: verificationCustomerInfo.originalAppUserId,
+          platform: Platform.OS,
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error("📱 [SubscriptionContext] Failed to link RevenueCat user:", error);
+
+      // Log linking failure
+      await logToCommunication("RevenueCat User Linking Failed", {
+        error: error instanceof Error ? error.message : String(error),
+        platform: Platform.OS,
+      });
+
+      return false;
+    }
+  }, [medplum, logToCommunication]);
+
+  // Initialize RevenueCat when component mounts
+  useEffect(() => {
+    // Import the RevenueCat initialization utility
+    import("@/utils/subscription/initialize-revenue-cat")
+      .then(({ ensureRevenueCatInitialized }) => {
+        // Ensure RevenueCat is initialized before proceeding
+        ensureRevenueCatInitialized(medplum).catch((error) => {
+          console.error("Error ensuring RevenueCat is initialized:", error);
+        });
+      })
+      .catch((error) => {
+        console.error("Error importing RevenueCat initialization utility:", error);
+      });
 
     const initializePurchases = async () => {
       // Log native modules availability
@@ -804,12 +881,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
               "📱 [SubscriptionContext] RevenueCat initialized successfully, attempting user linking",
             );
 
-            await logToCommunication("User Linking Attempt Starting", {
-              initialized: true,
-              platform: Platform.OS,
-            });
-
-            const linkingSuccess = await linkRevenueCatToPatient();
+            const linkingSuccess = await handleUserLinking("startup");
 
             if (linkingSuccess) {
               console.log(
@@ -1056,6 +1128,75 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
   }, [medplum, storeSubscriptionStatusToMedplum, checkPremiumEntitlement]);
 
+  // Authentication state monitoring - trigger user linking when Patient ID changes
+  useEffect(() => {
+    const currentPatientId = medplum.getProfile()?.id || null;
+
+    // Only trigger if Patient ID actually changed (not initial load)
+    if (currentPatientId !== lastPatientId && lastPatientId !== null) {
+      console.log(
+        `📱 [SubscriptionContext] Patient ID changed from ${lastPatientId} to ${currentPatientId}`,
+      );
+
+      setLastPatientId(currentPatientId);
+
+      // Trigger user linking if authenticated and RevenueCat ready
+      if (currentPatientId && !isLoading && !isLinkingInProgress) {
+        console.log(
+          `📱 [SubscriptionContext] Triggering user linking due to authentication change`,
+        );
+
+        // Add small delay to ensure RevenueCat is stable
+        setTimeout(() => {
+          handleUserLinking("authentication_change").catch((error: Error) => {
+            console.error("📱 [SubscriptionContext] Authentication change linking failed:", error);
+          });
+        }, 1000);
+      }
+    } else if (lastPatientId === null) {
+      // First time setting the Patient ID (initial load)
+      setLastPatientId(currentPatientId);
+    }
+  }, [medplum.getProfile()?.id, lastPatientId, isLoading, isLinkingInProgress]);
+
+  // App state change monitoring - retry user linking when app comes to foreground
+  useEffect(() => {
+    let lastAppStateChangeTime = 0;
+
+    const handleAppStateChange = (nextAppState: string) => {
+      console.log(`📱 [SubscriptionContext] App state changed to: ${nextAppState}`);
+
+      if (nextAppState === "active") {
+        const now = Date.now();
+        const timeSinceLastChange = now - lastAppStateChangeTime;
+
+        // Throttle to prevent excessive calls (minimum 5 seconds between attempts)
+        if (timeSinceLastChange > 5000) {
+          lastAppStateChangeTime = now;
+
+          const currentPatientId = medplum.getProfile()?.id;
+          if (currentPatientId && !isLoading && !isLinkingInProgress) {
+            console.log(`📱 [SubscriptionContext] Triggering user linking due to app foreground`);
+
+            // Add delay to ensure app is fully active
+            setTimeout(() => {
+              handleUserLinking("app_foreground").catch((error: Error) => {
+                console.error("📱 [SubscriptionContext] App foreground linking failed:", error);
+              });
+            }, 2000);
+          }
+        } else {
+          console.log(`📱 [SubscriptionContext] Skipping app foreground linking (throttled)`);
+        }
+      }
+    };
+
+    if (Platform.OS !== "web") {
+      const subscription = AppState.addEventListener("change", handleAppStateChange);
+      return () => subscription?.remove();
+    }
+  }, [medplum.getProfile()?.id, isLoading, isLinkingInProgress]);
+
   // Function to handle purchasing a package
   const purchasePackage = async (pkg: PurchasesPackage): Promise<boolean> => {
     try {
@@ -1146,12 +1287,53 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
       }
 
-      // Make the purchase using our safe execution helper
-      const purchaseResult = await safelyExecuteRevenueCatMethod(
-        "purchasePackage",
-        async () => Purchases.purchasePackage(pkg),
-        { customerInfo: null },
-      );
+      // CRITICAL: Validate package object to prevent Android native crash
+      if (!pkg || !pkg.identifier || !pkg.product || !pkg.product.identifier) {
+        console.error("📱 [SubscriptionContext] Invalid package object - preventing native crash");
+
+        await logToCommunication("Purchase Failed - Invalid Package", {
+          packageObject: pkg ? "exists" : "null",
+          packageIdentifier: pkg?.identifier || "missing",
+          productObject: pkg?.product ? "exists" : "missing",
+          productIdentifier: pkg?.product?.identifier || "missing",
+          platform: Platform.OS,
+        });
+
+        return false;
+      }
+
+      // Add explicit error handling around the purchase call
+      let purchaseResult;
+      try {
+        console.log("📱 [SubscriptionContext] About to call Purchases.purchasePackage with:", {
+          packageId: pkg.identifier,
+          productId: pkg.product.identifier,
+          packageValid: !!pkg,
+          productValid: !!pkg.product,
+        });
+
+        // Make the purchase using our safe execution helper
+        purchaseResult = await safelyExecuteRevenueCatMethod(
+          "purchasePackage",
+          async () => Purchases.purchasePackage(pkg),
+          { customerInfo: null },
+        );
+
+        console.log("📱 [SubscriptionContext] Purchase result:", purchaseResult);
+      } catch (purchaseError) {
+        console.error("📱 [SubscriptionContext] Purchase crashed:", purchaseError);
+
+        await logToCommunication("Purchase Method Crashed", {
+          packageIdentifier: pkg?.identifier,
+          productIdentifier: pkg?.product?.identifier,
+          error: purchaseError instanceof Error ? purchaseError.message : String(purchaseError),
+          errorStack: purchaseError instanceof Error ? purchaseError.stack : undefined,
+          platform: Platform.OS,
+        });
+
+        // Don't let the crash bubble up - return false instead
+        return false;
+      }
 
       if (purchaseResult?.customerInfo) {
         setCustomerInfo(purchaseResult.customerInfo);
@@ -1291,6 +1473,17 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const checkEntitlementStatus = (entitlementId: string): boolean => {
     if (!customerInfo) return false;
     return !!customerInfo.entitlements.active[entitlementId];
+  };
+
+  // Manual retry user linking function
+  const retryUserLinking = async (): Promise<boolean> => {
+    if (isLinkingInProgress) {
+      console.log("📱 [SubscriptionContext] User linking already in progress");
+      return false;
+    }
+
+    console.log("📱 [SubscriptionContext] Manual retry user linking requested");
+    return await handleUserLinking("manual_retry");
   };
 
   // Debug utility methods
@@ -1458,6 +1651,9 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     restorePurchases,
     purchasePackage,
     checkEntitlementStatus,
+    // User linking methods
+    retryUserLinking,
+    isLinkingInProgress,
     // Debug methods
     debugGetCustomerInfo,
     debugGetOfferings,
