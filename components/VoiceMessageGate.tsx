@@ -2,6 +2,7 @@ import { useMedplum } from "@medplum/react-hooks";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
+import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { ENTITLEMENT_IDS } from "../utils/subscription/config";
@@ -11,23 +12,15 @@ import {
   hasReachedDailyLimit,
   incrementVoiceMessageCount,
 } from "../utils/voiceMessageTracking";
-import {
-  Button,
-  Heading,
-  Modal,
-  ModalBackdrop,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  Text,
-  VStack,
-} from "./ui";
+import { Modal, ModalBody, ModalFooter, ModalHeader } from "./Modal";
+import { Button, ButtonText, Heading, Text, VStack } from "./ui";
 
 interface VoiceMessageGateProps {
   threadId: string;
   onAllowRecording: () => void;
   onDenyRecording: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 /**
@@ -38,9 +31,23 @@ export function VoiceMessageGate({
   threadId: _threadId,
   onAllowRecording,
   onDenyRecording,
+  isOpen = false,
+  onClose,
 }: VoiceMessageGateProps) {
   // We use threadId for documentation but prefix with _ to indicate it's unused
   const [showLimitModal, setShowLimitModal] = useState(false);
+
+  // Use external isOpen prop if provided, otherwise use internal state
+  const modalIsOpen = isOpen ?? showLimitModal;
+
+  // Helper function to close modal (external or internal)
+  const closeModal = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      setShowLimitModal(false);
+    }
+  };
   const [voiceUsage, setVoiceUsage] = useState({
     dailyCount: 0,
     monthlyCount: 0,
@@ -132,50 +139,153 @@ export function VoiceMessageGate({
     }
   };
 
-  // Navigation to subscription screen
-  const navigateToSubscription = () => {
-    setShowLimitModal(false);
-    router.push("/subscription");
+  // Helper function for logging to Medplum
+  const logToMedplum = async (title: string, data: Record<string, unknown>) => {
+    try {
+      const profile = medplum.getProfile();
+      if (profile?.id) {
+        await medplum.createResource({
+          resourceType: "Communication",
+          status: "completed",
+          subject: { reference: `Patient/${profile.id}` },
+          about: [{ reference: `Patient/${profile.id}` }],
+          sent: new Date().toISOString(),
+          payload: [
+            {
+              contentString: title,
+            },
+            {
+              contentString: JSON.stringify({
+                timestamp: new Date().toISOString(),
+                threadId: _threadId,
+                ...data,
+              }),
+            },
+          ],
+        });
+      }
+    } catch (error) {
+      console.error(`Failed to log "${title}":`, error);
+    }
+  };
+
+  // Direct paywall upgrade (better UX than going to subscription page)
+  const handleDirectUpgrade = async () => {
+    console.log("🛒 [VoiceGate] Upgrade button clicked - starting direct upgrade process");
+
+    try {
+      // Log upgrade attempt
+      await logToMedplum("VoiceGate Direct Upgrade Attempt", {
+        currentUsage: voiceUsage,
+        source: "voice_message_limit",
+      });
+
+      console.log("🛒 [VoiceGate] Closing modal first to avoid modal stacking issues");
+
+      // Close the modal first to avoid modal stacking issues with RevenueCat paywall
+      closeModal();
+
+      // Small delay to ensure modal is fully closed before presenting paywall
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      console.log("🛒 [VoiceGate] About to present RevenueCat paywall for upgrade");
+
+      // Present RevenueCat native paywall directly - matching SubscriptionScreen implementation exactly
+      const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();
+
+      console.log("🛒 [VoiceGate] Paywall result received:", paywallResult);
+
+      switch (paywallResult) {
+        case PAYWALL_RESULT.PURCHASED:
+          await logToMedplum("VoiceGate Upgrade Success", {
+            result: "purchased",
+            source: "voice_message_limit",
+          });
+          console.log("🛒 [VoiceGate] Purchase successful, allowing recording");
+          // Allow the recording since they just upgraded (modal already closed)
+          onAllowRecording();
+          break;
+
+        case PAYWALL_RESULT.RESTORED:
+          await logToMedplum("VoiceGate Upgrade Success", {
+            result: "restored",
+            source: "voice_message_limit",
+          });
+          console.log("🛒 [VoiceGate] Purchases restored, allowing recording");
+          // Allow the recording since they restored premium (modal already closed)
+          onAllowRecording();
+          break;
+
+        case PAYWALL_RESULT.CANCELLED:
+          await logToMedplum("VoiceGate Upgrade Cancelled", {
+            result: "cancelled",
+            source: "voice_message_limit",
+          });
+          console.log("🛒 [VoiceGate] User cancelled paywall, re-opening modal");
+          // Re-open the modal since user cancelled (only if using internal state)
+          if (!onClose) {
+            setShowLimitModal(true);
+          }
+          // Note: If using external control, parent should handle re-opening
+          break;
+
+        case PAYWALL_RESULT.NOT_PRESENTED:
+        case PAYWALL_RESULT.ERROR:
+        default:
+          await logToMedplum("VoiceGate Upgrade Error", {
+            result: paywallResult,
+            resultString: String(paywallResult),
+            source: "voice_message_limit",
+          });
+          console.log("🛒 [VoiceGate] Paywall not presented or error:", paywallResult);
+          console.log("🛒 [VoiceGate] Falling back to subscription page");
+          // Fallback to subscription page if paywall fails (modal already closed)
+          router.push("/subscription");
+          break;
+      }
+    } catch (error) {
+      console.error("🛒 [VoiceGate] Paywall exception caught:", error);
+      console.error("🛒 [VoiceGate] Error type:", typeof error);
+      console.error(
+        "🛒 [VoiceGate] Error details:",
+        error instanceof Error ? error.message : String(error),
+      );
+
+      await logToMedplum("VoiceGate Upgrade Exception", {
+        result: "exception",
+        error: error instanceof Error ? error.message : String(error),
+        errorType: typeof error,
+        source: "voice_message_limit",
+      });
+
+      // Fallback to subscription page on error (modal already closed)
+      console.log("🛒 [VoiceGate] Falling back to subscription page due to exception");
+      router.push("/subscription");
+    }
   };
 
   return (
-    <>
-      {/* Daily limit reached modal */}
-      <Modal isOpen={showLimitModal} onClose={() => setShowLimitModal(false)}>
-        <ModalBackdrop />
-        <ModalContent>
-          <ModalHeader>
-            <Heading size="lg">Voice Message Limit</Heading>
-          </ModalHeader>
-          <ModalBody>
-            <VStack className="gap-4">
-              <Text>
-                You've used all {FREE_DAILY_VOICE_MESSAGE_LIMIT} of your daily voice messages.
-              </Text>
-              <Text>Upgrade to Voice Connect for unlimited voice messaging.</Text>
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              variant="solid"
-              size="md"
-              onPress={navigateToSubscription}
-              className="mb-2 w-full"
-            >
-              Upgrade to Voice Connect
-            </Button>
-            <Button
-              variant="outline"
-              size="md"
-              onPress={() => setShowLimitModal(false)}
-              className="w-full"
-            >
-              Continue with Text
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
+    <Modal isOpen={modalIsOpen} onClose={closeModal}>
+      <ModalHeader>
+        <Heading size="lg">Voice Message Limit</Heading>
+      </ModalHeader>
+      <ModalBody>
+        <VStack className="gap-4">
+          <Text>
+            You've used all {FREE_DAILY_VOICE_MESSAGE_LIMIT} of your daily voice messages.
+          </Text>
+          <Text>Upgrade to Voice Connect for unlimited voice messaging.</Text>
+        </VStack>
+      </ModalBody>
+      <ModalFooter>
+        <Button variant="outline" onPress={closeModal} className="mr-2">
+          <ButtonText>Continue with Text</ButtonText>
+        </Button>
+        <Button variant="solid" onPress={handleDirectUpgrade}>
+          <ButtonText>Upgrade to Voice Connect</ButtonText>
+        </Button>
+      </ModalFooter>
+    </Modal>
   );
 }
 

@@ -10,7 +10,7 @@ import { ChatMessageInput } from "@/components/ChatMessageInput";
 import { ChatMessageList } from "@/components/ChatMessageList";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { MessageDeleteModal } from "@/components/MessageDeleteModal";
-import { useVoiceMessageGate } from "@/components/VoiceMessageGate";
+import { useVoiceMessageGate, VoiceMessageGate } from "@/components/VoiceMessageGate";
 import { ChatContext } from "@/contexts/ChatContext";
 import { useAudioRecording } from "@/hooks/useAudioRecording";
 import { useAvatars } from "@/hooks/useAvatars";
@@ -62,6 +62,7 @@ export default function ThreadPage() {
   const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [showVoiceGate, setShowVoiceGate] = useState(false);
   const { isRecording, recordingDuration, startRecording, stopRecording } = useAudioRecording();
   // Audio playback state
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
@@ -292,8 +293,9 @@ export default function ThreadPage() {
             Alert.alert("Error", "Failed to start recording. Please check microphone permissions.");
           }
         } else {
-          // User has reached daily limit, show upgrade prompt
-          showLimitReachedAlert();
+          // User has reached daily limit, show upgrade prompt with direct paywall
+          console.log("📱 [handleAttachment] Daily limit reached, showing VoiceMessageGate modal");
+          setShowVoiceGate(true);
         }
       } else {
         // Regular attachment flow
@@ -335,6 +337,18 @@ export default function ThreadPage() {
       }
       return next;
     });
+  }, []);
+
+  // VoiceMessageGate callback handlers
+  const handleAllowRecording = useCallback(() => {
+    console.log("📱 [VoiceMessageGate] Recording allowed, returning to chat screen");
+    // Just close the modal and return to normal chat - user can press mic button again
+    setShowVoiceGate(false);
+  }, []);
+
+  const handleDenyRecording = useCallback(() => {
+    console.log("📱 [VoiceMessageGate] Recording denied");
+    // Already handled by modal state, no additional action needed
   }, []);
 
   const handleConfirmDelete = useCallback(async () => {
@@ -413,6 +427,13 @@ export default function ThreadPage() {
         onConfirm={handleConfirmDelete}
         selectedCount={selectedMessages.size}
         isDeleting={isDeleting}
+      />
+      <VoiceMessageGate
+        threadId={id}
+        onAllowRecording={handleAllowRecording}
+        onDenyRecording={handleDenyRecording}
+        isOpen={showVoiceGate}
+        onClose={() => setShowVoiceGate(false)}
       />
     </View>
   );
