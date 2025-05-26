@@ -48,6 +48,11 @@ _dev/
 # Cursor prompt
 .cursorrules
 
+# Log files
+log
+log[0-9]*
+*.log
+
 # Pre-build files
 android/
 ios/
