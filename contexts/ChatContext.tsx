@@ -34,7 +34,18 @@ async function fetchThreads({
     cache: "no-cache",
   });
   const threads =
-    searchResults.entry?.filter((e) => e.search?.mode === "match").map((e) => e.resource!) || [];
+    searchResults.entry
+      ?.filter((e) => e.search?.mode === "match")
+      .map((e) => e.resource!)
+      .filter((thread) => {
+        // Filter out subscription tracking Communications (safety net)
+        const hasSubscriptionCategory = thread.category?.some((cat) =>
+          cat.coding?.some(
+            (coding) => coding.system === "https://progressnotes.app/fhir/subscription-tracking",
+          ),
+        );
+        return !hasSubscriptionCategory;
+      }) || [];
 
   // Create a map of thread ID to messages
   const threadCommMap = new Map<string, Communication[]>();
@@ -251,12 +262,16 @@ interface ChatContextType {
     attachment,
     audioData,
     processWithAI,
+    skipAIProcessing,
+    placeholderMessageId,
   }: {
     threadId: string;
     message?: string;
     attachment?: ImagePicker.ImagePickerAsset;
     audioData?: string;
     processWithAI?: boolean;
+    skipAIProcessing?: boolean;
+    placeholderMessageId?: string;
   }) => Promise<string | undefined>;
   markMessageAsRead: ({
     threadId,
@@ -562,7 +577,7 @@ export function ChatProvider({
         const thread = threads.find((t) => t.id === threadId);
         if (!thread) return;
 
-        let newCommunication;
+        let newCommunication: Communication | undefined;
 
         // Handle special case for audio with placeholder
         if (audioData && placeholderMessageId) {
@@ -576,10 +591,10 @@ export function ChatProvider({
             data: audioData,
           });
 
-          console.log("Binary resource created with ID:", binary.id);
+          console.log("Binary resource created with ID:", binary.id!);
 
           // Now process the audio via the reflection guide bot for transcription
-          console.log(`STEP 1: Getting transcription from audio with binaryId: ${binary.id}`);
+          console.log(`STEP 1: Getting transcription from audio with binaryId: ${binary.id!}`);
           const transcriptionResponse = await medplum.executeBot(
             {
               system: "https://progressnotes.app",
@@ -589,7 +604,7 @@ export function ChatProvider({
               patientId: profile.id,
               threadId: threadId,
               placeholderMessageId: placeholderMessageId,
-              audioBinaryId: binary.id, // Use binary ID instead of raw audio data
+              audioBinaryId: binary.id!, // Use binary ID instead of raw audio data
               returnTranscriptionOnly: true, // Just get transcription, not response
             },
           );
@@ -686,6 +701,24 @@ export function ChatProvider({
 
           // Now generate the AI response using the transcription
           try {
+            // Check voice limits for this response too
+            const { hasReachedDailyLimit, getVoiceMessageUsage } = await import(
+              "../utils/voiceMessageTracking"
+            );
+            let shouldSkipTTS = false;
+
+            try {
+              if (profile.id) {
+                const usage = await getVoiceMessageUsage(medplum, profile.id);
+                shouldSkipTTS = hasReachedDailyLimit(usage.dailyCount);
+              }
+            } catch (error) {
+              console.warn(
+                "Could not check voice message limits for transcription response:",
+                error,
+              );
+            }
+
             const aiResponse = await medplum.executeBot(
               {
                 system: "https://progressnotes.app",
@@ -696,6 +729,7 @@ export function ChatProvider({
                 threadId: threadId,
                 textInput: transcriptionResponse.transcription,
                 skipMessageCreation: true, // Don't create a new message, we already have the placeholder
+                skipTTS: shouldSkipTTS, // Skip TTS when voice limits reached
               },
             );
 
@@ -740,13 +774,18 @@ export function ChatProvider({
           });
 
           // Update the thread messages
-          setThreadCommMap((prev) => {
-            const existing = prev.get(threadId) || [];
-            return new Map([...prev, [threadId, syncResourceArray(existing, newCommunication)]]);
-          });
+          if (newCommunication) {
+            setThreadCommMap((prev) => {
+              const existing = prev.get(threadId) || [];
+              return new Map([
+                ...prev,
+                [threadId, syncResourceArray<Communication>(existing, newCommunication)],
+              ]);
+            });
+          }
 
           // Process with AI if requested and is a reflection thread, but not if skipAIProcessing is true
-          if (processWithAI && !skipAIProcessing) {
+          if (processWithAI && !skipAIProcessing && newCommunication) {
             const threadObj = Thread.fromCommunication({
               comm: thread,
               threadMessageComms: threadCommMap.get(threadId) || [],
@@ -767,7 +806,7 @@ export function ChatProvider({
             }
           }
 
-          return newCommunication.id;
+          return newCommunication?.id;
         }
       } catch (err) {
         onError?.(err as Error);
@@ -933,6 +972,28 @@ export function ChatProvider({
           }
         }
 
+        // Check if user has reached voice message limits and should get text-only responses
+        const { hasReachedDailyLimit, getVoiceMessageUsage } = await import(
+          "../utils/voiceMessageTracking"
+        );
+        let shouldSkipTTS = false;
+
+        try {
+          if (profile.id) {
+            const usage = await getVoiceMessageUsage(medplum, profile.id);
+            shouldSkipTTS = hasReachedDailyLimit(usage.dailyCount);
+
+            if (shouldSkipTTS) {
+              console.log(
+                `User has reached voice message limit (${usage.dailyCount} messages), using text-only mode`,
+              );
+            }
+          }
+        } catch (error) {
+          console.warn("Could not check voice message limits, proceeding with audio:", error);
+          // Default to audio if we can't check limits
+        }
+
         const response = await medplum.executeBot(
           {
             system: "https://progressnotes.app",
@@ -945,6 +1006,7 @@ export function ChatProvider({
             textInput: textInput || (audioData ? "[Audio message]" : undefined),
             audioBinaryId: audioBinaryId,
             skipMessageCreation: skipMessageCreation, // Don't create a new message when updating an existing one
+            skipTTS: shouldSkipTTS, // Skip TTS when voice limits reached
             config: {
               voiceModel: "aura-2-cora-en",
               persona: "empathetic, supportive guide",
@@ -1044,6 +1106,10 @@ export function ChatProvider({
       setIsBotProcessingMap((prev) => new Map([...prev, [threadId, true]]));
 
       try {
+        // Note: Audio regeneration is always attempted regardless of voice limits
+        // since users explicitly requested audio regeneration (they can upgrade if needed)
+        console.log("Regenerating audio for message:", messageId);
+
         // Call the reflection-guide bot with regenerateTTS flag
         const response = await medplum.executeBot(
           {

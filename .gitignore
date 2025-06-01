@@ -73,3 +73,6 @@ ios/
 # Google Services
 google-services.json
 **/google-services.json
+
+# Upload key reset documentation (contains sensitive info)
+docs/upload-key-reset-guide.md

@@ -8,6 +8,7 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { trackUserAction } from "@/utils/system-logging";
 
 /**
  * Registration callback page for web platform
@@ -63,195 +64,112 @@ export default function RegisterCallback() {
                       throw new Error("Purchases object not available");
                     }
 
-                    // Create Communication resource log before login attempt
-                    try {
-                      await medplum.createResource({
-                        resourceType: "Communication",
-                        status: "completed",
-                        subject: { reference: `Patient/${profileId}` },
-                        about: [{ reference: `Patient/${profileId}` }],
-                        sent: new Date().toISOString(),
-                        payload: [
-                          {
-                            contentString: "RevenueCat login attempt after registration",
-                          },
-                          {
-                            contentString: JSON.stringify({
-                              timestamp: new Date().toISOString(),
-                              method: "Purchases.logIn",
-                              profileId: profileId,
-                              retryCount: retryCount,
-                              status: "attempting",
-                            }),
-                          },
-                        ],
-                      });
-                    } catch (logError) {
-                      console.error("Failed to create pre-login log:", logError);
-                    }
+                    // Log login attempt
+                    await trackUserAction({
+                      medplum,
+                      patientId: profileId,
+                      action: "RevenueCat login attempt after registration",
+                      details: JSON.stringify({
+                        method: "Purchases.logIn",
+                        profileId: profileId,
+                        retryCount: retryCount,
+                        status: "attempting",
+                      }),
+                      success: true,
+                    });
 
                     // Try the login - this will fail if not properly initialized
                     await Purchases.logIn(profileId);
                     console.log("RevenueCat login successful after registration");
 
-                    // Create Communication resource log for successful login
-                    try {
-                      await medplum.createResource({
-                        resourceType: "Communication",
-                        status: "completed",
-                        subject: { reference: `Patient/${profileId}` },
-                        about: [{ reference: `Patient/${profileId}` }],
-                        sent: new Date().toISOString(),
-                        payload: [
-                          {
-                            contentString: "RevenueCat login successful after registration",
-                          },
-                          {
-                            contentString: JSON.stringify({
-                              timestamp: new Date().toISOString(),
-                              method: "Purchases.logIn",
-                              profileId: profileId,
-                              retryCount: retryCount,
-                              status: "success",
-                            }),
-                          },
-                        ],
-                      });
-                    } catch (logError) {
-                      console.error("Failed to create post-login log:", logError);
-                    }
+                    // Log successful login
+                    await trackUserAction({
+                      medplum,
+                      patientId: profileId,
+                      action: "RevenueCat login successful after registration",
+                      details: JSON.stringify({
+                        method: "Purchases.logIn",
+                        profileId: profileId,
+                        retryCount: retryCount,
+                        status: "success",
+                      }),
+                      success: true,
+                    });
 
                     // Force refresh customer info to ensure everything is synced
                     if (typeof Purchases.getCustomerInfo === "function") {
                       try {
-                        // Create Communication resource log before customer info fetch
-                        try {
-                          await medplum.createResource({
-                            resourceType: "Communication",
-                            status: "completed",
-                            subject: { reference: `Patient/${profileId}` },
-                            about: [{ reference: `Patient/${profileId}` }],
-                            sent: new Date().toISOString(),
-                            payload: [
-                              {
-                                contentString:
-                                  "RevenueCat customer info fetch attempt after registration",
-                              },
-                              {
-                                contentString: JSON.stringify({
-                                  timestamp: new Date().toISOString(),
-                                  method: "Purchases.getCustomerInfo",
-                                  profileId: profileId,
-                                  status: "attempting",
-                                }),
-                              },
-                            ],
-                          });
-                        } catch (logError) {
-                          console.error("Failed to create pre-customer-info log:", logError);
-                        }
+                        // Log customer info fetch attempt
+                        await trackUserAction({
+                          medplum,
+                          patientId: profileId,
+                          action: "RevenueCat customer info fetch attempt after registration",
+                          details: JSON.stringify({
+                            method: "Purchases.getCustomerInfo",
+                            profileId: profileId,
+                            status: "attempting",
+                          }),
+                          success: true,
+                        });
 
                         const customerInfo = await Purchases.getCustomerInfo();
                         console.log("RevenueCat customer info refreshed");
 
-                        // Create Communication resource log for successful customer info fetch
-                        try {
-                          await medplum.createResource({
-                            resourceType: "Communication",
-                            status: "completed",
-                            subject: { reference: `Patient/${profileId}` },
-                            about: [{ reference: `Patient/${profileId}` }],
-                            sent: new Date().toISOString(),
-                            payload: [
-                              {
-                                contentString:
-                                  "RevenueCat customer info fetch successful after registration",
-                              },
-                              {
-                                contentString: JSON.stringify({
-                                  timestamp: new Date().toISOString(),
-                                  method: "Purchases.getCustomerInfo",
-                                  profileId: profileId,
-                                  status: "success",
-                                  hasEntitlements: !!customerInfo?.entitlements?.active,
-                                  entitlementCount: customerInfo?.entitlements?.active
-                                    ? Object.keys(customerInfo.entitlements.active).length
-                                    : 0,
-                                  entitlements: customerInfo?.entitlements?.active
-                                    ? Object.keys(customerInfo.entitlements.active)
-                                    : [],
-                                }),
-                              },
-                            ],
-                          });
-                        } catch (logError) {
-                          console.error("Failed to create post-customer-info log:", logError);
-                        }
+                        // Log successful customer info fetch
+                        await trackUserAction({
+                          medplum,
+                          patientId: profileId,
+                          action: "RevenueCat customer info fetch successful after registration",
+                          details: JSON.stringify({
+                            method: "Purchases.getCustomerInfo",
+                            profileId: profileId,
+                            status: "success",
+                            hasEntitlements: !!customerInfo?.entitlements?.active,
+                            entitlementCount: customerInfo?.entitlements?.active
+                              ? Object.keys(customerInfo.entitlements.active).length
+                              : 0,
+                            entitlements: customerInfo?.entitlements?.active
+                              ? Object.keys(customerInfo.entitlements.active)
+                              : [],
+                          }),
+                          success: true,
+                        });
                       } catch (infoError) {
                         console.warn("Failed to refresh customer info:", infoError);
 
-                        // Create Communication resource log for failed customer info fetch
-                        try {
-                          await medplum.createResource({
-                            resourceType: "Communication",
-                            status: "completed",
-                            subject: { reference: `Patient/${profileId}` },
-                            about: [{ reference: `Patient/${profileId}` }],
-                            sent: new Date().toISOString(),
-                            payload: [
-                              {
-                                contentString:
-                                  "RevenueCat customer info fetch failed after registration",
-                              },
-                              {
-                                contentString: JSON.stringify({
-                                  timestamp: new Date().toISOString(),
-                                  method: "Purchases.getCustomerInfo",
-                                  profileId: profileId,
-                                  status: "error",
-                                  error:
-                                    infoError instanceof Error
-                                      ? infoError.message
-                                      : String(infoError),
-                                }),
-                              },
-                            ],
-                          });
-                        } catch (logError) {
-                          console.error("Failed to create error-customer-info log:", logError);
-                        }
+                        // Log failed customer info fetch
+                        await trackUserAction({
+                          medplum,
+                          patientId: profileId,
+                          action: "RevenueCat customer info fetch failed after registration",
+                          details: JSON.stringify({
+                            method: "Purchases.getCustomerInfo",
+                            profileId: profileId,
+                            status: "error",
+                            error:
+                              infoError instanceof Error ? infoError.message : String(infoError),
+                          }),
+                          success: false,
+                        });
                       }
                     }
                   } catch (error) {
                     console.warn(`RevenueCat login attempt ${retryCount} failed:`, error);
 
-                    // Create Communication resource log for failed login
-                    try {
-                      await medplum.createResource({
-                        resourceType: "Communication",
-                        status: "completed",
-                        subject: { reference: `Patient/${profileId}` },
-                        about: [{ reference: `Patient/${profileId}` }],
-                        sent: new Date().toISOString(),
-                        payload: [
-                          {
-                            contentString: "RevenueCat login failed after registration",
-                          },
-                          {
-                            contentString: JSON.stringify({
-                              timestamp: new Date().toISOString(),
-                              method: "Purchases.logIn",
-                              profileId: profileId,
-                              retryCount: retryCount,
-                              status: "error",
-                              error: error instanceof Error ? error.message : String(error),
-                            }),
-                          },
-                        ],
-                      });
-                    } catch (logError) {
-                      console.error("Failed to create login-error log:", logError);
-                    }
+                    // Log failed login
+                    await trackUserAction({
+                      medplum,
+                      patientId: profileId,
+                      action: "RevenueCat login failed after registration",
+                      details: JSON.stringify({
+                        method: "Purchases.logIn",
+                        profileId: profileId,
+                        retryCount: retryCount,
+                        status: "error",
+                        error: error instanceof Error ? error.message : String(error),
+                      }),
+                      success: false,
+                    });
 
                     // Retry logic - increase delay with each retry
                     if (retryCount < 2) {

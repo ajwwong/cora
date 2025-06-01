@@ -31,6 +31,7 @@ export default function Index() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [tapCount, setTapCount] = useState(0);
+  const [showDebugButton, setShowDebugButton] = useState(__DEV__); // Only show in dev by default
   const notificationManager = useMemo(() => new PushNotificationTokenManager(medplum), [medplum]);
 
   // Check if we need to show the welcome walkthrough
@@ -85,6 +86,24 @@ export default function Index() {
     }
   }, [medplum, router, notificationManager]);
 
+  // Handle secret tap area to reveal debug button
+  const handleSecretTap = useCallback(() => {
+    const newTapCount = tapCount + 1;
+    setTapCount(newTapCount);
+
+    // Show debug button after 7 taps
+    if (newTapCount >= 7) {
+      setShowDebugButton(true);
+      Alert.alert("Debug Mode", "Debug button enabled!");
+      setTapCount(0); // Reset counter
+    }
+
+    // Reset counter after 3 seconds of no taps
+    setTimeout(() => {
+      setTapCount(0);
+    }, 3000);
+  }, [tapCount]);
+
   if (isLoading || isAvatarsLoading) {
     return <LoadingScreen />;
   }
@@ -114,25 +133,40 @@ export default function Index() {
         </View>
       )}
 
-      {/* Debug button - visible for easier access */}
+      {/* Secret tap area to reveal debug button */}
       <Pressable
         style={{
           position: "absolute",
-          bottom: 10,
-          right: 10,
-          backgroundColor: "#2196f3",
-          paddingHorizontal: 12,
-          paddingVertical: 8,
-          borderRadius: 20,
-          opacity: 0.7,
+          bottom: 0,
+          right: 0,
+          width: 80,
+          height: 80,
+          backgroundColor: "transparent",
         }}
-        onPress={() => {
-          setShowDebugPanel((show) => !show);
-          Alert.alert("Debug Panel", showDebugPanel ? "Debug panel hidden" : "Debug panel shown");
-        }}
-      >
-        <Text style={{ color: "white", fontWeight: "bold", fontSize: 12 }}>DEBUG</Text>
-      </Pressable>
+        onPress={handleSecretTap}
+      />
+
+      {/* Debug button - only visible when showDebugButton is true */}
+      {showDebugButton && (
+        <Pressable
+          style={{
+            position: "absolute",
+            bottom: 10,
+            right: 10,
+            backgroundColor: "#2196f3",
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            borderRadius: 20,
+            opacity: 0.7,
+          }}
+          onPress={() => {
+            setShowDebugPanel((show) => !show);
+            Alert.alert("Debug Panel", showDebugPanel ? "Debug panel hidden" : "Debug panel shown");
+          }}
+        >
+          <Text style={{ color: "white", fontWeight: "bold", fontSize: 12 }}>DEBUG</Text>
+        </Pressable>
+      )}
     </View>
   );
 }

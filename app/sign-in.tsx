@@ -10,7 +10,7 @@ import {
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useState } from "react";
-import { Alert, Platform, View } from "react-native";
+import { Alert, Image, Linking, Platform, View } from "react-native";
 import Purchases from "react-native-purchases";
 
 import { Button, ButtonText } from "@/components/ui/button";
@@ -18,8 +18,8 @@ import { GradientBackground } from "@/components/ui/gradient-background";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { WebRegistration } from "@/components/WebRegistration";
 import { oauth2ClientId, oAuth2Discovery } from "@/utils/medplum-oauth2";
+import { trackUserAction } from "@/utils/system-logging";
 
 // Based on https://docs.expo.dev/guides/authentication/#calendly
 WebBrowser.maybeCompleteAuthSession();
@@ -28,7 +28,6 @@ export default function SignIn() {
   const router = useRouter();
   const medplum = useMedplum();
   const [isLoginLoading, setIsLoginLoading] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
   const isLoading = isLoginLoading || !medplum.isInitialized;
 
   const redirectAfterLogin = useCallback(() => {
@@ -39,11 +38,31 @@ export default function SignIn() {
     router.replace("/");
   }, [router]);
 
-  // Helper function to log authentication issues to console only
-  const logAuthError = useCallback((title: string, details: Record<string, unknown>) => {
-    // Log to console instead of creating Communication resources
-    console.log(`Auth Log: ${title}`, details);
-  }, []);
+  // Helper function to log authentication issues to AuditEvent
+  const logAuthError = useCallback(
+    async (title: string, details: Record<string, unknown>, success: boolean = true) => {
+      try {
+        const profile = medplum.getProfile();
+        if (profile?.id) {
+          await trackUserAction({
+            medplum,
+            patientId: profile.id,
+            action: title,
+            details: JSON.stringify(details),
+            success,
+          });
+        } else {
+          // Log to console if no profile available
+          console.log(`Auth Log: ${title}`, details);
+        }
+      } catch (error) {
+        console.error(`Failed to log auth event "${title}":`, error);
+        // Fallback to console logging
+        console.log(`Auth Log: ${title}`, details);
+      }
+    },
+    [medplum],
+  );
 
   const processTokenResponse = useCallback(
     async (tokenResponse: TokenResponse) => {
@@ -58,12 +77,12 @@ export default function SignIn() {
           timestamp: new Date().toISOString(),
         };
 
-        logAuthError("Token Response Info", tokenInfo);
+        await logAuthError("Token Response Info", tokenInfo);
 
         // Check token validity before attempting login
         if (!tokenResponse.accessToken) {
           const error = "Missing access token in response";
-          logAuthError("Token Validation Failed", { error });
+          await logAuthError("Token Validation Failed", { error }, false);
           throw new Error(error);
         }
 
@@ -72,7 +91,7 @@ export default function SignIn() {
           console.log(
             "No refresh token provided - session will need re-authentication when it expires",
           );
-          logAuthError("Missing Refresh Token", {
+          await logAuthError("Missing Refresh Token", {
             warning:
               "No refresh token provided - session will need re-authentication when it expires",
             timestamp: new Date().toISOString(),
@@ -80,7 +99,7 @@ export default function SignIn() {
           // Continue with authentication - don't throw an error
         }
 
-        logAuthError("Setting Active Login", {
+        await logAuthError("Setting Active Login", {
           timestamp: new Date().toISOString(),
           status: "attempting",
         });
@@ -91,7 +110,7 @@ export default function SignIn() {
           refreshToken: tokenResponse.refreshToken,
         } as LoginState);
 
-        logAuthError("Verifying Login", {
+        await logAuthError("Verifying Login", {
           timestamp: new Date().toISOString(),
           status: "checking",
         });
@@ -99,7 +118,7 @@ export default function SignIn() {
         // Verify login was successful
         const loginState = await medplum.getActiveLogin();
 
-        logAuthError("Login State Retrieved", {
+        await logAuthError("Login State Retrieved", {
           hasLoginState: !!loginState,
           hasProfile: !!loginState?.profile,
           timestamp: new Date().toISOString(),
@@ -109,7 +128,7 @@ export default function SignIn() {
         const profile = medplum.getProfile();
 
         // Add detailed logging about the profile
-        logAuthError("Profile Information", {
+        await logAuthError("Profile Information", {
           hasProfile: !!profile,
           profileType: profile?.resourceType || "undefined",
           profileId: profile?.id || "undefined",
@@ -123,7 +142,7 @@ export default function SignIn() {
             // Try to explicitly request the profile
             const userDetails = await medplum.getProfileResource();
 
-            logAuthError("Explicit Profile Fetch Result", {
+            await logAuthError("Explicit Profile Fetch Result", {
               success: !!userDetails,
               resourceType: userDetails?.resourceType || "undefined",
               id: userDetails?.id || "undefined",
@@ -131,10 +150,14 @@ export default function SignIn() {
             });
           } catch (fetchErr) {
             console.error("Error fetching profile:", fetchErr);
-            logAuthError("Profile Fetch Error", {
-              error: fetchErr instanceof Error ? fetchErr.message : String(fetchErr),
-              timestamp: new Date().toISOString(),
-            });
+            await logAuthError(
+              "Profile Fetch Error",
+              {
+                error: fetchErr instanceof Error ? fetchErr.message : String(fetchErr),
+                timestamp: new Date().toISOString(),
+              },
+              false,
+            );
           }
         }
 
@@ -145,7 +168,7 @@ export default function SignIn() {
               try {
                 // Check if we're on web (where RevenueCat isn't supported)
                 if (Platform.OS === "web") {
-                  return logAuthError("RevenueCat Skipped", {
+                  return await logAuthError("RevenueCat Skipped", {
                     reason: "Web platform not supported",
                     profileId: profile.id,
                     timestamp: new Date().toISOString(),
@@ -157,22 +180,20 @@ export default function SignIn() {
                   throw new Error("Purchases object not available");
                 }
 
-                // Show visible information about what we're doing
-                Alert.alert(
-                  "RevenueCat Login",
-                  `Attempting login for profile ID: ${profile.id.substring(0, 6)}...`,
+                // Log what we're doing
+                console.log(
+                  `📱 [RevenueCat] Attempting login for profile ID: ${profile.id.substring(0, 6)}...`,
                 );
 
                 // Check if RevenueCat is configured
                 if (typeof Purchases.isConfigured !== "function") {
-                  Alert.alert("RevenueCat Issue", "isConfigured method not available");
+                  console.warn("📱 [RevenueCat] isConfigured method not available");
                 }
 
                 if (typeof Purchases.isConfigured === "function" && !Purchases.isConfigured()) {
-                  // Show a visible alert about initialization
-                  Alert.alert(
-                    "RevenueCat Status",
-                    "Not configured. Attempting on-demand initialization...",
+                  // Log initialization attempt
+                  console.log(
+                    "📱 [RevenueCat] Not configured. Attempting on-demand initialization...",
                   );
 
                   // Try to initialize RevenueCat on-demand if not already configured
@@ -188,144 +209,72 @@ export default function SignIn() {
                     const debugInfo = getRevenueCatDebugInfo();
 
                     // Log debug info
-                    try {
-                      await medplum.createResource({
-                        resourceType: "Communication",
-                        status: "completed",
-                        subject: { reference: `Patient/${profile.id}` },
-                        about: [{ reference: `Patient/${profile.id}` }],
-                        sent: new Date().toISOString(),
-                        payload: [
-                          {
-                            contentString: "RevenueCat debug info before on-demand initialization",
-                          },
-                          {
-                            contentString: JSON.stringify({
-                              timestamp: new Date().toISOString(),
-                              debugInfo,
-                              profileId: profile.id,
-                              retryCount: retryCount,
-                            }),
-                          },
-                        ],
-                      });
-                    } catch (logError) {
-                      console.error("Failed to create debug info log:", logError);
-                    }
+                    await logAuthError("RevenueCat debug info before on-demand initialization", {
+                      debugInfo,
+                      profileId: profile.id,
+                      retryCount: retryCount,
+                    });
 
                     // Try initialization - will show alerts internally
                     const initialized = await ensureRevenueCatInitialized(medplum, true);
 
-                    // Create Communication resource log for initialization attempt
-                    try {
-                      await medplum.createResource({
-                        resourceType: "Communication",
-                        status: "completed",
-                        subject: { reference: `Patient/${profile.id}` },
-                        about: [{ reference: `Patient/${profile.id}` }],
-                        sent: new Date().toISOString(),
-                        payload: [
-                          {
-                            contentString: "RevenueCat on-demand initialization attempt",
-                          },
-                          {
-                            contentString: JSON.stringify({
-                              timestamp: new Date().toISOString(),
-                              success: initialized,
-                              profileId: profile.id,
-                              retryCount: retryCount,
-                            }),
-                          },
-                        ],
-                      });
-                    } catch (logError) {
-                      console.error("Failed to create on-demand initialization log:", logError);
-                    }
+                    // Log initialization attempt
+                    await logAuthError(
+                      "RevenueCat on-demand initialization attempt",
+                      {
+                        success: initialized,
+                        profileId: profile.id,
+                        retryCount: retryCount,
+                      },
+                      initialized,
+                    );
 
                     if (!initialized) {
                       const error = "Failed to initialize RevenueCat on-demand";
-                      Alert.alert("RevenueCat Error", error);
+                      console.error("📱 [RevenueCat] " + error);
                       throw new Error(error);
                     }
                   } catch (initError) {
                     const error = `RevenueCat not configured and on-demand initialization failed: ${initError}`;
-                    Alert.alert("RevenueCat Error", error);
+                    console.error("📱 [RevenueCat] " + error);
                     throw new Error(error);
                   }
                 } else if (
                   typeof Purchases.isConfigured === "function" &&
                   Purchases.isConfigured()
                 ) {
-                  Alert.alert("RevenueCat Status", "Already configured! Proceeding with login...");
+                  console.log("📱 [RevenueCat] Already configured! Proceeding with login...");
                 }
 
-                // Create Communication resource log before login attempt
-                try {
-                  await medplum.createResource({
-                    resourceType: "Communication",
-                    status: "completed",
-                    subject: { reference: `Patient/${profile.id}` },
-                    about: [{ reference: `Patient/${profile.id}` }],
-                    sent: new Date().toISOString(),
-                    payload: [
-                      {
-                        contentString: "RevenueCat login attempt",
-                      },
-                      {
-                        contentString: JSON.stringify({
-                          timestamp: new Date().toISOString(),
-                          method: "Purchases.logIn",
-                          profileId: profile.id,
-                          retryCount: retryCount,
-                          status: "attempting",
-                        }),
-                      },
-                    ],
-                  });
-                } catch (logError) {
-                  console.error("Failed to create pre-login log:", logError);
-                }
+                // Log login attempt
+                await logAuthError("RevenueCat login attempt", {
+                  method: "Purchases.logIn",
+                  profileId: profile.id,
+                  retryCount: retryCount,
+                  status: "attempting",
+                });
 
-                // Show a pre-login message
-                Alert.alert("RevenueCat", "Executing Purchases.logIn() now...");
+                // Log pre-login message
+                console.log("📱 [RevenueCat] Executing Purchases.logIn() now...");
 
                 // Try the login - this will fail if not properly initialized
                 try {
                   await Purchases.logIn(profile.id);
-                  Alert.alert("RevenueCat", "Login successful!");
+                  console.log("📱 [RevenueCat] Login successful!");
                 } catch (loginErr) {
-                  Alert.alert("RevenueCat Login Error", String(loginErr));
+                  console.error("📱 [RevenueCat] Login Error:", String(loginErr));
                   throw loginErr; // Re-throw to be caught by the outer try/catch
                 }
 
-                // Create Communication resource log for successful login
-                try {
-                  await medplum.createResource({
-                    resourceType: "Communication",
-                    status: "completed",
-                    subject: { reference: `Patient/${profile.id}` },
-                    about: [{ reference: `Patient/${profile.id}` }],
-                    sent: new Date().toISOString(),
-                    payload: [
-                      {
-                        contentString: "RevenueCat login successful",
-                      },
-                      {
-                        contentString: JSON.stringify({
-                          timestamp: new Date().toISOString(),
-                          method: "Purchases.logIn",
-                          profileId: profile.id,
-                          retryCount: retryCount,
-                          status: "success",
-                        }),
-                      },
-                    ],
-                  });
-                } catch (logError) {
-                  console.error("Failed to create post-login log:", logError);
-                }
+                // Log successful login
+                await logAuthError("RevenueCat login successful", {
+                  method: "Purchases.logIn",
+                  profileId: profile.id,
+                  retryCount: retryCount,
+                  status: "success",
+                });
 
-                logAuthError("RevenueCat Login", {
+                await logAuthError("RevenueCat Login", {
                   success: true,
                   profileId: profile.id,
                   retryCount,
@@ -335,68 +284,30 @@ export default function SignIn() {
                 // Force refresh customer info to ensure everything is synced
                 if (typeof Purchases.getCustomerInfo === "function") {
                   try {
-                    // Create Communication resource log before customer info fetch
-                    try {
-                      await medplum.createResource({
-                        resourceType: "Communication",
-                        status: "completed",
-                        subject: { reference: `Patient/${profile.id}` },
-                        about: [{ reference: `Patient/${profile.id}` }],
-                        sent: new Date().toISOString(),
-                        payload: [
-                          {
-                            contentString: "RevenueCat customer info fetch attempt",
-                          },
-                          {
-                            contentString: JSON.stringify({
-                              timestamp: new Date().toISOString(),
-                              method: "Purchases.getCustomerInfo",
-                              profileId: profile.id,
-                              status: "attempting",
-                            }),
-                          },
-                        ],
-                      });
-                    } catch (logError) {
-                      console.error("Failed to create pre-customer-info log:", logError);
-                    }
+                    // Log customer info fetch attempt
+                    await logAuthError("RevenueCat customer info fetch attempt", {
+                      method: "Purchases.getCustomerInfo",
+                      profileId: profile.id,
+                      status: "attempting",
+                    });
 
                     const customerInfo = await Purchases.getCustomerInfo();
 
-                    // Create Communication resource log for successful customer info fetch
-                    try {
-                      await medplum.createResource({
-                        resourceType: "Communication",
-                        status: "completed",
-                        subject: { reference: `Patient/${profile.id}` },
-                        about: [{ reference: `Patient/${profile.id}` }],
-                        sent: new Date().toISOString(),
-                        payload: [
-                          {
-                            contentString: "RevenueCat customer info fetch successful",
-                          },
-                          {
-                            contentString: JSON.stringify({
-                              timestamp: new Date().toISOString(),
-                              method: "Purchases.getCustomerInfo",
-                              profileId: profile.id,
-                              status: "success",
-                              hasEntitlements: !!customerInfo?.entitlements?.active,
-                              entitlementCount: customerInfo?.entitlements?.active
-                                ? Object.keys(customerInfo.entitlements.active).length
-                                : 0,
-                              entitlements: customerInfo?.entitlements?.active
-                                ? Object.keys(customerInfo.entitlements.active)
-                                : [],
-                            }),
-                          },
-                        ],
-                      });
-                    } catch (logError) {
-                      console.error("Failed to create post-customer-info log:", logError);
-                    }
+                    // Log successful customer info fetch
+                    await logAuthError("RevenueCat customer info fetch successful", {
+                      method: "Purchases.getCustomerInfo",
+                      profileId: profile.id,
+                      status: "success",
+                      hasEntitlements: !!customerInfo?.entitlements?.active,
+                      entitlementCount: customerInfo?.entitlements?.active
+                        ? Object.keys(customerInfo.entitlements.active).length
+                        : 0,
+                      entitlements: customerInfo?.entitlements?.active
+                        ? Object.keys(customerInfo.entitlements.active)
+                        : [],
+                    });
 
-                    logAuthError("RevenueCat CustomerInfo", {
+                    await logAuthError("RevenueCat CustomerInfo", {
                       success: true,
                       hasCustomerInfo: !!customerInfo,
                       entitlements: customerInfo?.entitlements?.active
@@ -407,87 +318,64 @@ export default function SignIn() {
                   } catch (infoError) {
                     console.warn("Failed to refresh customer info:", infoError);
 
-                    // Create Communication resource log for failed customer info fetch
-                    try {
-                      await medplum.createResource({
-                        resourceType: "Communication",
-                        status: "completed",
-                        subject: { reference: `Patient/${profile.id}` },
-                        about: [{ reference: `Patient/${profile.id}` }],
-                        sent: new Date().toISOString(),
-                        payload: [
-                          {
-                            contentString: "RevenueCat customer info fetch failed",
-                          },
-                          {
-                            contentString: JSON.stringify({
-                              timestamp: new Date().toISOString(),
-                              method: "Purchases.getCustomerInfo",
-                              profileId: profile.id,
-                              status: "error",
-                              error:
-                                infoError instanceof Error ? infoError.message : String(infoError),
-                            }),
-                          },
-                        ],
-                      });
-                    } catch (logError) {
-                      console.error("Failed to create error-customer-info log:", logError);
-                    }
+                    // Log failed customer info fetch
+                    await logAuthError(
+                      "RevenueCat customer info fetch failed",
+                      {
+                        method: "Purchases.getCustomerInfo",
+                        profileId: profile.id,
+                        status: "error",
+                        error: infoError instanceof Error ? infoError.message : String(infoError),
+                      },
+                      false,
+                    );
                   }
                 }
               } catch (error) {
                 console.warn(`RevenueCat login attempt ${retryCount} failed:`, error);
 
-                // Create Communication resource log for failed login
-                try {
-                  await medplum.createResource({
-                    resourceType: "Communication",
-                    status: "completed",
-                    subject: { reference: `Patient/${profile.id}` },
-                    about: [{ reference: `Patient/${profile.id}` }],
-                    sent: new Date().toISOString(),
-                    payload: [
-                      {
-                        contentString: "RevenueCat login failed",
-                      },
-                      {
-                        contentString: JSON.stringify({
-                          timestamp: new Date().toISOString(),
-                          method: "Purchases.logIn",
-                          profileId: profile.id,
-                          retryCount: retryCount,
-                          status: "error",
-                          error: error instanceof Error ? error.message : String(error),
-                        }),
-                      },
-                    ],
-                  });
-                } catch (logError) {
-                  console.error("Failed to create login-error log:", logError);
-                }
+                // Log failed login
+                await logAuthError(
+                  "RevenueCat login failed",
+                  {
+                    method: "Purchases.logIn",
+                    profileId: profile.id,
+                    retryCount: retryCount,
+                    status: "error",
+                    error: error instanceof Error ? error.message : String(error),
+                  },
+                  false,
+                );
 
                 // Retry logic - increase delay with each retry
                 if (retryCount < 2) {
                   const delay = (retryCount + 1) * 2000; // 2s, 4s
                   console.log(`Retrying RevenueCat login in ${delay}ms...`);
 
-                  logAuthError("RevenueCat Login Retry", {
-                    error: error instanceof Error ? error.message : String(error),
-                    profileId: profile.id,
-                    retryCount,
-                    nextRetryDelay: delay,
-                    timestamp: new Date().toISOString(),
-                  });
+                  await logAuthError(
+                    "RevenueCat Login Retry",
+                    {
+                      error: error instanceof Error ? error.message : String(error),
+                      profileId: profile.id,
+                      retryCount,
+                      nextRetryDelay: delay,
+                      timestamp: new Date().toISOString(),
+                    },
+                    false,
+                  );
 
                   setTimeout(() => attemptRevenueCatLogin(retryCount + 1), delay);
                 } else {
-                  logAuthError("RevenueCat Login Failed", {
-                    error: error instanceof Error ? error.message : String(error),
-                    profileId: profile.id,
-                    retriesExhausted: true,
-                    timestamp: new Date().toISOString(),
-                  });
+                  await logAuthError(
+                    "RevenueCat Login Failed",
+                    {
+                      error: error instanceof Error ? error.message : String(error),
+                      profileId: profile.id,
+                      retriesExhausted: true,
+                      timestamp: new Date().toISOString(),
+                    },
+                    false,
+                  );
                 }
               }
             };
@@ -495,50 +383,29 @@ export default function SignIn() {
             // Start the login attempt process
             attemptRevenueCatLogin();
           } catch (error) {
-            logAuthError("RevenueCat Login Failed", {
-              error: error instanceof Error ? error.message : String(error),
-              profileId: profile.id,
-              timestamp: new Date().toISOString(),
-            });
+            await logAuthError(
+              "RevenueCat Login Failed",
+              {
+                error: error instanceof Error ? error.message : String(error),
+                profileId: profile.id,
+                timestamp: new Date().toISOString(),
+              },
+              false,
+            );
             // Don't block the login process if RevenueCat fails
           }
         } else {
-          logAuthError("RevenueCat Login Skipped", {
+          await logAuthError("RevenueCat Login Skipped", {
             reason: "No profile ID available",
             timestamp: new Date().toISOString(),
           });
         }
 
-        // Add a diagnostic log entry to test Communication resource creation
-        try {
-          const profile = medplum.getProfile();
-          if (profile?.id) {
-            await medplum.createResource({
-              resourceType: "Communication",
-              status: "completed",
-              subject: { reference: `Patient/${profile.id}` },
-              about: [{ reference: `Patient/${profile.id}` }],
-              sent: new Date().toISOString(),
-              payload: [
-                {
-                  contentString: "DIAGNOSTIC LOG: Testing Communication Resource Creation",
-                },
-                {
-                  contentString: JSON.stringify({
-                    timestamp: new Date().toISOString(),
-                    test: "This is a test entry to verify Communication resource creation",
-                    platform: Platform.OS,
-                  }),
-                },
-              ],
-            });
-            console.log("Created diagnostic communication resource!");
-          } else {
-            console.log("Cannot create diagnostic log - no profile ID available");
-          }
-        } catch (diagError) {
-          console.error("Failed to create diagnostic log:", diagError);
-        }
+        // Add a diagnostic log entry
+        await logAuthError("DIAGNOSTIC LOG: Testing AuditEvent Resource Creation", {
+          test: "This is a test entry to verify AuditEvent resource creation",
+          platform: Platform.OS,
+        });
 
         redirectAfterLogin();
       } catch (error) {
@@ -550,12 +417,9 @@ export default function SignIn() {
           timestamp: new Date().toISOString(),
         };
 
-        logAuthError("Token Processing Failed", errorDetails);
+        await logAuthError("Token Processing Failed", errorDetails, false);
         console.error("Error processing token response:", error);
-        Alert.alert(
-          "Authentication Error",
-          `Failed to complete login process. Please try again. (${errorDetails.message})`,
-        );
+        Alert.alert("Authentication Error", "Failed to complete login process. Please try again.");
       }
     },
     [medplum, redirectAfterLogin, logAuthError],
@@ -572,17 +436,13 @@ export default function SignIn() {
     console.log("Token endpoint:", oAuth2Discovery.tokenEndpoint);
     console.log("=====================");
 
-    try {
-      await logAuthError("Starting Login Flow", {
-        oauth2ClientId,
-        redirectUri,
-        authorizationEndpoint: oAuth2Discovery.authorizationEndpoint,
-        tokenEndpoint: oAuth2Discovery.tokenEndpoint,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (err) {
-      console.error("Could not log auth start:", err);
-    }
+    await logAuthError("Starting Login Flow", {
+      oauth2ClientId,
+      redirectUri,
+      authorizationEndpoint: oAuth2Discovery.authorizationEndpoint,
+      tokenEndpoint: oAuth2Discovery.tokenEndpoint,
+      timestamp: new Date().toISOString(),
+    });
 
     const loginRequest = new AuthRequest({
       clientId: oauth2ClientId,
@@ -594,14 +454,14 @@ export default function SignIn() {
 
     let loginResponse;
     try {
-      logAuthError("Prompt Auth Request", {
+      await logAuthError("Prompt Auth Request", {
         status: "starting",
         timestamp: new Date().toISOString(),
       });
 
       loginResponse = await loginRequest.promptAsync(oAuth2Discovery);
 
-      logAuthError("Auth Prompt Response", {
+      await logAuthError("Auth Prompt Response", {
         type: loginResponse.type,
         hasCode: loginResponse.type === "success" && !!loginResponse.params.code,
         hasError: !!loginResponse.params.error,
@@ -615,11 +475,11 @@ export default function SignIn() {
         timestamp: new Date().toISOString(),
       };
 
-      logAuthError("Auth Prompt Error", errorDetails);
+      await logAuthError("Auth Prompt Error", errorDetails, false);
 
       if (error instanceof Error) {
         console.error("Auth prompt error:", error.message);
-        Alert.alert("Authentication error", error.message);
+        Alert.alert("Authentication error", "Unable to start sign-in process. Please try again.");
         if (__DEV__) {
           console.error(error);
         }
@@ -627,32 +487,39 @@ export default function SignIn() {
       return;
     }
 
+    if (loginResponse.type === "dismiss" || loginResponse.type === "cancel") {
+      // User cancelled the authentication - this is normal behavior, don't show an error
+      await logAuthError("Auth Cancelled", {
+        reason: "User cancelled authentication flow",
+        timestamp: new Date().toISOString(),
+      });
+      console.log("User cancelled authentication");
+      return;
+    }
+
     if (loginResponse.type === "error") {
       const errorDetails = {
-        error: loginResponse.params.error,
-        error_description: loginResponse.params.error_description,
+        error: loginResponse.params?.error || "Unknown error",
+        error_description: loginResponse.params?.error_description || "Authentication failed",
         timestamp: new Date().toISOString(),
       };
 
-      logAuthError("Auth Response Error", errorDetails);
+      await logAuthError("Auth Response Error", errorDetails, false);
 
       console.error(
         "Auth response error:",
-        loginResponse.params.error_description || "Unknown error",
+        loginResponse.params?.error_description || "Unknown error",
       );
-      Alert.alert(
-        "Authentication error",
-        loginResponse.params.error_description || "something went wrong",
-      );
+      Alert.alert("Sign In Cancelled", "You can try signing in again when you're ready.");
       if (__DEV__) {
-        console.error(loginResponse.params.error_description);
+        console.error(loginResponse.params?.error_description);
       }
       return;
     }
 
     if (loginResponse.type === "success") {
       try {
-        logAuthError("Token Exchange Request", {
+        await logAuthError("Token Exchange Request", {
           status: "starting",
           hasCode: !!loginResponse.params.code,
           hasCodeVerifier: !!loginRequest.codeVerifier,
@@ -687,7 +554,7 @@ export default function SignIn() {
 
         console.log("TOKEN RESPONSE:", JSON.stringify(logSafeResponse, null, 2));
 
-        logAuthError("Token Exchange Success", {
+        await logAuthError("Token Exchange Success", {
           status: "success",
           responseDetails: logSafeResponse,
           timestamp: new Date().toISOString(),
@@ -704,7 +571,7 @@ export default function SignIn() {
           timestamp: new Date().toISOString(),
         };
 
-        logAuthError("Token Exchange Error", errorDetails);
+        await logAuthError("Token Exchange Error", errorDetails, false);
 
         console.error("Token exchange error:", error);
 
@@ -716,10 +583,14 @@ export default function SignIn() {
             // If the user tries to login right after unsuccessfully logging out,
             // the server returns an invalid_request error.
             // We can ignore and try again:
-            logAuthError("Invalid Code Verifier", {
-              status: "retrying",
-              timestamp: new Date().toISOString(),
-            });
+            await logAuthError(
+              "Invalid Code Verifier",
+              {
+                status: "retrying",
+                timestamp: new Date().toISOString(),
+              },
+              false,
+            );
 
             console.log("Invalid code verifier, retrying login");
             return medplumLogin();
@@ -728,7 +599,7 @@ export default function SignIn() {
             code: error.code,
             description: error.description,
           });
-          Alert.alert("Authentication error", error.message);
+          Alert.alert("Authentication error", "Sign-in was unsuccessful. Please try again.");
           if (__DEV__) {
             console.error(error);
           }
@@ -742,22 +613,83 @@ export default function SignIn() {
     medplumLogin().finally(() => setIsLoginLoading(false));
   }, [medplumLogin]);
 
+  // Note: Currently unused but kept for potential future registration flow changes
+  // Registration callbacks are handled by _layout.tsx (mobile deep links) and register-callback.tsx (web)
   const handleRegisterSuccess = useCallback(() => {
     // Registration automatically logs the user in, so just redirect
     redirectAfterLogin();
   }, [redirectAfterLogin]);
 
-  const toggleRegistration = useCallback(() => {
-    setShowRegister((prev) => !prev);
+  // Direct registration handler - launches browser immediately
+  const handleCreateAccount = useCallback(async () => {
+    try {
+      // Base URL for the web registration page
+      const registrationUrl = "https://www.feelheard.me/register";
+
+      // Choose appropriate redirect URI based on platform
+      let redirectUri;
+
+      if (Platform.OS === "web") {
+        // For web, use the current origin with a callback path
+        const origin = window.location.origin;
+        redirectUri = `${origin}/register-callback`;
+      } else {
+        // For mobile, use the deep link scheme
+        redirectUri = "feelheard://register";
+      }
+
+      // Construct the full URL with redirect
+      const fullUrl = `${registrationUrl}?redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+      console.log("Registration URL:", fullUrl);
+
+      // Launch browser registration
+      if (Platform.OS === "web") {
+        window.open(fullUrl, "_blank");
+      } else {
+        try {
+          console.log("Opening browser for registration");
+          await WebBrowser.openBrowserAsync(fullUrl);
+        } catch (browserError) {
+          console.error("WebBrowser.openBrowserAsync failed:", browserError);
+
+          try {
+            // Fallback to WebBrowser.openAuthSessionAsync which handles redirects better
+            console.log("Attempting WebBrowser.openAuthSessionAsync as fallback");
+            await WebBrowser.openAuthSessionAsync(fullUrl, "feelheard://register");
+          } catch (authSessionError) {
+            console.error("WebBrowser.openAuthSessionAsync failed:", authSessionError);
+
+            // Last resort: try standard Linking
+            console.log("Attempting Linking.openURL as last resort");
+            await Linking.openURL(fullUrl);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error opening browser for registration:", error);
+      Alert.alert(
+        "Browser Error",
+        "Unable to open your browser. Please try again or register directly at www.feelheard.me",
+      );
+    }
   }, []);
 
   return (
     <GradientBackground variant="primary">
-      <View className="flex-1 items-center justify-center">
-        {isLoading && <Spinner size="large" color="white" />}
-        {!isLoading && !showRegister && (
-          <VStack space="lg" className="w-[90%] max-w-[350px] items-center">
-            <View className="w-full items-center rounded-xl bg-white/10 p-8 shadow-md backdrop-blur-md">
+      <View className="flex-1">
+        <Image
+          source={require("@/assets/images/two-hearts-gradient.png")}
+          style={{
+            width: "100%",
+            height: 350,
+          }}
+          resizeMode="cover"
+        />
+        <View className="flex-1 items-center justify-center px-6">
+          {isLoading && <Spinner size="large" color="white" />}
+          {!isLoading && (
+            <VStack space="lg" className="w-full max-w-[350px] items-center">
               <Text className="mb-1 text-center text-3xl font-bold text-white">
                 Welcome to FeelHeard.me
               </Text>
@@ -776,19 +708,14 @@ export default function SignIn() {
                 action="secondary"
                 variant="outline"
                 size="lg"
-                onPress={toggleRegistration}
+                onPress={handleCreateAccount}
                 className="h-14 w-full rounded-full border-white/50"
               >
                 <ButtonText className="text-lg font-semibold text-white">Create Account</ButtonText>
               </Button>
-            </View>
-          </VStack>
-        )}
-        {!isLoading && showRegister && (
-          <View className="w-[90%] max-w-[350px]">
-            <WebRegistration onSuccess={handleRegisterSuccess} onCancel={toggleRegistration} />
-          </View>
-        )}
+            </VStack>
+          )}
+        </View>
       </View>
     </GradientBackground>
   );
