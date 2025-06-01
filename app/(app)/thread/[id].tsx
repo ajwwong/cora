@@ -2,7 +2,8 @@ import { useMedplumContext } from "@medplum/react-hooks";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, View } from "react-native";
+import { Alert } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useContextSelector } from "use-context-selector";
 
 import { ChatHeader } from "@/components/ChatHeader";
@@ -278,16 +279,6 @@ export default function ThreadPage() {
             console.log("Attempting to start recording (reflection thread)");
             await startRecording();
             console.log("Recording started successfully");
-
-            // If not premium, show remaining message count
-            if (!hasPremium && remainingFreeMessages > 0) {
-              Alert.alert(
-                "Voice Message",
-                `You have ${remainingFreeMessages} voice messages remaining today.`,
-                [{ text: "OK" }],
-                { cancelable: true },
-              );
-            }
           } catch (error) {
             console.error("Error starting recording:", error);
             Alert.alert("Error", "Failed to start recording. Please check microphone permissions.");
@@ -383,7 +374,7 @@ export default function ThreadPage() {
   }
 
   return (
-    <View className="flex-1 bg-background-50">
+    <KeyboardAvoidingView style={{ flex: 1 }} className="bg-background-50">
       <ChatHeader
         currentThread={thread}
         getAvatarURL={getAvatarURL}
@@ -391,6 +382,8 @@ export default function ThreadPage() {
         onDelete={handleDeleteMessages}
         onCancelSelection={handleCancelSelection}
         isDeleting={isDeleting}
+        remainingFreeMessages={remainingFreeMessages}
+        hasPremium={hasPremium}
       />
       <ChatMessageList
         messages={thread.messages}
@@ -435,6 +428,6 @@ export default function ThreadPage() {
         isOpen={showVoiceGate}
         onClose={() => setShowVoiceGate(false)}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }

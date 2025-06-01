@@ -103,6 +103,8 @@ export function ChatMessageList({
       windowSize={5}
       removeClippedSubviews
       inverted
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
       ListHeaderComponent={loading ? <LoadingDots /> : null}
     />
   );
