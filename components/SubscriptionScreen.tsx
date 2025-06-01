@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { Platform } from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 
+import { trackSubscriptionEvent } from "@/utils/system-logging";
+
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { FREE_DAILY_VOICE_MESSAGE_LIMIT } from "../utils/subscription/config";
 import LoadingScreen from "./LoadingScreen";
@@ -29,30 +31,26 @@ const SubscriptionScreen = () => {
     customerInfo,
   } = useSubscription();
 
-  // Create a helper function for logging to Communication resources
-  const logToMedplum = async (title: string, data: Record<string, unknown>) => {
+  // Create a helper function for logging to AuditEvent resources
+  const logToAuditEvent = async (
+    eventType: "purchase" | "status_change" | "error",
+    title: string,
+    data: Record<string, unknown>,
+    success: boolean = true,
+  ) => {
     try {
       const profile = medplum.getProfile();
       if (!profile?.id) return;
 
-      await medplum.createResource({
-        resourceType: "Communication",
-        status: "completed",
-        subject: { reference: `Patient/${profile.id}` },
-        about: [{ reference: `Patient/${profile.id}` }],
-        sent: new Date().toISOString(),
-        payload: [
-          {
-            contentString: title,
-          },
-          {
-            contentString: JSON.stringify({
-              timestamp: new Date().toISOString(),
-              component: "SubscriptionScreen",
-              ...data,
-            }),
-          },
-        ],
+      await trackSubscriptionEvent({
+        medplum,
+        patientId: profile.id,
+        eventType,
+        details: `[SubscriptionScreen] ${title}: ${JSON.stringify({
+          timestamp: new Date().toISOString(),
+          ...data,
+        })}`,
+        success,
       });
     } catch (error) {
       console.error(`Failed to log "${title}":`, error);
@@ -62,7 +60,7 @@ const SubscriptionScreen = () => {
   // Log subscription status when component mounts
   useEffect(() => {
     const logSubscriptionInfo = async () => {
-      await logToMedplum("SubscriptionScreen Initial Status", {
+      await logToAuditEvent("status_change", "SubscriptionScreen Initial Status", {
         isPremium,
         hasCustomerInfo: !!customerInfo,
         activeEntitlements: customerInfo?.entitlements?.active
@@ -76,13 +74,13 @@ const SubscriptionScreen = () => {
     };
 
     logSubscriptionInfo();
-  }, [isPremium, customerInfo, availablePackages, logToMedplum]);
+  }, [isPremium, customerInfo, availablePackages, logToAuditEvent]);
 
   // Handle purchase using RevenueCat native paywall
   const handlePurchase = async () => {
     try {
       // Log purchase attempt
-      await logToMedplum("SubscriptionScreen PaywallUI Attempt", {
+      await logToAuditEvent("purchase", "SubscriptionScreen PaywallUI Attempt", {
         currentStatus: isPremium ? "premium" : "free",
       });
 
@@ -95,7 +93,7 @@ const SubscriptionScreen = () => {
 
       switch (paywallResult) {
         case PAYWALL_RESULT.PURCHASED:
-          await logToMedplum("SubscriptionScreen PaywallUI Success", {
+          await logToAuditEvent("purchase", "SubscriptionScreen PaywallUI Success", {
             result: "purchased",
             premium: true,
           });
@@ -104,7 +102,7 @@ const SubscriptionScreen = () => {
           break;
 
         case PAYWALL_RESULT.RESTORED:
-          await logToMedplum("SubscriptionScreen PaywallUI Success", {
+          await logToAuditEvent("purchase", "SubscriptionScreen PaywallUI Success", {
             result: "restored",
             premium: true,
           });
@@ -113,7 +111,7 @@ const SubscriptionScreen = () => {
           break;
 
         case PAYWALL_RESULT.CANCELLED:
-          await logToMedplum("SubscriptionScreen PaywallUI Cancelled", {
+          await logToAuditEvent("status_change", "SubscriptionScreen PaywallUI Cancelled", {
             result: "cancelled",
           });
           console.log("🛒 User cancelled paywall");
@@ -122,26 +120,36 @@ const SubscriptionScreen = () => {
         case PAYWALL_RESULT.NOT_PRESENTED:
         case PAYWALL_RESULT.ERROR:
         default:
-          await logToMedplum("SubscriptionScreen PaywallUI Error", {
-            result: paywallResult,
-          });
+          await logToAuditEvent(
+            "error",
+            "SubscriptionScreen PaywallUI Error",
+            {
+              result: paywallResult,
+            },
+            false,
+          );
           console.log("🛒 Paywall error or not presented:", paywallResult);
           break;
       }
     } catch (error) {
       console.error("🛒 Paywall error:", error);
 
-      await logToMedplum("SubscriptionScreen PaywallUI Exception", {
-        result: "exception",
-        error: error instanceof Error ? error.message : String(error),
-      });
+      await logToAuditEvent(
+        "error",
+        "SubscriptionScreen PaywallUI Exception",
+        {
+          result: "exception",
+          error: error instanceof Error ? error.message : String(error),
+        },
+        false,
+      );
     }
   };
 
   // Handle restore purchases
   const handleRestore = async () => {
     // Log restore attempt
-    await logToMedplum("SubscriptionScreen Restore Attempt", {
+    await logToAuditEvent("purchase", "SubscriptionScreen Restore Attempt", {
       currentStatus: isPremium ? "premium" : "free",
     });
 
@@ -150,7 +158,7 @@ const SubscriptionScreen = () => {
 
       if (success) {
         // Log restore success
-        await logToMedplum("SubscriptionScreen Restore Success", {
+        await logToAuditEvent("purchase", "SubscriptionScreen Restore Success", {
           result: "success",
           premium: true,
         });
@@ -159,7 +167,7 @@ const SubscriptionScreen = () => {
         router.push("/(app)");
       } else {
         // Log no purchases found
-        await logToMedplum("SubscriptionScreen Restore No Purchases", {
+        await logToAuditEvent("status_change", "SubscriptionScreen Restore No Purchases", {
           result: "no_purchases",
           premium: isPremium,
         });
@@ -171,10 +179,15 @@ const SubscriptionScreen = () => {
       console.error("Restore failed:", error);
 
       // Log restore error
-      await logToMedplum("SubscriptionScreen Restore Error", {
-        result: "error",
-        error: error instanceof Error ? error.message : String(error),
-      });
+      await logToAuditEvent(
+        "error",
+        "SubscriptionScreen Restore Error",
+        {
+          result: "error",
+          error: error instanceof Error ? error.message : String(error),
+        },
+        false,
+      );
     }
   };
 

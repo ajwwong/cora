@@ -4,7 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "FeelHeard",
   slug: "feelheard-me",
-  version: "1.0.0",
+  version: "1.0.40",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "feelheard",
@@ -50,6 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "./plugins/withRevenueCat", // Add RevenueCat native initialization
+    "./plugins/withSigningConfig", // Add release signing configuration
     "expo-router",
     "expo-font",
     [

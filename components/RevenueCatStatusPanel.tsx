@@ -5,6 +5,7 @@ import Purchases from "react-native-purchases";
 
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { getRevenueCatDebugInfo } from "@/utils/subscription/initialize-revenue-cat";
+import { trackSubscriptionEvent } from "@/utils/system-logging";
 
 interface StatusProps {
   onClose?: () => void;
@@ -20,29 +21,25 @@ export const RevenueCatStatusPanel: React.FC<StatusProps> = ({ onClose }) => {
   const [debugInfo, setDebugInfo] = useState(getRevenueCatDebugInfo());
 
   // Helper function to log panel actions to Communication resources
-  const logToCommunication = async (title: string, data: Record<string, unknown>) => {
+  const logToAuditEvent = async (
+    title: string,
+    success: boolean,
+    data: Record<string, unknown>,
+  ) => {
     try {
       const profile = medplum.getProfile();
-      if (!profile?.id) return;
-
-      await medplum.createResource({
-        resourceType: "Communication",
-        status: "completed",
-        subject: { reference: `Patient/${profile.id}` },
-        about: [{ reference: `Patient/${profile.id}` }],
-        sent: new Date().toISOString(),
-        payload: [
-          {
-            contentString: `PANEL: ${title}`,
-          },
-          {
-            contentString: JSON.stringify({
-              timestamp: new Date().toISOString(),
-              ...data,
-            }),
-          },
-        ],
-      });
+      await trackSubscriptionEvent(
+        medplum,
+        "status_change",
+        success,
+        {
+          title: `PANEL: ${title}`,
+          component: "RevenueCatStatusPanel",
+          ...data,
+        },
+        success ? undefined : (data.error as string),
+        profile?.id,
+      );
     } catch (error) {
       console.error(`Failed to log "${title}" from panel:`, error);
     }
@@ -74,19 +71,19 @@ export const RevenueCatStatusPanel: React.FC<StatusProps> = ({ onClose }) => {
     Alert.alert("RevenueCat Detailed Status", JSON.stringify(enhancedInfo, null, 2));
 
     // Log to Communication resources
-    logToCommunication("Detailed Status Button Pressed", enhancedInfo);
+    logToAuditEvent("Detailed Status Button Pressed", true, enhancedInfo);
   };
 
   const attemptBridgeDiagnostic = () => {
     // Log initial attempt to Communication
-    logToCommunication("Native Bridge Diagnostic Started", {
+    logToAuditEvent("Native Bridge Diagnostic Started", true, {
       platform: Platform.OS,
     });
 
     if (!NativeModules.RNPurchases) {
       const errorMsg = "RNPurchases native module is not available";
       Alert.alert("Native Module Error", errorMsg);
-      logToCommunication("Native Module Error", { error: errorMsg });
+      logToAuditEvent("Native Module Error", false, { error: errorMsg });
       return;
     }
 
@@ -113,7 +110,7 @@ export const RevenueCatStatusPanel: React.FC<StatusProps> = ({ onClose }) => {
     };
 
     Alert.alert("Bridge Diagnostic", JSON.stringify(diagnosticInfo, null, 2));
-    logToCommunication("Native Bridge Diagnostic Complete", diagnosticInfo);
+    logToAuditEvent("Native Bridge Diagnostic Complete", true, diagnosticInfo);
   };
 
   const testUserLinking = async () => {
@@ -131,7 +128,7 @@ export const RevenueCatStatusPanel: React.FC<StatusProps> = ({ onClose }) => {
       );
 
       // Log the test attempt
-      await logToCommunication("User Linking Test Started", {
+      await logToAuditEvent("User Linking Test Started", true, {
         currentUserID,
         patientID: profile.id,
         platform: Platform.OS,
@@ -156,7 +153,7 @@ export const RevenueCatStatusPanel: React.FC<StatusProps> = ({ onClose }) => {
       );
 
       // Log success
-      await logToCommunication("User Linking Test Success", {
+      await logToAuditEvent("User Linking Test Success", true, {
         previousID: currentUserID,
         newID: newUserID,
         customerInfoID: newCustomerInfo.originalAppUserId,
@@ -166,7 +163,7 @@ export const RevenueCatStatusPanel: React.FC<StatusProps> = ({ onClose }) => {
     } catch (error) {
       Alert.alert("User Linking Test", `ERROR: ${error}`);
 
-      await logToCommunication("User Linking Test Failed", {
+      await logToAuditEvent("User Linking Test Failed", false, {
         error: error instanceof Error ? error.message : String(error),
         platform: Platform.OS,
       });

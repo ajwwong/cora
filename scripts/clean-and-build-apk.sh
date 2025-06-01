@@ -22,7 +22,7 @@ rm -rf ./android/build
 
 # Run prebuild to ensure native projects are updated
 log "Running prebuild..."
-npx expo prebuild --clean 2>&1 | tee -a "$LOG_FILE"
+npx expo prebuild 2>&1 | tee -a "$LOG_FILE"
 
 # Navigate to the android directory
 cd ./android
