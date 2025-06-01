@@ -1,15 +1,7 @@
-import {
-  AlertCircleIcon,
-  BoltIcon,
-  LockIcon,
-  MessageSquareIcon,
-  MicIcon,
-  ZapIcon,
-} from "lucide-react-native";
+import { AlertCircleIcon, LockIcon, MessageSquareIcon, MicIcon } from "lucide-react-native";
 import { useState } from "react";
 import { ScrollView } from "react-native";
 
-import { FREE_DAILY_VOICE_MESSAGE_LIMIT } from "../utils/subscription/config";
 import { Modal, ModalBody, ModalFooter, ModalHeader } from "./Modal";
 import { Button, ButtonText } from "./ui/button";
 import { Text } from "./ui/text";
@@ -27,7 +19,7 @@ export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps)
   const [step, setStep] = useState(0);
 
   const handleNext = () => {
-    if (step < 4) {
+    if (step < 3) {
       setStep(step + 1);
     } else {
       // Reset step for next time
@@ -50,8 +42,7 @@ export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps)
             <View className="mb-6">
               <Text className="mb-2 text-base font-medium">
                 The Reflection Guide is an AI-powered tool to help you explore your thoughts and
-                feelings between therapy sessions. It provides a safe space for reflection and
-                personal growth.
+                feelings. It provides a safe space for reflection and personal growth.
               </Text>
 
               <Text className="mb-4 text-sm">
@@ -151,50 +142,6 @@ export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps)
           <ScrollView className="max-h-[400px]">
             <View className="mb-6">
               <Text className="mb-2 text-base font-medium">
-                Cora offers a freemium model with two plans:
-              </Text>
-
-              <View className="mb-4 rounded-lg bg-gray-100 p-3">
-                <Text className="mb-1 font-medium">Free Plan</Text>
-                <View className="mb-2 flex-row items-center">
-                  <MessageSquareIcon size={16} color="#4B5563" />
-                  <Text className="ml-2 text-sm">Unlimited text conversations</Text>
-                </View>
-                <View className="mb-2 flex-row items-center">
-                  <MicIcon size={16} color="#4B5563" />
-                  <Text className="ml-2 text-sm">
-                    {FREE_DAILY_VOICE_MESSAGE_LIMIT} voice messages per day
-                  </Text>
-                </View>
-              </View>
-
-              <View className="mb-4 rounded-lg bg-primary-50 p-3">
-                <Text className="mb-1 font-medium text-primary-700">
-                  Voice Connect Subscription
-                </Text>
-                <View className="mb-2 flex-row items-center">
-                  <ZapIcon size={16} color="#4B5563" />
-                  <Text className="ml-2 text-sm">Voice messaging</Text>
-                </View>
-                <View className="mb-2 flex-row items-center">
-                  <BoltIcon size={16} color="#4B5563" />
-                  <Text className="ml-2 text-sm">Enhanced voice features (coming soon)</Text>
-                </View>
-              </View>
-
-              <Text className="text-sm">
-                You can upgrade to Voice Connect anytime through the settings menu if you find
-                yourself using voice messaging frequently.
-              </Text>
-            </View>
-          </ScrollView>
-        );
-
-      case 4:
-        return (
-          <ScrollView className="max-h-[400px]">
-            <View className="mb-6">
-              <Text className="mb-2 text-base font-medium">
                 Your privacy and security are important to us. Here's what you should know:
               </Text>
 
@@ -205,15 +152,11 @@ export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps)
                 </View>
                 <View className="mb-2 flex-row items-center">
                   <LockIcon size={18} color="#4B5563" />
-                  <Text className="ml-2 text-sm">
-                    Your therapist may review these reflections as part of your care
-                  </Text>
+                  <Text className="ml-2 text-sm">We do not use your data for training</Text>
                 </View>
                 <View className="mb-2 flex-row items-center">
                   <LockIcon size={18} color="#4B5563" />
-                  <Text className="ml-2 text-sm">
-                    The AI does not store or use your data for training
-                  </Text>
+                  <Text className="ml-2 text-sm">We do not sell your data to advertisers.</Text>
                 </View>
               </View>
 
@@ -241,7 +184,7 @@ export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps)
   const renderDots = () => {
     return (
       <View className="mb-2 mt-4 flex-row justify-center">
-        {[0, 1, 2, 3, 4].map((index) => (
+        {[0, 1, 2, 3].map((index) => (
           <View
             key={index}
             className={`mx-1 h-2 w-2 rounded-full ${step === index ? "bg-primary-500" : "bg-gray-300"}`}
@@ -252,10 +195,9 @@ export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps)
   };
 
   const titles = [
-    "Welcome to Cora",
+    "Welcome to Feel Heard",
     "Text Chat",
     "Voice Recording",
-    "Subscription Plans",
     "Privacy & Important Info",
   ];
 
@@ -272,7 +214,7 @@ export function WelcomeWalkthrough({ opened, onClose }: WelcomeWalkthroughProps)
             <ButtonText>Back</ButtonText>
           </Button>
           <Button onPress={handleNext}>
-            <ButtonText>{step === 4 ? "Get Started" : "Next"}</ButtonText>
+            <ButtonText>{step === 3 ? "Get Started" : "Next"}</ButtonText>
           </Button>
         </View>
       </ModalFooter>

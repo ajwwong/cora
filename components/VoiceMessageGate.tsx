@@ -6,6 +6,7 @@ import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { ENTITLEMENT_IDS } from "../utils/subscription/config";
+import { trackSubscriptionEvent } from "../utils/system-logging";
 import {
   FREE_DAILY_VOICE_MESSAGE_LIMIT,
   getVoiceMessageUsage,
@@ -139,29 +140,26 @@ export function VoiceMessageGate({
     }
   };
 
-  // Helper function for logging to Medplum
-  const logToMedplum = async (title: string, data: Record<string, unknown>) => {
+  // Helper function for logging to AuditEvent
+  const logToAuditEvent = async (
+    eventType: "purchase" | "status_change" | "error",
+    title: string,
+    data: Record<string, unknown>,
+    success: boolean = true,
+  ) => {
     try {
       const profile = medplum.getProfile();
       if (profile?.id) {
-        await medplum.createResource({
-          resourceType: "Communication",
-          status: "completed",
-          subject: { reference: `Patient/${profile.id}` },
-          about: [{ reference: `Patient/${profile.id}` }],
-          sent: new Date().toISOString(),
-          payload: [
-            {
-              contentString: title,
-            },
-            {
-              contentString: JSON.stringify({
-                timestamp: new Date().toISOString(),
-                threadId: _threadId,
-                ...data,
-              }),
-            },
-          ],
+        await trackSubscriptionEvent({
+          medplum,
+          patientId: profile.id,
+          eventType,
+          details: `[VoiceMessageGate] ${title}: ${JSON.stringify({
+            timestamp: new Date().toISOString(),
+            threadId: _threadId,
+            ...data,
+          })}`,
+          success,
         });
       }
     } catch (error) {
@@ -175,7 +173,7 @@ export function VoiceMessageGate({
 
     try {
       // Log upgrade attempt
-      await logToMedplum("VoiceGate Direct Upgrade Attempt", {
+      await logToAuditEvent("purchase", "VoiceGate Direct Upgrade Attempt", {
         currentUsage: voiceUsage,
         source: "voice_message_limit",
       });
@@ -197,7 +195,7 @@ export function VoiceMessageGate({
 
       switch (paywallResult) {
         case PAYWALL_RESULT.PURCHASED:
-          await logToMedplum("VoiceGate Upgrade Success", {
+          await logToAuditEvent("purchase", "VoiceGate Upgrade Success", {
             result: "purchased",
             source: "voice_message_limit",
           });
@@ -207,7 +205,7 @@ export function VoiceMessageGate({
           break;
 
         case PAYWALL_RESULT.RESTORED:
-          await logToMedplum("VoiceGate Upgrade Success", {
+          await logToAuditEvent("purchase", "VoiceGate Upgrade Success", {
             result: "restored",
             source: "voice_message_limit",
           });
@@ -217,7 +215,7 @@ export function VoiceMessageGate({
           break;
 
         case PAYWALL_RESULT.CANCELLED:
-          await logToMedplum("VoiceGate Upgrade Cancelled", {
+          await logToAuditEvent("status_change", "VoiceGate Upgrade Cancelled", {
             result: "cancelled",
             source: "voice_message_limit",
           });
@@ -232,11 +230,16 @@ export function VoiceMessageGate({
         case PAYWALL_RESULT.NOT_PRESENTED:
         case PAYWALL_RESULT.ERROR:
         default:
-          await logToMedplum("VoiceGate Upgrade Error", {
-            result: paywallResult,
-            resultString: String(paywallResult),
-            source: "voice_message_limit",
-          });
+          await logToAuditEvent(
+            "error",
+            "VoiceGate Upgrade Error",
+            {
+              result: paywallResult,
+              resultString: String(paywallResult),
+              source: "voice_message_limit",
+            },
+            false,
+          );
           console.log("🛒 [VoiceGate] Paywall not presented or error:", paywallResult);
           console.log("🛒 [VoiceGate] Falling back to subscription page");
           // Fallback to subscription page if paywall fails (modal already closed)
@@ -251,12 +254,17 @@ export function VoiceMessageGate({
         error instanceof Error ? error.message : String(error),
       );
 
-      await logToMedplum("VoiceGate Upgrade Exception", {
-        result: "exception",
-        error: error instanceof Error ? error.message : String(error),
-        errorType: typeof error,
-        source: "voice_message_limit",
-      });
+      await logToAuditEvent(
+        "error",
+        "VoiceGate Upgrade Exception",
+        {
+          result: "exception",
+          error: error instanceof Error ? error.message : String(error),
+          errorType: typeof error,
+          source: "voice_message_limit",
+        },
+        false,
+      );
 
       // Fallback to subscription page on error (modal already closed)
       console.log("🛒 [VoiceGate] Falling back to subscription page due to exception");
@@ -274,7 +282,7 @@ export function VoiceMessageGate({
           <Text>
             You've used all {FREE_DAILY_VOICE_MESSAGE_LIMIT} of your daily voice messages.
           </Text>
-          <Text>Upgrade to Voice Connect for unlimited voice messaging.</Text>
+          <Text>Upgrade to Voice Connect for enhanced voice messaging.</Text>
         </VStack>
       </ModalBody>
       <ModalFooter>

@@ -114,25 +114,6 @@ export function ChatMessageInput({
         ) : (
           <>
             <MicIcon size={24} color="#374151" />
-            {!hasPremium && remainingFreeMessages > 0 && (
-              <View
-                style={{
-                  position: "absolute",
-                  top: -5,
-                  right: -5,
-                  backgroundColor: "#4338ca",
-                  borderRadius: 10,
-                  width: 20,
-                  height: 20,
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text style={{ fontSize: 12, color: "white", fontWeight: "bold" }}>
-                  {remainingFreeMessages}
-                </Text>
-              </View>
-            )}
           </>
         )}
       </Pressable>

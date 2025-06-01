@@ -1,10 +1,10 @@
 import { Patient } from "@medplum/fhirtypes";
 import { useMedplum } from "@medplum/react-hooks";
-import { router } from "expo-router";
 import { Bug, CreditCard, Loader, Mail, Moon, Sun, User } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
+import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 
-import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
+import { Button, ButtonText } from "@/components/ui/button";
 import { Divider } from "@/components/ui/divider";
 import { Icon } from "@/components/ui/icon";
 import {
@@ -20,6 +20,7 @@ import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
+import { trackSubscriptionEvent } from "@/utils/system-logging";
 
 import SubscriptionDebugPanel from "./SubscriptionDebugPanel";
 
@@ -30,36 +31,31 @@ interface SettingsModalProps {
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { isAutoplayEnabled, isLoadingPreference, toggleAutoplay } = useUserPreferences();
-  const { isPremium, customerInfo, retryUserLinking, isLinkingInProgress } = useSubscription();
+  const { isPremium, customerInfo } = useSubscription();
   const medplum = useMedplum();
   const [patientInfo, setPatientInfo] = useState<Patient | null>(null);
   const [isLoadingPatient, setIsLoadingPatient] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
 
-  // Create a helper function for logging to Communication resources
-  const logToMedplum = async (title: string, data: Record<string, unknown>) => {
+  // Helper function that accepts patient ID directly to avoid dependency issues
+  const logToSystemWithPatient = async (
+    title: string,
+    patientId: string,
+    data: Record<string, unknown>,
+  ) => {
     try {
-      if (!patientInfo?.id) return;
-
-      await medplum.createResource({
-        resourceType: "Communication",
-        status: "completed",
-        subject: { reference: `Patient/${patientInfo.id}` },
-        about: [{ reference: `Patient/${patientInfo.id}` }],
-        sent: new Date().toISOString(),
-        payload: [
-          {
-            contentString: title,
-          },
-          {
-            contentString: JSON.stringify({
-              timestamp: new Date().toISOString(),
-              component: "SettingsModal",
-              ...data,
-            }),
-          },
-        ],
-      });
+      await trackSubscriptionEvent(
+        medplum,
+        "status_change",
+        true,
+        {
+          title,
+          component: "SettingsModal",
+          ...data,
+        },
+        undefined,
+        patientId,
+      );
     } catch (error) {
       console.error(`Failed to log "${title}":`, error);
     }
@@ -76,35 +72,19 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             const patient = await medplum.readResource("Patient", profile.id);
             setPatientInfo(patient);
 
-            // Log RevenueCat status when modal opens
-            try {
-              await medplum.createResource({
-                resourceType: "Communication",
-                status: "completed",
-                subject: { reference: `Patient/${patient.id}` },
-                about: [{ reference: `Patient/${patient.id}` }],
-                sent: new Date().toISOString(),
-                payload: [
-                  {
-                    contentString: "SettingsModal RevenueCat Status",
-                  },
-                  {
-                    contentString: JSON.stringify({
-                      timestamp: new Date().toISOString(),
-                      component: "SettingsModal",
-                      isPremium: isPremium,
-                      hasCustomerInfo: !!customerInfo,
-                      activeEntitlements: customerInfo?.entitlements?.active
-                        ? Object.keys(customerInfo.entitlements.active)
-                        : [],
-                      customerInfoId: customerInfo?.originalAppUserId || null,
-                      status: isPremium ? "Voice Connect" : "Text Companion",
-                    }),
-                  },
-                ],
+            // Log RevenueCat status when modal opens using AuditEvent (async, don't await)
+            if (patient.id) {
+              logToSystemWithPatient("SettingsModal RevenueCat Status", patient.id, {
+                isPremium: isPremium,
+                hasCustomerInfo: !!customerInfo,
+                activeEntitlements: customerInfo?.entitlements?.active
+                  ? Object.keys(customerInfo.entitlements.active)
+                  : [],
+                customerInfoId: customerInfo?.originalAppUserId || null,
+                status: isPremium ? "Voice Connect" : "Text Companion",
+              }).catch((logError) => {
+                console.error("Failed to log RevenueCat status in SettingsModal:", logError);
               });
-            } catch (logError) {
-              console.error("Failed to log RevenueCat status in SettingsModal:", logError);
             }
           }
         } catch (error) {
@@ -122,10 +102,82 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     toggleAutoplay();
   }, [toggleAutoplay]);
 
-  const navigateToSubscription = useCallback(() => {
-    onClose(); // Close the modal first
-    router.push("/subscription");
-  }, [onClose]);
+  // Direct paywall upgrade handler - similar to VoiceMessageGate.tsx
+  const handleDirectUpgrade = async () => {
+    console.log("🛒 [SettingsModal] Upgrade button clicked - starting direct upgrade process");
+
+    try {
+      // Log upgrade attempt
+      if (patientInfo?.id) {
+        await logToSystemWithPatient("SettingsModal Direct Upgrade Attempt", patientInfo.id, {
+          source: "settings_modal",
+        });
+      }
+
+      console.log("🛒 [SettingsModal] About to present RevenueCat paywall for upgrade");
+
+      // Present RevenueCat native paywall directly
+      const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();
+
+      console.log("🛒 [SettingsModal] Paywall result received:", paywallResult);
+
+      switch (paywallResult) {
+        case PAYWALL_RESULT.PURCHASED:
+          if (patientInfo?.id) {
+            await logToSystemWithPatient("SettingsModal Upgrade Success", patientInfo.id, {
+              result: "purchased",
+              source: "settings_modal",
+            });
+          }
+          console.log("🛒 [SettingsModal] Purchase successful");
+          // No need to navigate away - user can see updated subscription status
+          break;
+
+        case PAYWALL_RESULT.RESTORED:
+          if (patientInfo?.id) {
+            await logToSystemWithPatient("SettingsModal Upgrade Success", patientInfo.id, {
+              result: "restored",
+              source: "settings_modal",
+            });
+          }
+          console.log("🛒 [SettingsModal] Purchases restored");
+          break;
+
+        case PAYWALL_RESULT.CANCELLED:
+          if (patientInfo?.id) {
+            await logToSystemWithPatient("SettingsModal Upgrade Cancelled", patientInfo.id, {
+              result: "cancelled",
+              source: "settings_modal",
+            });
+          }
+          console.log("🛒 [SettingsModal] User cancelled paywall");
+          break;
+
+        case PAYWALL_RESULT.NOT_PRESENTED:
+        case PAYWALL_RESULT.ERROR:
+        default:
+          if (patientInfo?.id) {
+            await logToSystemWithPatient("SettingsModal Upgrade Error", patientInfo.id, {
+              result: paywallResult,
+              resultString: String(paywallResult),
+              source: "settings_modal",
+            });
+          }
+          console.log("🛒 [SettingsModal] Paywall not presented or error:", paywallResult);
+          break;
+      }
+    } catch (error) {
+      console.error("🛒 [SettingsModal] Paywall exception caught:", error);
+
+      if (patientInfo?.id) {
+        await logToSystemWithPatient("SettingsModal Upgrade Exception", patientInfo.id, {
+          result: "exception",
+          error: error instanceof Error ? error.message : String(error),
+          source: "settings_modal",
+        });
+      }
+    }
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -178,23 +230,20 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </View>
             </View>
 
-            <Button variant="outline" onPress={navigateToSubscription} size="sm" className="mb-2">
-              <ButtonIcon as={CreditCard} size="sm" />
-              <ButtonText>
-                {isPremium ? "Manage Subscription" : "Upgrade to Voice Connect"}
-              </ButtonText>
-            </Button>
-
-            <Button
-              variant="outline"
-              onPress={retryUserLinking}
-              size="sm"
-              className="mb-4"
-              disabled={isLinkingInProgress}
-            >
-              <ButtonIcon as={isLinkingInProgress ? Loader : User} size="sm" />
-              <ButtonText>{isLinkingInProgress ? "Linking..." : "Retry User Linking"}</ButtonText>
-            </Button>
+            {isPremium ? (
+              <Text className="text-sm text-typography-600">
+                To manage your subscription, go to your device's App Store or Play Store settings.
+              </Text>
+            ) : (
+              <View className="gap-3">
+                <Text className="text-sm text-typography-600">
+                  Upgrade to Voice Connect for enhanced voice messaging.
+                </Text>
+                <Button variant="solid" onPress={handleDirectUpgrade}>
+                  <ButtonText>Upgrade to Voice Connect</ButtonText>
+                </Button>
+              </View>
+            )}
 
             <Divider className="my-4" />
 

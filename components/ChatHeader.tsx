@@ -30,6 +30,8 @@ interface StatusConfig {
 
 interface ChatStatusProps {
   currentThread: Thread;
+  remainingFreeMessages?: number;
+  hasPremium?: boolean;
 }
 
 interface ThreadInfoProps {
@@ -57,6 +59,8 @@ export interface ChatHeaderProps {
   onDelete?: () => void;
   onCancelSelection?: () => void;
   isDeleting?: boolean;
+  remainingFreeMessages?: number;
+  hasPremium?: boolean;
 }
 
 // Helper Components
@@ -108,7 +112,12 @@ function SelectionInfo({ selectedCount, onDelete, isDeleting = false }: Selectio
   );
 }
 
-function ThreadInfo({ currentThread, avatarURL }: ThreadInfoProps) {
+function ThreadInfo({
+  currentThread,
+  avatarURL,
+  remainingFreeMessages,
+  hasPremium,
+}: ThreadInfoProps & { remainingFreeMessages?: number; hasPremium?: boolean }) {
   const { isAutoplayEnabled, isLoadingPreference, toggleAutoplay } = useUserPreferences();
 
   return (
@@ -122,7 +131,11 @@ function ThreadInfo({ currentThread, avatarURL }: ThreadInfoProps) {
           <Text size="md" bold className="text-typography-900">
             {currentThread.topic}
           </Text>
-          <ChatStatus currentThread={currentThread} />
+          <ChatStatus
+            currentThread={currentThread}
+            remainingFreeMessages={remainingFreeMessages}
+            hasPremium={hasPremium}
+          />
         </View>
       </View>
 
@@ -151,7 +164,7 @@ function ThreadInfo({ currentThread, avatarURL }: ThreadInfoProps) {
   );
 }
 
-function ChatStatus({ currentThread }: ChatStatusProps) {
+function ChatStatus({ currentThread, remainingFreeMessages, hasPremium }: ChatStatusProps) {
   const { profile } = useMedplumContext();
   const isPatient = profile?.resourceType === "Patient";
 
@@ -190,6 +203,15 @@ function ChatStatus({ currentThread }: ChatStatusProps) {
       <Text size="sm" className="text-typography-600">
         {message}
       </Text>
+      {currentThread.isReflectionThread &&
+        !hasPremium &&
+        remainingFreeMessages !== undefined &&
+        remainingFreeMessages > 0 &&
+        remainingFreeMessages <= 3 && (
+          <Text size="xs" className="ml-1 text-typography-500">
+            ({remainingFreeMessages} voice messages left)
+          </Text>
+        )}
     </View>
   );
 }
@@ -202,6 +224,8 @@ export function ChatHeader({
   onDelete,
   onCancelSelection,
   isDeleting = false,
+  remainingFreeMessages,
+  hasPremium,
 }: ChatHeaderProps) {
   const { profile } = useMedplumContext();
   const avatarURL = getAvatarURL(currentThread.getAvatarRef({ profile }));
@@ -218,7 +242,12 @@ export function ChatHeader({
             isDeleting={isDeleting}
           />
         ) : (
-          <ThreadInfo currentThread={currentThread} avatarURL={avatarURL} />
+          <ThreadInfo
+            currentThread={currentThread}
+            avatarURL={avatarURL}
+            remainingFreeMessages={remainingFreeMessages}
+            hasPremium={hasPremium}
+          />
         )}
       </View>
     </View>
