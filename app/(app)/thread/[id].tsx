@@ -3,7 +3,7 @@ import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useContextSelector } from "use-context-selector";
 
 import { ChatHeader } from "@/components/ChatHeader";
@@ -374,7 +374,14 @@ export default function ThreadPage() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} className="bg-background-50">
+    <KeyboardAwareScrollView
+      style={{ flex: 1 }}
+      className="bg-background-50"
+      contentContainerStyle={{ flex: 1 }}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      bottomOffset={80}
+    >
       <ChatHeader
         currentThread={thread}
         getAvatarURL={getAvatarURL}
@@ -428,6 +435,6 @@ export default function ThreadPage() {
         isOpen={showVoiceGate}
         onClose={() => setShowVoiceGate(false)}
       />
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }
