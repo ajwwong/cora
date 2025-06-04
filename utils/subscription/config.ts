@@ -31,14 +31,18 @@ export const PRODUCT_IDS = {
  * - For development and testing use the same keys, for production use only production keys
  */
 export const REVENUE_CAT_API_KEYS = {
-  ios: "appl_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // Production Apple App Store key
+  ios: "appl_EhZpZQEfVCtlalbFExbKnpsrUOl", // Production Apple App Store key
   android: "goog_ocxwCYOseIPqHeYRlHAuuaIAWBo", // Production Google Play key
 };
 
 /**
- * RevenueCat App ID
+ * RevenueCat App IDs
+ * Note: Different app IDs for each platform in RevenueCat dashboard
  */
-export const REVENUE_CAT_APP_ID = "app3e20afa061";
+export const REVENUE_CAT_APP_IDS = {
+  ios: "app34f0ee7c4b", // iOS App Store app ID
+  android: "app3e20afa061", // Google Play app ID
+};
 
 /**
  * Entitlement IDs in RevenueCat dashboard
