@@ -88,6 +88,18 @@ export default function ThreadPage() {
     (ctx) => ctx.processWithReflectionGuide,
   );
 
+  // Debug logging for bot processing state
+  const isBotProcessing = isBotProcessingMap.get(id) || false;
+  useEffect(() => {
+    if (id) {
+      console.log("🤖 [ThreadPage] Bot processing state change:", {
+        threadId: id,
+        isBotProcessing,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }, [id, isBotProcessing]);
+
   // Track the most recent audio message
   const mostRecentAudioMessageId = useMemo(() => {
     // Sort messages by sentAt date (descending) and find the first with audio
@@ -123,6 +135,11 @@ export default function ThreadPage() {
 
   // Audio control handlers
   const handleAudioPlay = useCallback((messageId: string) => {
+    console.log("🔊 [ThreadPage] Audio STARTED playing:", {
+      messageId,
+      timestamp: new Date().toISOString(),
+    });
+
     // Update global audio state
     setIsAudioPlaying(true);
     setCurrentPlayingMessageId(messageId);
@@ -133,6 +150,12 @@ export default function ThreadPage() {
 
   const handleAudioStop = useCallback(
     (messageId: string) => {
+      console.log("🔇 [ThreadPage] Audio STOPPED playing:", {
+        messageId,
+        wasCurrentlyPlaying: currentPlayingMessageId === messageId,
+        timestamp: new Date().toISOString(),
+      });
+
       // Only update global state if this is the current playing message
       if (currentPlayingMessageId === messageId) {
         setIsAudioPlaying(false);
@@ -417,7 +440,7 @@ export default function ThreadPage() {
         isRecording={isRecording}
         isReflectionThread={thread.isReflectionThread}
         recordingDuration={recordingDuration}
-        isBotProcessing={isBotProcessingMap.get(thread.id) || false}
+        isBotProcessing={isBotProcessing}
         remainingFreeMessages={remainingFreeMessages}
         hasPremium={hasPremium}
       />

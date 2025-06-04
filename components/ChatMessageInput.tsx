@@ -1,8 +1,8 @@
 import { MicIcon, SendIcon, StopCircleIcon } from "lucide-react-native";
-import { useEffect, useRef } from "react";
-import { Animated } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, TextInput } from "react-native";
 
-import { TextareaResizable, TextareaResizableInput } from "@/components/textarea-resizable";
+// Removed TextareaResizable import - replacing with native TextInput
 import { Button, ButtonIcon } from "@/components/ui/button";
 import { Pressable } from "@/components/ui/pressable";
 import { Text } from "@/components/ui/text";
@@ -39,6 +39,40 @@ export function ChatMessageInput({
 }: ChatMessageInputProps) {
   // Add a pulsing animation for recording indicator
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  // Add ref for text input to manage focus
+  const textInputRef = useRef<TextInput>(null);
+  // State for auto-expanding text input height
+  const [inputHeight, setInputHeight] = useState(40);
+
+  // Debug logging for input visibility state
+  const isInputDisabled = isSending || disabled || isRecording || isBotProcessing;
+
+  // Focus management: blur when disabled, only focus after recording
+  const prevRecordingRef = useRef(isRecording);
+  const prevDisabledRef = useRef(isInputDisabled);
+
+  useEffect(() => {
+    const wasRecording = prevRecordingRef.current;
+    const wasDisabled = prevDisabledRef.current;
+    const isNowNotRecording = !isRecording;
+    const isNowDisabled = isInputDisabled;
+    const isNowEnabled = !isInputDisabled;
+
+    // Blur input when it becomes disabled (removes cursor during "Waiting for response...")
+    if (!wasDisabled && isNowDisabled) {
+      textInputRef.current?.blur();
+    }
+
+    // Only refocus if we just finished recording AND input is not disabled
+    if (wasRecording && isNowNotRecording && isNowEnabled) {
+      setTimeout(() => {
+        textInputRef.current?.focus();
+      }, 100);
+    }
+
+    prevRecordingRef.current = isRecording;
+    prevDisabledRef.current = isInputDisabled;
+  }, [isRecording, isInputDisabled]);
 
   // Set up pulsing animation when recording
   useEffect(() => {
@@ -78,7 +112,18 @@ export function ChatMessageInput({
     };
   }, [isRecording, pulseAnim]);
   return (
-    <View className="flex-row items-center bg-background-0 p-3">
+    <View
+      className="flex-row items-center bg-background-0 p-3"
+      style={{
+        backgroundColor: "#f9fafb", // Light gray background
+        minHeight: 60, // Ensure reasonable height
+        borderTopWidth: 1,
+        borderTopColor: "#e5e7eb", // Subtle top border
+        // Defensive positioning to prevent hiding
+        position: "relative",
+        zIndex: 1,
+      }}
+    >
       <Pressable
         onPress={() => {
           console.log("Record button pressed via Pressable");
@@ -124,7 +169,7 @@ export function ChatMessageInput({
               position: "absolute",
               top: 4,
               right: 8,
-              zIndex: 10,
+              zIndex: 20,
               transform: [{ scale: pulseAnim }],
             }}
           >
@@ -140,7 +185,7 @@ export function ChatMessageInput({
               position: "absolute",
               top: 4,
               right: 8,
-              zIndex: 10,
+              zIndex: 20,
             }}
           >
             <View className="flex-row items-center rounded-full bg-primary-500 p-1">
@@ -149,27 +194,46 @@ export function ChatMessageInput({
             </View>
           </View>
         )}
-        <TextareaResizable
-          size="md"
-          className="flex-1"
-          isDisabled={isSending || disabled || isRecording || isBotProcessing}
-        >
-          <TextareaResizableInput
-            placeholder={
-              isRecording
-                ? "Recording audio..."
-                : isSending
-                  ? "Sending..."
-                  : isBotProcessing
-                    ? "Waiting for response..."
-                    : "Type a message..."
-            }
-            value={message}
-            onChangeText={setMessage}
-            className="min-h-10 border-outline-300 px-3"
-            editable={!isRecording}
-          />
-        </TextareaResizable>
+        <TextInput
+          ref={textInputRef}
+          multiline={true}
+          textAlignVertical="top"
+          placeholder={
+            isRecording
+              ? "Recording audio..."
+              : isSending
+                ? "Sending..."
+                : isBotProcessing
+                  ? "Waiting for response..."
+                  : "Type a message..."
+          }
+          placeholderTextColor="#9ca3af"
+          value={message}
+          onChangeText={setMessage}
+          onContentSizeChange={(e) => {
+            // Auto-expand height based on content, with min/max limits
+            const newHeight = Math.max(40, Math.min(120, e.nativeEvent.contentSize.height));
+            setInputHeight(newHeight);
+          }}
+          style={{
+            flex: 1,
+            height: inputHeight,
+            backgroundColor: isInputDisabled ? "#f3f4f6" : "#ffffff",
+            borderColor: isInputDisabled ? "#d1d5db" : "#cbd5e1",
+            borderWidth: 1,
+            borderRadius: 6,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            color: "#111827",
+            fontSize: 16,
+            lineHeight: 20,
+            // Defensive styling to ensure it's always visible
+            opacity: 1,
+            zIndex: 10,
+          }}
+          editable={!isInputDisabled}
+          pointerEvents={isInputDisabled ? "none" : "auto"}
+        />
       </View>
       <Button
         variant="solid"

@@ -23,6 +23,8 @@ import { Thread } from "@/models/chat";
 import { syncResourceArray } from "@/utils/array";
 import { getQueryString } from "@/utils/url";
 
+import { useSubscription as useRevenueCatSubscription } from "./SubscriptionContext";
+
 async function fetchThreads({
   medplum,
   threadsQuery,
@@ -334,6 +336,9 @@ export function ChatProvider({
 }: ChatProviderProps) {
   const { medplum } = useMedplumContext();
   const [profile, setProfile] = useState(medplum.getProfile());
+
+  // Get premium status from SubscriptionContext using the hook
+  const { isPremium } = useRevenueCatSubscription();
   const [threads, setThreads] = useState<Communication[]>([]);
   const [threadCommMap, setThreadCommMap] = useState<Map<string, Communication[]>>(new Map());
   const [reconnecting, setReconnecting] = useState(false);
@@ -583,6 +588,12 @@ export function ChatProvider({
         if (audioData && placeholderMessageId) {
           console.log("Processing audio with placeholder ID:", placeholderMessageId);
 
+          // Set bot processing state for voice messages
+          setIsBotProcessingMap((prev) => new Map([...prev, [threadId, true]]));
+          console.log(
+            `🤖 [sendMessage] Bot processing STARTING for voice message in thread: ${threadId}`,
+          );
+
           // First create a Binary resource (exactly like in SecureHealth)
           console.log("Creating Binary resource for audio data...");
           const binary = await medplum.createResource({
@@ -689,6 +700,12 @@ export function ChatProvider({
             await new Promise((resolve) => setTimeout(resolve, 2000)); // Longer wait for alternative approach
             await receiveThread(threadId);
 
+            // Clear bot processing state for failed transcription
+            setIsBotProcessingMap((prev) => new Map([...prev, [threadId, false]]));
+            console.log(
+              `🤖 [sendMessage] Bot processing COMPLETED (alternative) for voice message in thread: ${threadId}`,
+            );
+
             // Return placeholder ID
             return placeholderMessageId;
           }
@@ -710,7 +727,8 @@ export function ChatProvider({
             try {
               if (profile.id) {
                 const usage = await getVoiceMessageUsage(medplum, profile.id);
-                shouldSkipTTS = hasReachedDailyLimit(usage.dailyCount);
+                // Only skip TTS for free users who reached daily limit, premium users get unlimited TTS
+                shouldSkipTTS = !isPremium && hasReachedDailyLimit(usage.dailyCount);
               }
             } catch (error) {
               console.warn(
@@ -750,6 +768,12 @@ export function ChatProvider({
             console.log("Waiting for AI response to propagate...");
             await new Promise((resolve) => setTimeout(resolve, 2000)); // Longer wait for AI processing
             await receiveThread(threadId);
+
+            // Clear bot processing state for voice messages
+            setIsBotProcessingMap((prev) => new Map([...prev, [threadId, false]]));
+            console.log(
+              `🤖 [sendMessage] Bot processing COMPLETED for voice message in thread: ${threadId}`,
+            );
           }
 
           return placeholderMessageId; // Return placeholder ID as it was updated
@@ -889,7 +913,7 @@ export function ChatProvider({
 
       // Set processing state to true for this thread
       setIsBotProcessingMap((prev) => new Map([...prev, [threadId, true]]));
-      console.log(`Bot processing starting for thread: ${threadId}`);
+      console.log(`🤖 [ChatContext] Bot processing STARTING for thread: ${threadId}`);
 
       try {
         console.log("Processing with reflection guide bot:", {
@@ -981,11 +1005,16 @@ export function ChatProvider({
         try {
           if (profile.id) {
             const usage = await getVoiceMessageUsage(medplum, profile.id);
-            shouldSkipTTS = hasReachedDailyLimit(usage.dailyCount);
+            // Only skip TTS for free users who reached daily limit, premium users get unlimited TTS
+            shouldSkipTTS = !isPremium && hasReachedDailyLimit(usage.dailyCount);
 
             if (shouldSkipTTS) {
               console.log(
-                `User has reached voice message limit (${usage.dailyCount} messages), using text-only mode`,
+                `Free user has reached voice message limit (${usage.dailyCount} messages), using text-only mode`,
+              );
+            } else if (isPremium) {
+              console.log(
+                `Premium user: unlimited TTS enabled (${usage.dailyCount} messages used)`,
               );
             }
           }
@@ -1091,7 +1120,7 @@ export function ChatProvider({
       } finally {
         // Set processing state back to false for this thread
         setIsBotProcessingMap((prev) => new Map([...prev, [threadId, false]]));
-        console.log(`Bot processing completed for thread: ${threadId}`);
+        console.log(`🤖 [ChatContext] Bot processing COMPLETED for thread: ${threadId}`);
       }
     },
     [medplum, profile, receiveThread, onError, threads, setIsBotProcessingMap],
