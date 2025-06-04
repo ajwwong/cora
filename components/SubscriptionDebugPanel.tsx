@@ -13,7 +13,11 @@ import { Box, Button, Divider, Heading, HStack, Text, VStack } from "./ui";
 const SubscriptionDebugPanel = () => {
   const { customerInfo, isPremium, debugGetCustomerInfo, debugGetOfferings, debugRefreshUI } =
     useSubscription();
+  
+  // We can't use hooks conditionally, so we'll just let it fail if MedplumProvider is not available
+  // The logs feature won't work in modals, but the rest of the debug panel will
   const medplum = useMedplum();
+  
   const [logs, setLogs] = React.useState<Communication[]>([]);
   const [loadingLogs, setLoadingLogs] = React.useState<boolean>(false);
   const [expandedLogs, setExpandedLogs] = React.useState<Record<string, boolean>>({});
@@ -74,7 +78,7 @@ const SubscriptionDebugPanel = () => {
         }
       }
       return log.sent || "Unknown";
-    } catch (e) {
+    } catch {
       return log.sent || "Unknown";
     }
   };
@@ -95,7 +99,7 @@ const SubscriptionDebugPanel = () => {
         }
       }
       return "No content";
-    } catch (e) {
+    } catch {
       return "Error parsing content";
     }
   };

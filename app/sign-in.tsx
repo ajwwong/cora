@@ -454,8 +454,15 @@ export default function SignIn() {
 
     let loginResponse;
     try {
+      // Build the authorization URL to log it
+      const authUrl = await loginRequest.makeAuthUrlAsync(oAuth2Discovery);
+      console.log("==== FULL AUTH URL ====");
+      console.log(authUrl);
+      console.log("=======================");
+      
       await logAuthError("Prompt Auth Request", {
         status: "starting",
+        authUrl: authUrl,
         timestamp: new Date().toISOString(),
       });
 
@@ -463,8 +470,8 @@ export default function SignIn() {
 
       await logAuthError("Auth Prompt Response", {
         type: loginResponse.type,
-        hasCode: loginResponse.type === "success" && !!loginResponse.params.code,
-        hasError: !!loginResponse.params.error,
+        hasCode: loginResponse.type === "success" && !!loginResponse.params?.code,
+        hasError: loginResponse.type === "success" && !!loginResponse.params?.error,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

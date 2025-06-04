@@ -49,6 +49,10 @@ SplashScreen.preventAutoHideAsync();
 
 polyfillMedplumWebAPIs();
 
+console.log("Raw oauth2ClientId value:", oauth2ClientId);
+console.log("Type of oauth2ClientId:", typeof oauth2ClientId);
+console.log("Platform.OS:", Platform.OS);
+console.log("EXPO_PUBLIC_MEDPLUM_NATIVE_CLIENT_ID:", process.env.EXPO_PUBLIC_MEDPLUM_NATIVE_CLIENT_ID);
 console.log("Initializing Medplum client with OAuth client ID:", oauth2ClientId);
 
 // Create the Medplum client
