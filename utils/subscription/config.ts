@@ -13,12 +13,12 @@ export enum PurchaseType {
  */
 export const PRODUCT_IDS = {
   [PurchaseType.PREMIUM_MONTHLY]: {
-    ios: "feelheard_premium:monthly-autorenewing",
-    android: "feelheard_premium:monthly-autorenewing",
+    ios: "fh_1999_1m", // App Store Connect product ID
+    android: "feelheard_premium:monthly-autorenewing", // Google Play product ID
   },
   [PurchaseType.PREMIUM_ANNUAL]: {
-    ios: "feelheard_premium:annual-autorenewing",
-    android: "feelheard_premium:annual-autorenewing",
+    ios: "fh_18999_1y", // App Store Connect product ID
+    android: "feelheard_premium:annual-autorenewing", // Google Play product ID
   },
 };
 
