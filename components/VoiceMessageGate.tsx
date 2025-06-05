@@ -178,15 +178,10 @@ export function VoiceMessageGate({
         source: "voice_message_limit",
       });
 
-      console.log("🛒 [VoiceGate] Closing modal first to avoid modal stacking issues");
-
-      // Close the modal first to avoid modal stacking issues with RevenueCat paywall
-      closeModal();
-
-      // Small delay to ensure modal is fully closed before presenting paywall
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
       console.log("🛒 [VoiceGate] About to present RevenueCat paywall for upgrade");
+
+      // Keep modal open on iOS to ensure paywall can present properly
+      // On iOS, closing the modal prevents the paywall from appearing
 
       // Present RevenueCat native paywall directly - matching SubscriptionScreen implementation exactly
       const paywallResult: PAYWALL_RESULT = await RevenueCatUI.presentPaywall();
@@ -200,7 +195,9 @@ export function VoiceMessageGate({
             source: "voice_message_limit",
           });
           console.log("🛒 [VoiceGate] Purchase successful, allowing recording");
-          // Allow the recording since they just upgraded (modal already closed)
+          // Close modal after successful purchase
+          closeModal();
+          // Allow the recording since they just upgraded
           onAllowRecording();
           break;
 
@@ -210,7 +207,9 @@ export function VoiceMessageGate({
             source: "voice_message_limit",
           });
           console.log("🛒 [VoiceGate] Purchases restored, allowing recording");
-          // Allow the recording since they restored premium (modal already closed)
+          // Close modal after successful restore
+          closeModal();
+          // Allow the recording since they restored premium
           onAllowRecording();
           break;
 
@@ -219,12 +218,8 @@ export function VoiceMessageGate({
             result: "cancelled",
             source: "voice_message_limit",
           });
-          console.log("🛒 [VoiceGate] User cancelled paywall, re-opening modal");
-          // Re-open the modal since user cancelled (only if using internal state)
-          if (!onClose) {
-            setShowLimitModal(true);
-          }
-          // Note: If using external control, parent should handle re-opening
+          console.log("🛒 [VoiceGate] User cancelled paywall");
+          // Modal stays open since we didn't close it before presenting paywall
           break;
 
         case PAYWALL_RESULT.NOT_PRESENTED:
@@ -242,7 +237,8 @@ export function VoiceMessageGate({
           );
           console.log("🛒 [VoiceGate] Paywall not presented or error:", paywallResult);
           console.log("🛒 [VoiceGate] Falling back to subscription page");
-          // Fallback to subscription page if paywall fails (modal already closed)
+          // Close modal before navigating to subscription page
+          closeModal();
           router.push("/subscription");
           break;
       }
@@ -279,19 +275,19 @@ export function VoiceMessageGate({
       </ModalHeader>
       <ModalBody>
         <VStack className="gap-4">
-          <Text>
-            You've used all {FREE_DAILY_VOICE_MESSAGE_LIMIT} of your daily voice messages.
-          </Text>
+          <Text>You've used all of your daily voice messages.</Text>
           <Text>Upgrade to Voice Connect for enhanced voice messaging.</Text>
         </VStack>
       </ModalBody>
       <ModalFooter>
-        <Button variant="outline" onPress={closeModal} className="mr-2">
-          <ButtonText>Continue with Text</ButtonText>
-        </Button>
-        <Button variant="solid" onPress={handleDirectUpgrade}>
-          <ButtonText>Upgrade to Voice Connect</ButtonText>
-        </Button>
+        <VStack space="sm" className="w-full px-4">
+          <Button variant="solid" onPress={handleDirectUpgrade} className="w-full">
+            <ButtonText>Upgrade to Voice Connect</ButtonText>
+          </Button>
+          <Button variant="outline" onPress={closeModal} className="w-full">
+            <ButtonText>Continue with Text</ButtonText>
+          </Button>
+        </VStack>
       </ModalFooter>
     </Modal>
   );

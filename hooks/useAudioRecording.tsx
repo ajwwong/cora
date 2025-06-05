@@ -43,7 +43,7 @@ export function useAudioRecording(): UseAudioRecordingReturn {
     setRecordingDuration(newDuration);
 
     // Schedule next update
-    timerRef.current = setTimeout(updateDuration, 1000);
+    timerRef.current = setTimeout(updateDuration, 1000) as unknown as NodeJS.Timeout;
   }, []);
 
   // Clean up recording and timer when component unmounts
@@ -96,12 +96,28 @@ export function useAudioRecording(): UseAudioRecordingReturn {
 
       // Configure audio mode with settings to minimize update events
       console.log("Configuring audio mode...");
+
+      // iOS-specific: Stop any active audio sessions first
+      if (Platform.OS === "ios") {
+        try {
+          console.log("iOS: Deactivating any existing audio sessions...");
+          await Audio.setAudioModeAsync({
+            allowsRecordingIOS: false,
+            playsInSilentModeIOS: false,
+          });
+        } catch (sessionError) {
+          console.warn("iOS: Could not deactivate audio session:", sessionError);
+        }
+      }
+
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
         staysActiveInBackground: false,
         shouldDuckAndroid: true,
         playThroughEarpieceAndroid: false,
+        interruptionModeIOS: 2, // DUCK_OTHERS
+        interruptionModeAndroid: 1, // DUCK_OTHERS
       });
 
       // Prepare recording
@@ -130,9 +146,9 @@ export function useAudioRecording(): UseAudioRecordingReturn {
           },
           ios: {
             ...baseOptions.ios,
-            extension: ".mp3",
+            extension: ".m4a",
             outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
-            audioQuality: Audio.IOSAudioQuality.MEDIUM,
+            audioQuality: Audio.IOSAudioQuality.HIGH,
             sampleRate: 44100,
             numberOfChannels: 1,
             bitRate: 128000,
@@ -147,7 +163,11 @@ export function useAudioRecording(): UseAudioRecordingReturn {
           },
         };
 
-        console.log("Using MP3 recording preset for platform:", Platform.OS);
+        console.log(
+          "Using recording preset for platform:",
+          Platform.OS,
+          Platform.OS === "ios" ? "(M4A/AAC format)" : "(MP3 format)",
+        );
         console.log("Preparing to record...");
 
         const options = {
@@ -161,8 +181,51 @@ export function useAudioRecording(): UseAudioRecordingReturn {
         await recording.prepareToRecordAsync(options);
 
         console.log("Starting recording...");
-        await recording.startAsync();
-        console.log("Recording started successfully!");
+
+        // iOS-specific: Add retry logic for audio session conflicts
+        if (Platform.OS === "ios") {
+          let retries = 0;
+          const maxRetries = 3;
+          let lastError: Error | null = null;
+
+          while (retries < maxRetries) {
+            try {
+              await recording.startAsync();
+              console.log("Recording started successfully!");
+              break;
+            } catch (error) {
+              lastError = error as Error;
+              retries++;
+              console.warn(`iOS: Recording start attempt ${retries} failed:`, error);
+
+              if (retries < maxRetries) {
+                console.log("iOS: Retrying after delay...");
+                await new Promise((resolve) => setTimeout(resolve, 500 * retries));
+
+                // Try to reset audio session
+                await Audio.setAudioModeAsync({
+                  allowsRecordingIOS: false,
+                  playsInSilentModeIOS: false,
+                });
+
+                await Audio.setAudioModeAsync({
+                  allowsRecordingIOS: true,
+                  playsInSilentModeIOS: true,
+                  staysActiveInBackground: false,
+                  interruptionModeIOS: 2, // DUCK_OTHERS
+                });
+              }
+            }
+          }
+
+          if (retries === maxRetries && lastError) {
+            throw lastError;
+          }
+        } else {
+          // Non-iOS platforms
+          await recording.startAsync();
+          console.log("Recording started successfully!");
+        }
 
         recordingRef.current = recording;
 
@@ -174,7 +237,7 @@ export function useAudioRecording(): UseAudioRecordingReturn {
         setRecordingDuration(0);
 
         // Start duration timer
-        timerRef.current = setTimeout(updateDuration, 1000);
+        timerRef.current = setTimeout(updateDuration, 1000) as unknown as NodeJS.Timeout;
 
         // Finally update isRecording state after setup is complete
         setIsRecording(true);

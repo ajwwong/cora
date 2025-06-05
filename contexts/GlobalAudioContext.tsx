@@ -32,7 +32,7 @@ export function GlobalAudioProvider({ children }: { children: ReactNode }) {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [playingThreadId, setPlayingThreadId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
 
   // Clean up sound when component unmounts
@@ -80,6 +80,18 @@ export function GlobalAudioProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
 
       try {
+        // Set audio mode for playback to use speaker
+        console.log("Setting audio mode for playback...");
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: true,
+          shouldDuckAndroid: true,
+          playThroughEarpieceAndroid: false, // Force speaker on Android
+          interruptionModeIOS: 2, // DUCK_OTHERS
+          interruptionModeAndroid: 1, // DUCK_OTHERS
+        });
+
         // Create a data URI from the base64 audio data
         const base64Audio = `data:audio/mp3;base64,${audioData}`;
 
